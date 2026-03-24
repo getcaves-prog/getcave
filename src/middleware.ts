@@ -29,16 +29,20 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Redirect unauthenticated users trying to access protected routes
-  const protectedPaths = ["/upload", "/profile"];
-  const isProtectedRoute = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
-  );
+  // Public paths that don't require authentication
+  const publicPaths = ["/auth/login", "/auth/signup", "/auth/callback", "/auth/confirm"];
+  const isPublicRoute =
+    publicPaths.some((path) => request.nextUrl.pathname.startsWith(path)) ||
+    request.nextUrl.pathname.startsWith("/event/") ||
+    request.nextUrl.pathname.startsWith("/api/");
 
-  if (isProtectedRoute && !user) {
+  // Redirect unauthenticated users to login (login is the entry point)
+  if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
-    url.searchParams.set("redirectTo", request.nextUrl.pathname);
+    if (request.nextUrl.pathname !== "/") {
+      url.searchParams.set("redirectTo", request.nextUrl.pathname);
+    }
     return NextResponse.redirect(url);
   }
 
