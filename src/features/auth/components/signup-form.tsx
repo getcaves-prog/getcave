@@ -57,10 +57,12 @@ export function SignupForm() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2 text-center">
-        <h1 className="text-2xl font-bold text-white">Crea tu cuenta</h1>
+      <div className="flex flex-col items-center gap-2 text-center">
+        <h1 className="text-3xl font-bold text-white font-[family-name:var(--font-space-grotesk)]">
+          Caves
+        </h1>
         <p className="text-sm text-[#A0A0A0]">
-          Unete a Caves y descubre eventos cerca de ti
+          Crea tu cuenta y descubre eventos cerca de ti
         </p>
       </div>
 

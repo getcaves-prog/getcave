@@ -30,11 +30,13 @@ export function LoginForm() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2 text-center">
-        <h1 className="text-2xl font-bold text-white">Inicia sesion</h1>
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <h1 className="text-5xl font-bold text-[#FF4D4D] font-[family-name:var(--font-space-grotesk)]">
+          Caves
+        </h1>
         <p className="text-sm text-[#A0A0A0]">
-          Descubre lo que pasa cerca de ti
+          Discover what&apos;s happening around you
         </p>
       </div>
 
