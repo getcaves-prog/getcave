@@ -88,7 +88,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#2A2A2A] bg-[#0A0A0A]/90 backdrop-blur-lg safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#2A2A2A] bg-black/90 backdrop-blur-lg safe-area-bottom">
       <div className="mx-auto flex max-w-md items-center justify-around py-2">
         {NAV_ITEMS.map((item) => {
           const isActive =

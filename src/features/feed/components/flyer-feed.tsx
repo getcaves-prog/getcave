@@ -27,32 +27,19 @@ export function FlyerFeed() {
     retry: retryFeed,
   } = useFeed(coordinates);
 
-  // Show prompt when geo check finished and we need user permission
+  // While waiting for location, show empty grid
   if (geoStatus === "prompt" || (!coordinates && !geoLoading && geoStatus === "denied")) {
-    return (
-      <GeolocationPrompt
-        onEnableLocation={retryGeo}
-        onUseDefault={useDefaultLocation}
-        loading={geoLoading}
-      />
-    );
+    return <FeedEmpty />;
   }
 
   // Loading state
   if ((geoLoading || feedLoading) && events.length === 0) {
-    return (
-      <div className="flex h-[100dvh] w-full flex-col items-center justify-center gap-4 bg-[#0A0A0A]">
-        <LoadingSpinner size="lg" />
-        <p className="text-sm text-[#A0A0A0]">
-          {geoLoading ? "Finding your location..." : "Loading events..."}
-        </p>
-      </div>
-    );
+    return <FeedEmpty />;
   }
 
   // Error state
   if (feedError && events.length === 0) {
-    return <FeedError message={feedError} onRetry={retryFeed} />;
+    return <FeedEmpty />;
   }
 
   // Empty state

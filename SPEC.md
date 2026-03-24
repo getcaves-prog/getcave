@@ -547,3 +547,4 @@ NEXT_PUBLIC_DEFAULT_RADIUS=25000
 | Geocoding provider: Mapbox vs Google vs Nominatim (free)?   | Pending |
 | Desktop layout: grid of cards or side-by-side feed + map?   | Pending |
 | Multi-language support needed for MVP?                      | Pending |
+claude plugin install figma@claude-plugins-official
