@@ -1,10 +1,10 @@
-import { BottomNav } from "@/shared/components/layout/bottom-nav";
+import { FeedHeader } from "@/features/feed/components/feed-header";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-dvh bg-[#0A0A0A]">
-      {children}
-      <BottomNav />
+    <div className="h-dvh bg-black">
+      <FeedHeader />
+      <main className="h-dvh">{children}</main>
     </div>
   );
 }

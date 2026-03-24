@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -36,8 +36,11 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/event/") ||
     request.nextUrl.pathname.startsWith("/api/");
 
+  // Allow guest mode access (cookie set from login screen)
+  const isGuest = request.cookies.get("guest_mode")?.value === "true";
+
   // Redirect unauthenticated users to login (login is the entry point)
-  if (!user && !isPublicRoute) {
+  if (!user && !isGuest && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     if (request.nextUrl.pathname !== "/") {
