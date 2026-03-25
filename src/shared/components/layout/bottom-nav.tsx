@@ -3,13 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/shared/lib/utils/cn";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 
-const NAV_ITEMS = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: string;
+  authRequired?: boolean;
+}
+
+const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Feed", icon: "home" },
   { href: "/search", label: "Search", icon: "search" },
-  { href: "/upload", label: "Upload", icon: "plus" },
+  { href: "/upload", label: "Upload", icon: "plus", authRequired: true },
   { href: "/profile", label: "Profile", icon: "user" },
-] as const;
+];
 
 function NavIcon({ icon, active }: { icon: string; active: boolean }) {
   const color = active ? "#39FF14" : "#4A4A4A";
@@ -86,11 +94,29 @@ function NavIcon({ icon, active }: { icon: string; active: boolean }) {
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { user, loading } = useAuth();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-cave-rock bg-cave-stone/90 backdrop-blur-lg safe-area-bottom">
       <div className="mx-auto flex max-w-md items-center justify-around py-2">
         {NAV_ITEMS.map((item) => {
+          // Skip auth-required items if not logged in
+          if (item.authRequired && !loading && !user) {
+            return (
+              <Link
+                key={item.href}
+                href="/auth/login?redirect=/upload"
+                className={cn(
+                  "flex flex-col items-center gap-0.5 px-4 py-1.5 transition-colors min-w-[64px]",
+                  "text-cave-smoke hover:text-neon-green"
+                )}
+              >
+                <NavIcon icon={item.icon} active={false} />
+                <span className="text-[10px] font-medium">{item.label}</span>
+              </Link>
+            );
+          }
+
           const isActive =
             item.href === "/"
               ? pathname === "/"

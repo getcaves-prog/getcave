@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { createClient } from "@/shared/lib/supabase/server";
 import { UploadForm } from "@/features/events/components/upload-form";
 import { getCategories } from "@/features/events/services/upload.service";
 
@@ -7,6 +9,17 @@ export const metadata: Metadata = {
 };
 
 export default async function UploadPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    redirect("/auth/login?redirect=/upload");
+  }
+
   const categories = await getCategories();
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useState, useEffect } from "react";
 import { useGesture } from "@use-gesture/react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import { FlyerBoardItem } from "./flyer-board-item";
@@ -14,6 +14,7 @@ interface FlyerBoardCanvasProps {
   onSetPosition: (x: number, y: number) => void;
   onZoom: (scale: number) => void;
   onFlyerTap: (eventId: string) => void;
+  onFlyerDoubleTap?: (eventId: string) => void;
 }
 
 const MIN_SCALE = 0.5;
@@ -26,8 +27,18 @@ export function FlyerBoardCanvas({
   onSetPosition,
   onZoom,
   onFlyerTap,
+  onFlyerDoubleTap,
 }: FlyerBoardCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile on mount
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Motion values for smooth animation
   const x = useMotionValue(position.x);
@@ -119,6 +130,7 @@ export function FlyerBoardCanvas({
             event={event}
             index={index}
             onTap={handleFlyerTap}
+            onDoubleTap={onFlyerDoubleTap}
           />
         ))}
       </motion.div>
