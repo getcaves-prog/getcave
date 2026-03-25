@@ -111,42 +111,12 @@ export function FlyerBoard({ events, loading }: FlyerBoardProps) {
 
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-cave-dark">
-      {/* Grid background */}
-      <div className="pointer-events-none absolute inset-0 opacity-30">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `
-              radial-gradient(circle at 1px 1px, rgba(57, 255, 20, 0.08) 1px, transparent 0)
-            `,
-            backgroundSize: "40px 40px",
-          }}
-        />
-      </div>
-
       <InfiniteCanvas
         events={positionedEvents}
         isMobile={isMobile}
         onFlyerTap={handleFlyerTap}
         onFlyerDoubleTap={handleFlyerDoubleTap}
       />
-
-      {/* Pan hint */}
-      {events.length > 0 && (
-        <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 z-10">
-          <div className="flex items-center justify-center gap-8 opacity-40 animate-pulse">
-            <svg className="w-6 h-6 text-neon-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="text-xs text-neon-green font-[family-name:var(--font-space-mono)]">
-              {isMobile ? "Desliza para explorar" : "Arrastra o presiona ESPACIO para mover"}
-            </span>
-            <svg className="w-6 h-6 text-neon-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </div>
-      )}
 
       {/* Loading indicator */}
       {loading && (
