@@ -77,11 +77,12 @@ export function FlyerBoardItem({ event, index, onTap, onDoubleTap }: FlyerBoardI
       }}
     >
       <div
-        className="relative overflow-hidden rounded-lg transition-transform duration-200"
+        className="relative overflow-hidden rounded-lg transition-transform duration-200 flyer-card"
         style={{
-          width: isMobile ? FLYER_SIZES.mobile.width : FLYER_SIZES.desktop.width,
-          height: isMobile ? FLYER_SIZES.mobile.height : FLYER_SIZES.desktop.height,
+          width: isMobile ? `${FLYER_SIZES.mobile.width}px` : `${FLYER_SIZES.desktop.width}px`,
+          height: isMobile ? `${FLYER_SIZES.mobile.height}px` : `${FLYER_SIZES.desktop.height}px`,
           transform: isHovered && !isMobile ? "scale(1.05)" : "scale(1)",
+          aspectRatio: "2/3",
         }}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
