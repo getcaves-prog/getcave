@@ -19,7 +19,7 @@ export function OAuthButton() {
     <Button
       type="button"
       variant="secondary"
-      className="w-full gap-2"
+      className="w-full gap-2 bg-cave-ash border-cave-rock hover:border-neon-green"
       onClick={handleGoogleLogin}
     >
       <svg className="h-5 w-5" viewBox="0 0 24 24">

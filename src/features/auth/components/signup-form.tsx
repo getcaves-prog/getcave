@@ -40,14 +40,14 @@ export function SignupForm() {
   if (success) {
     return (
       <div className="flex flex-col gap-4 text-center">
-        <h1 className="text-2xl font-bold text-white">Revisa tu correo</h1>
-        <p className="text-sm text-[#A0A0A0]">
+        <h1 className="text-2xl font-bold text-cave-white">Revisa tu correo</h1>
+        <p className="text-sm text-cave-fog">
           Te enviamos un enlace de confirmacion. Revisa tu bandeja de entrada
           para activar tu cuenta.
         </p>
         <Link
           href="/auth/login"
-          className="text-sm text-[#FF4D4D] hover:underline"
+          className="text-sm text-neon-green hover:underline"
         >
           Volver al inicio de sesion
         </Link>
@@ -58,16 +58,16 @@ export function SignupForm() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-3xl font-bold text-white font-[family-name:var(--font-space-grotesk)]">
+        <h1 className="text-3xl font-bold text-cave-white font-[family-name:var(--font-space-mono)]">
           Caves
         </h1>
-        <p className="text-sm text-[#A0A0A0]">
+        <p className="text-sm text-cave-fog">
           Crea tu cuenta y descubre eventos cerca de ti
         </p>
       </div>
 
       {error && (
-        <div className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
+        <div className="rounded-xl bg-neon-pink/10 px-4 py-3 text-sm text-neon-pink">
           {error}
         </div>
       )}
@@ -104,16 +104,16 @@ export function SignupForm() {
       </form>
 
       <div className="relative flex items-center gap-4">
-        <div className="h-px flex-1 bg-[#2A2A2A]" />
-        <span className="text-xs text-[#A0A0A0]">o</span>
-        <div className="h-px flex-1 bg-[#2A2A2A]" />
+        <div className="h-px flex-1 bg-cave-rock" />
+        <span className="text-xs text-cave-fog">o</span>
+        <div className="h-px flex-1 bg-cave-rock" />
       </div>
 
       <OAuthButton />
 
-      <p className="text-center text-sm text-[#A0A0A0]">
+      <p className="text-center text-sm text-cave-fog">
         Ya tienes cuenta?{" "}
-        <Link href="/auth/login" className="text-[#FF4D4D] hover:underline">
+        <Link href="/auth/login" className="text-neon-green hover:underline">
           Inicia sesion
         </Link>
       </p>

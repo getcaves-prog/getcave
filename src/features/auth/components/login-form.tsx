@@ -24,9 +24,9 @@ export function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-black">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-cave-black">
       {/* Logo — large and centered */}
-      <h1 className="mb-auto mt-[35dvh] text-8xl text-white font-[family-name:var(--font-pinyon-script)]">
+      <h1 className="mb-auto mt-[35dvh] text-8xl text-cave-white font-[family-name:var(--font-pinyon-script)]">
         Caves
       </h1>
 
@@ -35,14 +35,14 @@ export function LoginForm() {
         <button
           type="button"
           onClick={handleGuestAccess}
-          className="w-[210px] rounded-full border border-[#3A3A3A] bg-transparent px-6 py-3 text-sm font-medium tracking-widest text-[#A0A0A0] uppercase transition-colors hover:border-[#5A5A5A] hover:text-white"
+          className="w-[210px] rounded-full border border-cave-smoke bg-transparent px-6 py-3 text-sm font-medium tracking-widest text-cave-fog uppercase transition-colors hover:border-neon-green hover:text-neon-green"
         >
           Guest.
         </button>
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className="w-[210px] rounded-full border border-transparent bg-[#1A1A1A] px-6 py-3 text-sm font-medium tracking-widest text-white uppercase transition-colors hover:bg-[#2A2A2A]"
+          className="w-[210px] rounded-full border border-transparent bg-neon-green px-6 py-3 text-sm font-medium tracking-widest text-cave-black uppercase transition-colors hover:brightness-110"
         >
           Log in.
         </button>
@@ -50,7 +50,7 @@ export function LoginForm() {
           type="button"
           onClick={handleGoogleLogin}
           aria-label="Sign in with Google"
-          className="mt-2 flex h-11 w-11 items-center justify-center rounded-full border border-[#3A3A3A] bg-transparent transition-colors hover:border-[#5A5A5A]"
+          className="mt-2 flex h-11 w-11 items-center justify-center rounded-full border border-cave-rock bg-cave-ash transition-colors hover:border-neon-green"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
             <path

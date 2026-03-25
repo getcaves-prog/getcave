@@ -38,6 +38,38 @@ export type Database = {
         }
         Relationships: []
       }
+      event_heat: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_heat_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           category_id: string
@@ -45,8 +77,10 @@ export type Database = {
           currency: string
           date: string
           description: string | null
+          expires_at: string | null
           external_url: string | null
           flyer_url: string
+          heat_count: number | null
           id: string
           location: unknown
           price: number | null
@@ -66,8 +100,10 @@ export type Database = {
           currency?: string
           date: string
           description?: string | null
+          expires_at?: string | null
           external_url?: string | null
           flyer_url: string
+          heat_count?: number | null
           id?: string
           location: unknown
           price?: number | null
@@ -87,8 +123,10 @@ export type Database = {
           currency?: string
           date?: string
           description?: string | null
+          expires_at?: string | null
           external_url?: string | null
           flyer_url?: string
+          heat_count?: number | null
           id?: string
           location?: unknown
           price?: number | null
@@ -175,8 +213,10 @@ export type Database = {
           date: string
           description: string
           distance_meters: number
+          expires_at: string
           external_url: string
           flyer_url: string
+          heat_count: number
           id: string
           location: string
           price: number
@@ -192,6 +232,7 @@ export type Database = {
         }[]
       }
       increment_view_count: { Args: { event_id: string }; Returns: undefined }
+      toggle_event_heat: { Args: { p_event_id: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never

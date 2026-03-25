@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "notion-automation": {
+      "source": "claude-office-skills/skills",
+      "sourceType": "github",
+      "computedHash": "72c8c2f2dc76b257bf9e1320fa3d2b5682b0ee2653b877c11ddf5d2739b3ff4f"
+    }
+  }
+}
