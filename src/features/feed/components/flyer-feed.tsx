@@ -2,19 +2,14 @@
 
 import { useGeolocation } from "../hooks/use-geolocation";
 import { useFeed } from "../hooks/use-feed";
-import { SwipeContainer } from "./swipe-container";
-import { GeolocationPrompt } from "./geolocation-prompt";
+import { FlyerBoard } from "./flyer-board";
 import { FeedEmpty } from "./feed-empty";
-import { FeedError } from "./feed-error";
-import { LoadingSpinner } from "@/shared/components/ui/loading-spinner";
 
 export function FlyerFeed() {
   const {
     coordinates,
     loading: geoLoading,
     status: geoStatus,
-    retry: retryGeo,
-    useDefault: useDefaultLocation,
   } = useGeolocation();
 
   const {
@@ -22,9 +17,6 @@ export function FlyerFeed() {
     loading: feedLoading,
     error: feedError,
     loadMore,
-    currentIndex,
-    setCurrentIndex,
-    retry: retryFeed,
   } = useFeed(coordinates);
 
   // While waiting for location, show empty grid
@@ -48,11 +40,10 @@ export function FlyerFeed() {
   }
 
   return (
-    <SwipeContainer
+    <FlyerBoard
       events={events}
-      currentIndex={currentIndex}
-      onIndexChange={setCurrentIndex}
-      onReachEnd={loadMore}
+      loading={feedLoading}
+      onLoadMore={loadMore}
     />
   );
 }

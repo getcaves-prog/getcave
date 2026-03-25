@@ -37,6 +37,8 @@ function createMockEvent(overrides: Partial<FeedEvent> = {}): FeedEvent {
     external_url: null,
     user_id: "user-1",
     views_count: 0,
+    heat_count: 0,
+    expires_at: "2026-03-27T00:00:00Z",
     created_at: "2026-03-20T00:00:00Z",
     updated_at: "2026-03-20T00:00:00Z",
     ...overrides,

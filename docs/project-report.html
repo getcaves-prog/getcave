@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CavesApp — Reporte Técnico del Proyecto</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    color: #1a1a2e;
+    line-height: 1.5;
+    background: #fff;
+  }
+
+  /* Cover Page */
+  .cover {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+    color: white;
+    text-align: center;
+    page-break-after: always;
+  }
+
+  .cover-logo {
+    font-size: 72px;
+    font-weight: 300;
+    letter-spacing: 4px;
+    margin-bottom: 16px;
+    font-style: italic;
+  }
+
+  .cover-tagline {
+    font-size: 16px;
+    font-weight: 300;
+    color: #a0a0a0;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 60px;
+  }
+
+  .cover-title {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .cover-subtitle {
+    font-size: 14px;
+    color: #a0a0a0;
+    margin-bottom: 40px;
+  }
+
+  .cover-meta {
+    font-size: 12px;
+    color: #666;
+    line-height: 2;
+  }
+
+  .cover-meta strong { color: #a0a0a0; }
+
+  /* Table of Contents Page */
+  .toc-page-container {
+    padding: 40px 50px;
+    page-break-after: always;
+  }
+
+  /* Content Pages - flowing layout */
+  .section {
+    padding: 0 50px;
+    margin-bottom: 16px;
+  }
+
+  .section:first-of-type {
+    padding-top: 40px;
+  }
+
+  h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0a0a0a;
+    margin-bottom: 6px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #0a0a0a;
+    padding-top: 20px;
+  }
+
+  h1 .section-num {
+    color: #a0a0a0;
+    font-weight: 400;
+    margin-right: 8px;
+  }
+
+  h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-top: 16px;
+    margin-bottom: 8px;
+  }
+
+  h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    margin-top: 14px;
+    margin-bottom: 6px;
+  }
+
+  p {
+    font-size: 12px;
+    margin-bottom: 8px;
+    color: #333;
+  }
+
+  ul, ol {
+    font-size: 12px;
+    margin-left: 18px;
+    margin-bottom: 8px;
+    color: #333;
+  }
+
+  li { margin-bottom: 3px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 11px;
+    page-break-inside: avoid;
+  }
+
+  th {
+    background: #0a0a0a;
+    color: white;
+    padding: 7px 10px;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 10px;
+  }
+
+  td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #eee;
+    color: #333;
+  }
+
+  tr:nth-child(even) td { background: #f8f9fa; }
+
+  .highlight-box {
+    background: #f0f4ff;
+    border-left: 4px solid #1a1a2e;
+    padding: 12px 16px;
+    margin: 10px 0;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .highlight-box p { margin-bottom: 0; }
+
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 10px 0;
+  }
+
+  .comparison-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 14px;
+  }
+
+  .comparison-card.selected {
+    border-color: #0a0a0a;
+    background: #f8f9fa;
+  }
+
+  .comparison-card h3 {
+    margin-top: 0;
+    font-size: 14px;
+  }
+
+  .comparison-card ul {
+    font-size: 11px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-green { background: #d4edda; color: #155724; }
+  .badge-yellow { background: #fff3cd; color: #856404; }
+  .badge-blue { background: #cce5ff; color: #004085; }
+  .badge-red { background: #f8d7da; color: #721c24; }
+  .badge-gray { background: #e9ecef; color: #495057; }
+
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 10px 0;
+  }
+
+  .metric-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    page-break-inside: avoid;
+  }
+
+  .metric-card .number {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0a0a0a;
+  }
+
+  .metric-card .label {
+    font-size: 10px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  .arch-diagram {
+    background: #0a0a0a;
+    color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 10px 0;
+    font-family: monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    white-space: pre;
+    page-break-inside: avoid;
+  }
+
+  .progress-bar {
+    background: #e9ecef;
+    border-radius: 8px;
+    height: 8px;
+    margin: 6px 0 4px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #0a0a0a, #1a1a2e);
+  }
+
+  .timeline {
+    border-left: 2px solid #0a0a0a;
+    margin-left: 10px;
+    padding-left: 20px;
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 12px;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    background: #0a0a0a;
+    border-radius: 50%;
+  }
+
+  .timeline-item.done::before { background: #28a745; }
+  .timeline-item.current::before { background: #ffc107; }
+  .timeline-item.pending::before { background: #e9ecef; border: 2px solid #adb5bd; }
+
+  .timeline-item h3 { margin-top: 0; }
+  .timeline-item p { font-size: 11px; margin-bottom: 4px; }
+
+  .toc-item {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+
+  .toc-num {
+    font-weight: 600;
+    width: 30px;
+    color: #0a0a0a;
+  }
+
+  .toc-title {
+    font-size: 13px;
+    color: #333;
+  }
+
+  .toc-dots {
+    flex: 1;
+    border-bottom: 1px dotted #ccc;
+    margin: 0 8px;
+    min-width: 20px;
+  }
+
+  .toc-page {
+    font-size: 12px;
+    color: #666;
+  }
+
+  @media print {
+    table { page-break-inside: avoid; }
+    .arch-diagram { page-break-inside: avoid; }
+    .metric-grid { page-break-inside: avoid; }
+    .comparison-grid { page-break-inside: avoid; }
+    .highlight-box { page-break-inside: avoid; }
+    .timeline-item { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<div class="cover">
+  <div class="cover-logo">Caves</div>
+  <div class="cover-tagline">Descubrí lo que pasa cerca tuyo</div>
+  <div class="cover-title">Reporte Técnico del Proyecto</div>
+  <div class="cover-subtitle">Arquitectura, Decisiones y Progreso</div>
+  <div class="cover-meta">
+    <strong>Cliente:</strong> CavesApp<br>
+    <strong>Elaborado por:</strong> Craftia — Consultoría de IA y Desarrollo<br>
+    <strong>Fecha:</strong> 24 de marzo de 2026<br>
+    <strong>Horas invertidas:</strong> 8 horas<br>
+    <strong>Versión:</strong> 1.0 — MVP Fase 1
+  </div>
+</div>
+
+<!-- TABLA DE CONTENIDOS -->
+<div class="toc-page-container">
+  <h1 style="padding-top: 0;">Tabla de Contenidos</h1>
+  <div style="margin-top: 20px;">
+    <div class="toc-item"><span class="toc-num">01</span><span class="toc-title">Resumen Ejecutivo</span><span class="toc-dots"></span><span class="toc-page">3</span></div>
+    <div class="toc-item"><span class="toc-num">02</span><span class="toc-title">Descripción del Producto</span><span class="toc-dots"></span><span class="toc-page">3</span></div>
+    <div class="toc-item"><span class="toc-num">03</span><span class="toc-title">Arquitectura y Stack Tecnológico</span><span class="toc-dots"></span><span class="toc-page">4</span></div>
+    <div class="toc-item"><span class="toc-num">04</span><span class="toc-title">Supabase vs Firebase: Decisión Técnica</span><span class="toc-dots"></span><span class="toc-page">5</span></div>
+    <div class="toc-item"><span class="toc-num">05</span><span class="toc-title">Arquitectura por Features (Screaming Architecture)</span><span class="toc-dots"></span><span class="toc-page">6</span></div>
+    <div class="toc-item"><span class="toc-num">06</span><span class="toc-title">Modelo de Datos</span><span class="toc-dots"></span><span class="toc-page">7</span></div>
+    <div class="toc-item"><span class="toc-num">07</span><span class="toc-title">Estrategia de Testing</span><span class="toc-dots"></span><span class="toc-page">8</span></div>
+    <div class="toc-item"><span class="toc-num">08</span><span class="toc-title">Progreso Actual y Roadmap</span><span class="toc-dots"></span><span class="toc-page">9</span></div>
+    <div class="toc-item"><span class="toc-num">09</span><span class="toc-title">Desglose de Inversión de Tiempo</span><span class="toc-dots"></span><span class="toc-page">10</span></div>
+  </div>
+</div>
+
+<!-- 01 RESUMEN EJECUTIVO + 02 PRODUCTO -->
+<div class="section">
+  <h1><span class="section-num">01</span> Resumen Ejecutivo</h1>
+
+  <div class="highlight-box">
+    <p><strong>Caves</strong> es una plataforma de descubrimiento de eventos basada en geolocalización, orientada al mercado mexicano (demográfico 18-35 años). Los usuarios navegan flyers de eventos a pantalla completa, ordenados por proximidad — como un mapa social visual donde los eventos flotan alrededor de tu ubicación. El MVP se construye como una PWA mobile-first con Next.js 15, Supabase y un lenguaje de diseño dark-first.</p>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="number">73</div>
+      <div class="label">Archivos fuente</div>
+    </div>
+    <div class="metric-card">
+      <div class="number">168</div>
+      <div class="label">Tests unitarios</div>
+    </div>
+    <div class="metric-card">
+      <div class="number">17</div>
+      <div class="label">Specs E2E</div>
+    </div>
+    <div class="metric-card">
+      <div class="number">8h</div>
+      <div class="label">Horas invertidas</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h1><span class="section-num">02</span> Descripción del Producto</h1>
+
+  <h2>Audiencia Objetivo</h2>
+  <table>
+    <tr><th>Segmento</th><th>Descripción</th><th>Propuesta de Valor</th></tr>
+    <tr><td><strong>Asistentes</strong></td><td>Jóvenes de 18-35 años buscando vida nocturna, conciertos, ferias gastronómicas</td><td>Un swipe para ver todo lo que hay cerca esta noche</td></tr>
+    <tr><td><strong>Promotores</strong></td><td>Organizadores de eventos buscando visibilidad local</td><td>Visibilidad gratuita, segmentada por ubicación</td></tr>
+    <tr><td><strong>Venues</strong></td><td>Bares, clubs, galerías, restaurantes</td><td>Plataforma de promoción recurrente de eventos</td></tr>
+  </table>
+
+  <h2>Funcionalidades Core (MVP)</h2>
+  <table>
+    <tr><th>Funcionalidad</th><th>Estado</th><th>Descripción</th></tr>
+    <tr><td>Feed de Flyers</td><td><span class="badge badge-green">Listo</span></td><td>Grilla a pantalla completa con swipe horizontal, ordenamiento por proximidad</td></tr>
+    <tr><td>Sistema de Auth</td><td><span class="badge badge-green">Listo</span></td><td>Email/Contraseña + Google OAuth + Modo Invitado</td></tr>
+    <tr><td>Detalle del Evento</td><td><span class="badge badge-green">Listo</span></td><td>Página SSR con mapa, metadata, botón de compartir</td></tr>
+    <tr><td>Subir Flyer</td><td><span class="badge badge-green">Listo</span></td><td>Carga de imagen + geocodificación + etiquetado de categoría</td></tr>
+    <tr><td>Perfil</td><td><span class="badge badge-green">Listo</span></td><td>Perfil de usuario con gestión de eventos</td></tr>
+    <tr><td>Búsqueda por Ubicación</td><td><span class="badge badge-yellow">En progreso</span></td><td>Autocompletado de ciudad/venue con re-centrado del mapa</td></tr>
+    <tr><td>Filtro por Categoría</td><td><span class="badge badge-gray">Pendiente</span></td><td>Filtrar el feed por tipo de evento</td></tr>
+  </table>
+</div>
+
+<!-- 03 ARQUITECTURA -->
+<div class="section">
+  <h1><span class="section-num">03</span> Arquitectura y Stack Tecnológico</h1>
+
+  <h2>Stack Tecnológico</h2>
+  <table>
+    <tr><th>Capa</th><th>Tecnología</th><th>Justificación</th></tr>
+    <tr><td>Framework</td><td>Next.js 15 (App Router)</td><td>SSR/SSG híbrido, edge-ready, React Server Components</td></tr>
+    <tr><td>Lenguaje</td><td>TypeScript (strict)</td><td>Seguridad de tipos, DX, confianza en refactoring</td></tr>
+    <tr><td>Base de datos</td><td>Supabase (PostgreSQL + PostGIS)</td><td>Consultas geoespaciales nativas, potencia SQL, RLS</td></tr>
+    <tr><td>Autenticación</td><td>Supabase Auth</td><td>Integrado con la BD, compatible con RLS, soporte OAuth</td></tr>
+    <tr><td>Almacenamiento</td><td>Supabase Storage</td><td>CDN integrado, políticas de acceso, transformación de imágenes</td></tr>
+    <tr><td>Estilos</td><td>Tailwind CSS 4</td><td>Utility-first, zero-runtime, dark mode nativo</td></tr>
+    <tr><td>Animaciones</td><td>Framer Motion</td><td>Física de resortes, soporte de gestos, animaciones de layout</td></tr>
+    <tr><td>Mapas</td><td>Mapbox GL JS</td><td>Estilos personalizados, API de geocodificación, soporte 3D</td></tr>
+    <tr><td>Testing</td><td>Vitest + Playwright</td><td>Velocidad nativa de Vite, E2E a nivel de navegador</td></tr>
+    <tr><td>Deploy</td><td>Vercel (Edge)</td><td>Hosting zero-config para Next.js, CDN global</td></tr>
+  </table>
+
+  <h2>Patrón Arquitectónico: Screaming Architecture</h2>
+  <div class="arch-diagram">
+src/
+  app/                        # Next.js App Router (solo capa de ruteo)
+    auth/login/page.tsx       # Página liviana — delega a componentes del feature
+    (main)/page.tsx           # Página del Feed
+    event/[id]/page.tsx       # Detalle del evento SSR
+    api/events/route.ts       # Endpoints REST
+
+  features/                   # DOMINIOS DE NEGOCIO (el "grito")
+    feed/                     # Lo que el usuario ve: descubrimiento de flyers
+      components/             # UI: FlyerCard, SwipeContainer, FeedHeader
+      hooks/                  # Estado: useFeed, useGeolocation
+      services/               # Datos: fetchNearbyEvents
+      types/                  # Contratos: FeedEvent, FeedState
+
+    auth/                     # Flujos de autenticación
+    events/                   # Creación y gestión de eventos
+    profile/                  # Perfiles de usuario
+    search/                   # Búsqueda por ubicación y categoría
+
+  shared/                     # Concerns transversales
+    components/ui/            # Primitivos del design system
+    lib/supabase/             # Fábricas de clientes
+    lib/utils/                # Utilidades puras</div>
+
+  <div class="highlight-box">
+    <p><strong>Principio clave:</strong> Cuando abrís la carpeta <code>features/</code>, inmediatamente entendés lo que la aplicación HACE (feed, auth, eventos, perfil) — no cómo está construida (componentes, hooks, servicios). La estructura de carpetas grita el dominio de negocio.</p>
+  </div>
+</div>
+
+<!-- 04 SUPABASE VS FIREBASE -->
+<div class="section">
+  <h1><span class="section-num">04</span> Supabase vs Firebase: Decisión Técnica</h1>
+
+  <p>La elección de base de datos fue la decisión arquitectónica más crítica para Caves. El valor core de la app es el <strong>descubrimiento de eventos basado en geolocalización</strong> — lo que significa que las consultas geoespaciales no son un nice-to-have, SON el producto.</p>
+
+  <div class="comparison-grid">
+    <div class="comparison-card selected">
+      <h3>Supabase <span class="badge badge-green">Elegido</span></h3>
+      <ul style="margin-top: 8px;">
+        <li><strong>PostGIS nativo:</strong> ST_DWithin, ST_Distance, índices GIST — consultas de proximidad sub-10ms en millones de filas</li>
+        <li><strong>Potencia SQL:</strong> JOINs complejos (eventos + categorías + perfiles), agregaciones, window functions</li>
+        <li><strong>Row Level Security:</strong> Políticas auth-aware a nivel de BD — sin necesidad de middleware backend</li>
+        <li><strong>Open source:</strong> Sin vendor lock-in, auto-hosteable, ecosistema Postgres</li>
+        <li><strong>Generación de tipos:</strong> Tipos TypeScript auto-generados desde el schema</li>
+        <li><strong>Migraciones SQL reales:</strong> Versionadas, revisables, con rollback seguro</li>
+        <li><strong>Costo:</strong> Free tier generoso, pricing predecible por proyecto</li>
+      </ul>
+    </div>
+    <div class="comparison-card">
+      <h3>Firebase <span class="badge badge-red">Rechazado</span></h3>
+      <ul style="margin-top: 8px;">
+        <li><strong>Sin geo nativo:</strong> Firestore requiere workaround con GeoHash — impreciso, complejo, no puede ordenar por distancia</li>
+        <li><strong>Limitaciones NoSQL:</strong> Sin JOINs, sin agregaciones, denormalización requerida en todos lados</li>
+        <li><strong>Reglas de seguridad:</strong> Basadas en JSON, difíciles de testear, sin enforcement a nivel SQL</li>
+        <li><strong>Vendor lock:</strong> Propietario de Google, sin self-hosting, exportación de datos dolorosa</li>
+        <li><strong>Sin generación de tipos:</strong> Mantenimiento manual de tipos, riesgo de drift del schema</li>
+        <li><strong>Costo impredecible:</strong> Facturación por lectura/escritura que puede dispararse con uso intensivo de feed</li>
+        <li><strong>Servicios innecesarios:</strong> ML, analytics, messaging que no necesitamos</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>El Argumento Geoespacial (Factor Decisivo)</h2>
+  <table>
+    <tr><th>Consulta</th><th>Supabase (PostGIS)</th><th>Firebase (GeoHash)</th></tr>
+    <tr><td>Encontrar eventos dentro de 25km</td><td><code>ST_DWithin(location, point, 25000)</code> — círculo exacto, indexado</td><td>Query por rango GeoHash — aproximación rectangular, falsos positivos, post-filtrado requerido</td></tr>
+    <tr><td>Ordenar por distancia</td><td><code>ORDER BY ST_Distance(...)</code> — nativo, indexado</td><td>No es posible server-side — hay que traer todo, calcular en el cliente y ordenar</td></tr>
+    <tr><td>Filtro + geo + orden</td><td>Una sola consulta SQL con JOIN, WHERE, ORDER BY</td><td>Múltiples queries + merge en cliente + orden manual — problema N+1</td></tr>
+    <tr><td>Performance a escala</td><td>Índice GIST: O(log n) sin importar el tamaño del dataset</td><td>GeoHash: se degrada con densidad, requiere índices compuestos por filtro</td></tr>
+  </table>
+
+  <div class="highlight-box">
+    <p><strong>Veredicto:</strong> Para un producto location-first, PostGIS no es solo mejor — es otra categoría. Firebase requeriría construir un motor de consultas geográficas sobre una base de datos que no fue diseñada para eso. Supabase nos da los 30+ años de madurez geoespacial de PostgreSQL out of the box.</p>
+  </div>
+</div>
+
+<!-- 05 ARQUITECTURA POR FEATURES -->
+<div class="section">
+  <h1><span class="section-num">05</span> Arquitectura por Features — Detalle</h1>
+
+  <h2>Reglas de Aislamiento de Features</h2>
+  <ol>
+    <li><strong>Sin imports cruzados:</strong> Los features nunca importan entre sí. El código compartido vive en <code>shared/</code></li>
+    <li><strong>Server Components por defecto:</strong> Solo usar <code>"use client"</code> cuando la interactividad lo requiere</li>
+    <li><strong>Colocación:</strong> Tests, tipos y servicios viven junto al código que sirven</li>
+    <li><strong>Sin barrel exports:</strong> Importar directamente del archivo, no desde <code>index.ts</code></li>
+  </ol>
+
+  <h2>Inventario de Features</h2>
+  <table>
+    <tr><th>Feature</th><th>Componentes</th><th>Hooks</th><th>Servicios</th><th>Renderizado</th></tr>
+    <tr><td><strong>Feed</strong></td><td>FlyerFeed, FeedEmpty, FeedHeader, FlyerCard, SwipeContainer, GeolocationPrompt</td><td>useFeed, useGeolocation</td><td>feedService</td><td>Cliente (geolocation + swipe)</td></tr>
+    <tr><td><strong>Auth</strong></td><td>LoginForm, SignupForm, OAuthButton, AuthGuard</td><td>useAuth</td><td>authService</td><td>Servidor + Cliente híbrido</td></tr>
+    <tr><td><strong>Events</strong></td><td>EventDetail, EventMap, UploadForm, ImageUpload, AddressInput, CategorySelect</td><td>—</td><td>eventsService, uploadService</td><td>SSR (detalle), Cliente (upload)</td></tr>
+    <tr><td><strong>Profile</strong></td><td>ProfileCard, EditForm, AvatarUpload, UserEventsList, SignOutButton</td><td>useProfile</td><td>profileService</td><td>Servidor + Cliente híbrido</td></tr>
+    <tr><td><strong>Search</strong></td><td>SearchBar, LocationPicker, CategoryFilter</td><td>useSearch</td><td>searchService</td><td>Cliente (interactivo)</td></tr>
+  </table>
+
+  <h2>Estrategia de Renderizado</h2>
+  <table>
+    <tr><th>Ruta</th><th>Estrategia</th><th>Razón</th></tr>
+    <tr><td><code>/</code> (Feed)</td><td>Client Component</td><td>Requiere API de geolocalización + manejo de gestos táctiles</td></tr>
+    <tr><td><code>/event/[id]</code></td><td>Servidor (SSR)</td><td>Crítico para SEO — meta tags OG para compartir en redes</td></tr>
+    <tr><td><code>/upload</code></td><td>Client Component</td><td>Carga de imagen + estado de formulario + geocodificación</td></tr>
+    <tr><td><code>/auth/*</code></td><td>Servidor + Cliente</td><td>Render inicial rápido, hidratación para interacción del form</td></tr>
+    <tr><td><code>/profile</code></td><td>Servidor + Cliente</td><td>Fetch de datos estático, hidratación para acciones de edición</td></tr>
+  </table>
+
+  <h2>Flujo de Autenticación</h2>
+  <table>
+    <tr><th>Método</th><th>Flujo</th><th>Rutas Protegidas</th></tr>
+    <tr><td>Email/Contraseña</td><td>Supabase Auth → cookie de sesión → proxy valida</td><td>/upload, /profile, /profile/edit</td></tr>
+    <tr><td>Google OAuth</td><td>Supabase OAuth → callback → cookie de sesión</td><td>Igual que arriba</td></tr>
+    <tr><td>Modo Invitado</td><td>Cookie <code>guest_mode=true</code> → proxy permite acceso (24h)</td><td>Feed, Búsqueda, Detalle de Evento (solo lectura)</td></tr>
+  </table>
+</div>
+
+<!-- 06 MODELO DE DATOS -->
+<div class="section">
+  <h1><span class="section-num">06</span> Modelo de Datos</h1>
+
+  <h2>Relación de Entidades</h2>
+  <div class="arch-diagram">
+  profiles (1) ──────< events (N)     "Un usuario crea muchos eventos"
+  categories (1) ────< events (N)     "Un evento pertenece a una categoría"
+
+  ┌─────────────┐     ┌──────────────────────────────────────────┐
+  │  profiles    │     │  events                                  │
+  ├─────────────┤     ├──────────────────────────────────────────┤
+  │ id (PK/FK)  │────>│ user_id (FK)                             │
+  │ username    │     │ category_id (FK)                          │
+  │ avatar_url  │     │ title, description                        │
+  │ bio         │     │ flyer_url (Supabase Storage)              │
+  │ role        │     │ venue_name, venue_address                 │
+  │ city        │     │ location (PostGIS POINT — lng, lat)       │
+  └─────────────┘     │ date, time_start, time_end                │
+                      │ price, currency, external_url             │
+  ┌─────────────┐     │ status (draft|active|cancelled|past)      │
+  │ categories  │────>│ views_count                               │
+  ├─────────────┤     └──────────────────────────────────────────┘
+  │ id (PK)     │
+  │ name, slug  │     Índices PostGIS:
+  │ icon        │     • GIST en location → O(log n) proximidad
+  └─────────────┘     • B-tree en (status, date) → filtrado de feed</div>
+
+  <h2>Consulta Clave: Eventos Cercanos</h2>
+  <div class="arch-diagram" style="font-size: 10px;">
+  SELECT e.*, c.name AS category_name,
+         ST_Distance(e.location, ST_MakePoint(lng, lat)::geography) AS distance_m
+  FROM events e
+  JOIN categories c ON c.id = e.category_id
+  WHERE e.status = 'active'
+    AND e.date >= CURRENT_DATE
+    AND ST_DWithin(e.location, ST_MakePoint(lng, lat)::geography, 25000)
+  ORDER BY distance_m ASC, e.date ASC
+  LIMIT 20;</div>
+
+  <h2>Row Level Security (RLS)</h2>
+  <table>
+    <tr><th>Tabla</th><th>SELECT</th><th>INSERT</th><th>UPDATE</th><th>DELETE</th></tr>
+    <tr><td>profiles</td><td>Todos</td><td>Auto (trigger de auth)</td><td>Solo perfil propio</td><td>—</td></tr>
+    <tr><td>events</td><td>Solo eventos activos</td><td>Usuarios autenticados</td><td>Solo eventos propios</td><td>Solo eventos propios</td></tr>
+    <tr><td>categories</td><td>Todos</td><td>—</td><td>—</td><td>—</td></tr>
+  </table>
+
+  <h2>Buckets de Almacenamiento</h2>
+  <table>
+    <tr><th>Bucket</th><th>Acceso</th><th>Tamaño Máx.</th><th>Tipos Permitidos</th></tr>
+    <tr><td>flyers</td><td>Público (CDN)</td><td>5 MB</td><td>JPEG, PNG, WebP</td></tr>
+    <tr><td>avatars</td><td>Público (CDN)</td><td>2 MB</td><td>JPEG, PNG, WebP</td></tr>
+  </table>
+</div>
+
+<!-- 07 TESTING -->
+<div class="section">
+  <h1><span class="section-num">07</span> Estrategia de Testing</h1>
+
+  <h2>Pirámide de Testing</h2>
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="number">168</div>
+      <div class="label">Tests Unitarios (Vitest)</div>
+    </div>
+    <div class="metric-card">
+      <div class="number">17</div>
+      <div class="label">Specs E2E (Playwright)</div>
+    </div>
+    <div class="metric-card">
+      <div class="number">15</div>
+      <div class="label">Archivos de Test</div>
+    </div>
+    <div class="metric-card">
+      <div class="number">80%</div>
+      <div class="label">Cobertura Objetivo</div>
+    </div>
+  </div>
+
+  <h2>Cobertura de Tests Unitarios</h2>
+  <table>
+    <tr><th>Categoría</th><th>Archivos Testeados</th><th>Tests</th><th>Qué se Cubre</th></tr>
+    <tr><td>Utilidades</td><td>cn, format, geo</td><td>53</td><td>Merge de clases, formateo de fechas/precios, geolocalización, cálculo de distancias</td></tr>
+    <tr><td>Servicios</td><td>feed, auth, events, upload, profile</td><td>50</td><td>Llamadas API, manejo de errores, flujos de auth, parseo de form data, redirects</td></tr>
+    <tr><td>Hooks</td><td>useFeed, useAuth, useGeolocation, useProfile</td><td>40</td><td>Manejo de estado, suscripciones, paginación, manejo de permisos</td></tr>
+    <tr><td>Componentes</td><td>LoginForm, FeedHeader, FeedEmpty</td><td>25</td><td>Renderizado, interacciones de usuario, navegación, comportamiento de menú</td></tr>
+  </table>
+
+  <h2>Cobertura de Tests E2E</h2>
+  <table>
+    <tr><th>Spec</th><th>Tests</th><th>Flujos Críticos Cubiertos</th></tr>
+    <tr><td>login.spec.ts</td><td>6</td><td>Visibilidad del logo, acceso como invitado con cookie, renderizado de botones</td></tr>
+    <tr><td>feed.spec.ts</td><td>5</td><td>Carga del feed como invitado, renderizado del header, expandir/colapsar tarjetas, scroll horizontal</td></tr>
+    <tr><td>navigation.spec.ts</td><td>6</td><td>Abrir/cerrar menú, links de navegación, atajo de upload</td></tr>
+  </table>
+
+  <h2>Herramientas de Testing</h2>
+  <table>
+    <tr><th>Herramienta</th><th>Propósito</th><th>Configuración</th></tr>
+    <tr><td>Vitest 4.x</td><td>Tests unitarios y de componentes</td><td>Entorno jsdom, alias de paths, setup global</td></tr>
+    <tr><td>Testing Library</td><td>Renderizado de componentes</td><td>Soporte React 19, user-event para interacciones</td></tr>
+    <tr><td>Playwright</td><td>Testing E2E en navegador</td><td>Viewport mobile (375x812), perfil de dispositivo Pixel 5</td></tr>
+  </table>
+
+  <h2>Comandos de Test</h2>
+  <table>
+    <tr><th>Comando</th><th>Descripción</th></tr>
+    <tr><td><code>pnpm test</code></td><td>Ejecutar los 168 tests unitarios</td></tr>
+    <tr><td><code>pnpm test:watch</code></td><td>Modo watch para desarrollo</td></tr>
+    <tr><td><code>pnpm test:coverage</code></td><td>Ejecutar con reporte de cobertura V8</td></tr>
+    <tr><td><code>pnpm test:e2e</code></td><td>Ejecutar suite E2E de Playwright</td></tr>
+  </table>
+</div>
+
+<!-- 08 PROGRESO -->
+<div class="section">
+  <h1><span class="section-num">08</span> Progreso Actual y Roadmap</h1>
+
+  <h2>Fase 1 — MVP Core <span class="badge badge-green">85% Completo</span></h2>
+  <div class="progress-bar"><div class="progress-fill" style="width: 85%"></div></div>
+
+  <div class="timeline" style="margin-top: 16px;">
+    <div class="timeline-item done">
+      <h3>Setup del Proyecto e Infraestructura</h3>
+      <p>Next.js 15, Supabase, Tailwind CSS 4, pipeline de deploy en Vercel, TypeScript strict mode, path aliases, ESLint.</p>
+    </div>
+    <div class="timeline-item done">
+      <h3>Sistema de Autenticación</h3>
+      <p>Email/contraseña + Google OAuth + modo invitado. Protección de rutas basada en proxy. Manejo de sesión vía cookies SSR de Supabase.</p>
+    </div>
+    <div class="timeline-item done">
+      <h3>Schema de Base de Datos y Migraciones</h3>
+      <p>Schema PostGIS con events, profiles, categories. Índices GIST para consultas geoespaciales. Políticas RLS. Seed data de categorías.</p>
+    </div>
+    <div class="timeline-item done">
+      <h3>Feed de Flyers (Rediseño de UI)</h3>
+      <p>Grilla masonry de 3 columnas con swipe horizontal por páginas (Framer Motion). Header transparente con menú hamburguesa. Dots indicadores de página. Expansión fullscreen de poster con animaciones de resorte.</p>
+    </div>
+    <div class="timeline-item done">
+      <h3>Página de Detalle del Evento (SSR)</h3>
+      <p>Renderizado en servidor con meta tags OG. Integración con mapa. Botón de compartir. Tracking de vistas.</p>
+    </div>
+    <div class="timeline-item done">
+      <h3>Formulario de Subida de Flyer</h3>
+      <p>Carga de imagen a Supabase Storage. Geocodificación de dirección. Selección de categoría. Selector de fecha/hora. Preview antes de publicar.</p>
+    </div>
+    <div class="timeline-item done">
+      <h3>Suite de Tests</h3>
+      <p>168 tests unitarios + 17 specs E2E. Vitest + Playwright configurados. Umbral de cobertura del 80% enforced.</p>
+    </div>
+    <div class="timeline-item current">
+      <h3>Pantalla de Login (Diseño Figma)</h3>
+      <p>Diseño dark minimalista siguiendo prototipo de Figma. Botones de Invitado, Iniciar Sesión y Google. En refinamiento.</p>
+    </div>
+  </div>
+
+  <h2>Fase 2 — Pulido (Siguiente)</h2>
+  <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+  <ul style="margin-top: 8px;">
+    <li>Búsqueda de ubicación con autocompletado</li>
+    <li>Filtrado por categoría en el feed</li>
+    <li>Funcionalidad de compartir (Web Share API)</li>
+    <li>Optimización de imágenes (compresión, conversión WebP)</li>
+    <li>Estados de carga, error boundaries, estados vacíos</li>
+    <li>Manifiesto PWA + service worker</li>
+  </ul>
+
+  <h2>Fase 3 — Crecimiento (Futuro)</h2>
+  <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+  <ul style="margin-top: 8px;">
+    <li>Guardados / eventos favoritos</li>
+    <li>Dashboard de analytics de vistas</li>
+    <li>Notificaciones push para eventos guardados</li>
+    <li>Herramientas de moderación para admins</li>
+    <li>Features premium para promotores (flyers fijados, analytics)</li>
+  </ul>
+</div>
+
+<!-- 09 TIEMPO -->
+<div class="section">
+  <h1><span class="section-num">09</span> Desglose de Inversión de Tiempo</h1>
+
+  <table>
+    <tr><th>Tarea</th><th>Horas</th><th>%</th><th>Entregables</th></tr>
+    <tr><td>Setup del Proyecto y Configuración</td><td>0.5h</td><td>6%</td><td>Next.js, Supabase, Tailwind, TypeScript, ESLint, Vercel</td></tr>
+    <tr><td>Schema de BD y Migraciones</td><td>0.5h</td><td>6%</td><td>Tablas PostGIS, índices, RLS, seeds, generación de tipos</td></tr>
+    <tr><td>Sistema de Autenticación</td><td>1.0h</td><td>13%</td><td>Login, signup, OAuth, modo invitado, proxy, manejo de sesión</td></tr>
+    <tr><td>Feature del Feed (UI + Lógica)</td><td>1.5h</td><td>19%</td><td>Layout de grilla, swipe horizontal, animaciones, geolocalización</td></tr>
+    <tr><td>Feature de Eventos</td><td>1.0h</td><td>13%</td><td>Página de detalle (SSR), formulario de upload, manejo de imágenes, geocodificación</td></tr>
+    <tr><td>Feature de Perfil</td><td>0.5h</td><td>6%</td><td>Página de perfil, formulario de edición, upload de avatar, lista de eventos</td></tr>
+    <tr><td>Rediseño UI (Figma → Código)</td><td>1.0h</td><td>13%</td><td>Pantalla de login, grilla del feed, navegación del header, tema dark</td></tr>
+    <tr><td>Suite de Tests</td><td>1.5h</td><td>19%</td><td>168 tests unitarios, 17 specs E2E, configuración de CI</td></tr>
+    <tr><td>DevOps y Corrección de Bugs</td><td>0.5h</td><td>6%</td><td>Fix de Turbopack, aislamiento de lockfile, pipeline de deploy</td></tr>
+    <tr><th>Total</th><th>8.0h</th><th>100%</th><th></th></tr>
+  </table>
+
+  <h2>Métricas de Velocidad</h2>
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="number">9.1</div>
+      <div class="label">Archivos / Hora</div>
+    </div>
+    <div class="metric-card">
+      <div class="number">21</div>
+      <div class="label">Tests / Hora</div>
+    </div>
+    <div class="metric-card">
+      <div class="number">5</div>
+      <div class="label">Features / 8h</div>
+    </div>
+    <div class="metric-card">
+      <div class="number">6</div>
+      <div class="label">PRs Mergeados</div>
+    </div>
+  </div>
+
+  <div class="highlight-box" style="margin-top: 20px;">
+    <p><strong>Nota sobre Desarrollo Asistido por IA:</strong> Este proyecto aprovecha Claude Code como herramienta de pair-programming con IA para generación de código, escritura de tests y decisiones arquitectónicas. El desarrollador humano (Alvaro Sepulveda / Craftia) provee toda la dirección creativa, supervisión arquitectónica y aprobación final. La IA acelera la ejecución; la experiencia humana dirige las decisiones.</p>
+  </div>
+
+  <div style="margin-top: 30px; text-align: center; color: #999; font-size: 12px;">
+    <p>— Fin del Reporte —</p>
+    <p style="margin-top: 8px;">Elaborado por <strong style="color: #333;">Craftia</strong> — Consultoría de IA y Desarrollo</p>
+    <p>24 de marzo de 2026</p>
+  </div>
+</div>
+
+</body>
+</html>

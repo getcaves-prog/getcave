@@ -12,7 +12,7 @@ const NAV_ITEMS = [
 ] as const;
 
 function NavIcon({ icon, active }: { icon: string; active: boolean }) {
-  const color = active ? "#FF4D4D" : "#A0A0A0";
+  const color = active ? "#39FF14" : "#4A4A4A";
 
   switch (icon) {
     case "home":
@@ -88,7 +88,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#2A2A2A] bg-black/90 backdrop-blur-lg safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-cave-rock bg-cave-stone/90 backdrop-blur-lg safe-area-bottom">
       <div className="mx-auto flex max-w-md items-center justify-around py-2">
         {NAV_ITEMS.map((item) => {
           const isActive =
@@ -102,7 +102,7 @@ export function BottomNav() {
               href={item.href}
               className={cn(
                 "flex flex-col items-center gap-0.5 px-4 py-1.5 transition-colors min-w-[64px]",
-                isActive ? "text-[#FF4D4D]" : "text-[#A0A0A0]"
+                isActive ? "text-neon-green" : "text-cave-smoke"
               )}
             >
               <NavIcon icon={item.icon} active={isActive} />

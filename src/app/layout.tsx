@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk, Pinyon_Script } from "next/font/google";
+import { Inter, Space_Mono, Pinyon_Script } from "next/font/google";
+import { GrainOverlay } from "@/shared/components/layout/grain-overlay";
 import "./globals.css";
 
 const inter = Inter({
@@ -7,9 +8,10 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-const spaceGrotesk = Space_Grotesk({
+const spaceMono = Space_Mono({
+  weight: "400",
   subsets: ["latin"],
-  variable: "--font-space-grotesk",
+  variable: "--font-space-mono",
 });
 
 const pinyonScript = Pinyon_Script({
@@ -40,8 +42,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className={`${inter.variable} ${spaceGrotesk.variable} ${pinyonScript.variable}`}>
-      <body className="bg-[#0A0A0A] text-white font-[family-name:var(--font-inter)] antialiased">
+    <html lang="es" className={`${inter.variable} ${spaceMono.variable} ${pinyonScript.variable}`}>
+      <body className="bg-cave-black text-white font-[family-name:var(--font-inter)] antialiased">
+        <GrainOverlay />
         {children}
       </body>
     </html>

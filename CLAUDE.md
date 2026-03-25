@@ -11,6 +11,7 @@
 | Auth          | Supabase Auth                |
 | Storage       | Supabase Storage             |
 | Animations    | Framer Motion                |
+| Gestures      | @use-gesture/react           |
 | Maps          | Mapbox GL JS                 |
 | Unit Tests    | Vitest                       |
 | E2E Tests     | Playwright                   |
@@ -132,6 +133,32 @@ Write failing tests first (red), then implement (green), then refactor. No excep
 5. **Performance budget**: < 3s LCP on 3G, < 100KB JS per route
 6. **Images**: Always use `next/image` with responsive sizes, WebP format preferred
 7. **Dark theme**: Primary theme. Light mode is a future consideration.
+
+## Visual Identity — "Punk Cave" (V2)
+
+The app follows the "Punk Cave" aesthetic. See `SPEC-V2.md` for full details.
+
+### Palette Rules
+
+- **Background**: Deep blacks (`#050505` primary, `#0A0A0A` elevated)
+- **Neon accents**: Used ONLY for interactive elements — never for backgrounds or large surfaces
+  - `--neon-green` (#39FF14): Primary accent — CTAs, active states, focus rings
+  - `--neon-orange` (#FF6B2B): Heat/calor system, warnings
+  - `--neon-pink` (#FF2D7B): Destructive actions, notifications
+- **Grain texture**: Subtle SVG noise overlay on all pages (via `GrainOverlay` component)
+
+### Typography Rules
+
+- **Headings / UI labels**: `Space Mono` (monospace, terminal aesthetic)
+- **Body text**: `Inter` (clean readability)
+- **Logo**: `Pinyon Script` (keep as-is, never change)
+
+### Animation Rules
+
+- All animations use Framer Motion spring physics
+- Always respect `prefers-reduced-motion` — provide instant fallbacks
+- Canvas gestures (pan, zoom, pinch) handled by `@use-gesture/react`
+- Heat effects: glow + scale on double-tap, never block interaction
 
 ## Environment
 
