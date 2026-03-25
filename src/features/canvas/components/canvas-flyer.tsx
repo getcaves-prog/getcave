@@ -1,40 +1,51 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import Image from "next/image";
-import type { Flyer } from "../types/canvas.types";
+import type { LayoutFlyer } from "../types/canvas.types";
+
+const DOUBLE_TAP_DELAY = 300;
 
 interface CanvasFlyerProps {
-  flyer: Flyer;
+  flyer: LayoutFlyer;
+  onDoubleTap: () => void;
 }
 
-export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
-  const [selected, setSelected] = useState(false);
+export function CanvasFlyer({ flyer, onDoubleTap }: CanvasFlyerProps) {
   const [imageError, setImageError] = useState(false);
+  const lastTapRef = useRef(0);
+
+  const handleClick = useCallback(() => {
+    const now = Date.now();
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      lastTapRef.current = 0;
+      onDoubleTap();
+    } else {
+      lastTapRef.current = now;
+    }
+  }, [onDoubleTap]);
 
   return (
     <div
-      className="absolute cursor-pointer group"
+      className="absolute group transition-transform duration-200 hover:z-10 hover:scale-[1.02]"
       style={{
-        left: flyer.canvas_x,
-        top: flyer.canvas_y,
-        width: flyer.width,
-        height: flyer.height,
-        transform: `rotate(${flyer.rotation}deg)`,
+        left: flyer.layout_x,
+        top: flyer.layout_y,
+        width: flyer.layout_width,
+        height: flyer.layout_height,
       }}
-      onClick={() => setSelected(!selected)}
+      onClick={handleClick}
     >
       <div
         className={`
-          relative w-full h-full rounded-sm overflow-hidden
-          border-2 transition-all duration-200
-          ${selected ? "border-neon-green shadow-[0_0_20px_rgba(57,255,20,0.4)]" : "border-cave-ash"}
-          group-hover:border-cave-smoke group-hover:shadow-[0_0_12px_rgba(57,255,20,0.2)]
+          relative w-full h-full overflow-hidden
+          border transition-all duration-200
+          border-cave-ash/60
+          group-hover:border-cave-smoke group-hover:shadow-[0_0_10px_rgba(57,255,20,0.15)]
         `}
         style={{
-          boxShadow: selected
-            ? "0 0 20px rgba(57, 255, 20, 0.4), 0 8px 32px rgba(0, 0, 0, 0.6)"
-            : "0 4px 16px rgba(0, 0, 0, 0.5)",
+          boxShadow:
+            "0 2px 8px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255,255,255,0.03)",
         }}
       >
         {imageError ? (
@@ -48,7 +59,7 @@ export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
             src={flyer.image_url}
             alt={flyer.title ?? "Event flyer"}
             fill
-            sizes="280px"
+            sizes={`${flyer.layout_width}px`}
             className="object-cover"
             onError={() => setImageError(true)}
             unoptimized
@@ -57,10 +68,15 @@ export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
 
         {/* Title overlay at the bottom */}
         {flyer.title && !imageError && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-            <p className="text-cave-white text-xs font-mono truncate">{flyer.title}</p>
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 pt-6">
+            <p className="text-cave-white text-[10px] font-mono truncate leading-tight">
+              {flyer.title}
+            </p>
           </div>
         )}
+
+        {/* Subtle worn-poster edge effect */}
+        <div className="absolute inset-0 pointer-events-none border border-white/[0.02]" />
       </div>
     </div>
   );
