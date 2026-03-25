@@ -1,16 +1,16 @@
 /**
  * Flyer sizing constants for FlyerBoard
- * All flyers maintain a 2:3 portrait aspect ratio
+ * All flyers maintain a tall portrait aspect ratio (1:3)
  */
 
 export const FLYER_SIZES = {
-  mobile: { width: 120, height: 180 },
-  desktop: { width: 180, height: 270 },
+  mobile: { width: 100, height: 300 },
+  desktop: { width: 140, height: 420 },
 } as const;
 
 export const FLYER_GAP = {
-  mobile: { x: 16, y: 24 },
-  desktop: { x: 24, y: 32 },
+  mobile: { x: 20, y: 40 },
+  desktop: { x: 30, y: 60 },
 } as const;
 
 export const FLYER_OFFSET = {
@@ -24,11 +24,11 @@ export const FLYER_ROTATION = {
 } as const;
 
 export const CARDS_PER_ROW = {
-  mobile: 4,
-  desktop: 6,
+  mobile: 3,
+  desktop: 5,
 } as const;
 
 export const BREAKPOINT_MOBILE = 768;
 
-/** Aspect ratio: width / height = 2/3 */
-export const FLYER_ASPECT_RATIO = 2 / 3;
+/** Aspect ratio: width / height = 1:3 (tall) */
+export const FLYER_ASPECT_RATIO = 1 / 3;

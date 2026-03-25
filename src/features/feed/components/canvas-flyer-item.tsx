@@ -113,7 +113,7 @@ export function CanvasFlyerItem({ event, index, isMobile, onTap, onDoubleTap }: 
         style={{
           width: isMobile ? `${FLYER_SIZES.mobile.width}px` : `${FLYER_SIZES.desktop.width}px`,
           height: isMobile ? `${FLYER_SIZES.mobile.height}px` : `${FLYER_SIZES.desktop.height}px`,
-          aspectRatio: "2/3",
+          aspectRatio: "1/3",
           cursor: "pointer",
         }}
         onMouseEnter={() => !isMobile && setIsHovered(true)}
