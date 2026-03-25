@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { FLYER_SIZES, BREAKPOINT_MOBILE } from "../constants/flyer";
 import type { PositionedEvent } from "../types/feed.types";
 
 interface FlyerBoardItemProps {
@@ -25,7 +26,10 @@ export function FlyerBoardItem({ event, index, onTap, onDoubleTap }: FlyerBoardI
 
   // Detect mobile on mount
   useEffect(() => {
-    setIsMobile(window.matchMedia("(max-width: 768px)").matches);
+    const check = () => setIsMobile(window.innerWidth < BREAKPOINT_MOBILE);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
   // 3D parallax motion values (desktop only)
@@ -107,8 +111,10 @@ export function FlyerBoardItem({ event, index, onTap, onDoubleTap }: FlyerBoardI
     >
       <motion.div
         ref={cardRef}
-        className="relative w-[140px] h-[200px] sm:w-[180px] sm:h-[260px] overflow-hidden rounded-lg"
+        className="relative overflow-hidden rounded-lg"
         style={{
+          width: isMobile ? FLYER_SIZES.mobile.width : FLYER_SIZES.desktop.width,
+          height: isMobile ? FLYER_SIZES.mobile.height : FLYER_SIZES.desktop.height,
           perspective: 800,
           rotateX: isMobile ? 0 : rotateX,
           rotateY: isMobile ? 0 : rotateY,
@@ -138,8 +144,8 @@ export function FlyerBoardItem({ event, index, onTap, onDoubleTap }: FlyerBoardI
             alt={event.title}
             fill
             className="object-cover"
-            sizes="(max-width: 640px) 140px, 180px"
-            priority={index < 6}
+            sizes={isMobile ? `${FLYER_SIZES.mobile.width}px` : `${FLYER_SIZES.desktop.width}px`}
+            priority={index < 12}
           />
 
           {/* Gradient overlay */}
