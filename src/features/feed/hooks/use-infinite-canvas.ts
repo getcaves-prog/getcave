@@ -119,9 +119,8 @@ export function useInfiniteCanvas() {
 
   // Mouse/Touch handlers
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    // Only left click, or spacebar+click for hand tool
+    // Only left click
     if (e.button !== 0) return;
-    if (!isSpacePressed && e.target !== e.currentTarget) return;
     
     isDraggingRef.current = true;
     setIsDragging(true);
@@ -133,9 +132,7 @@ export function useInfiniteCanvas() {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
-    
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [isSpacePressed]);
+  }, []);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!isDraggingRef.current || !lastPosRef.current) return;
@@ -173,8 +170,6 @@ export function useInfiniteCanvas() {
     isDraggingRef.current = false;
     setIsDragging(false);
     lastPosRef.current = null;
-    
-    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
   }, []);
 
   // Wheel zoom with cursor position as anchor

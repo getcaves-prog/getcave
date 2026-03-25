@@ -126,6 +126,7 @@ export function FlyerBoard({ events, loading }: FlyerBoardProps) {
 
       <InfiniteCanvas
         events={positionedEvents}
+        isMobile={isMobile}
         onFlyerTap={handleFlyerTap}
         onFlyerDoubleTap={handleFlyerDoubleTap}
       />

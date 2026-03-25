@@ -8,12 +8,14 @@ import type { PositionedEvent } from "../types/feed.types";
 
 interface InfiniteCanvasProps {
   events: PositionedEvent[];
+  isMobile: boolean;
   onFlyerTap: (eventId: string) => void;
   onFlyerDoubleTap?: (eventId: string) => void;
 }
 
 export function InfiniteCanvas({
   events,
+  isMobile,
   onFlyerTap,
   onFlyerDoubleTap,
 }: InfiniteCanvasProps) {
@@ -114,6 +116,7 @@ export function InfiniteCanvas({
                 key={event.id}
                 event={event}
                 index={index}
+                isMobile={isMobile}
                 onTap={onFlyerTap}
                 onDoubleTap={onFlyerDoubleTap}
               />
