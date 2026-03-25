@@ -22,4 +22,5 @@ export interface PositionedEvent extends FeedEvent {
   x: number;
   y: number;
   rotation: number;
+  scale?: number;
 }
