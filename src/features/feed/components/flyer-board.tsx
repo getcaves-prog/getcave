@@ -4,6 +4,14 @@ import { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import { useCanvas } from "../hooks/use-canvas";
 import { FlyerBoardCanvas } from "./flyer-board-canvas";
 import { FlyerBoardOverlay } from "./flyer-board-overlay";
+import {
+  FLYER_SIZES,
+  FLYER_GAP,
+  FLYER_OFFSET,
+  FLYER_ROTATION,
+  CARDS_PER_ROW,
+  BREAKPOINT_MOBILE,
+} from "../constants/flyer";
 import type { FeedEvent, PositionedEvent } from "../types/feed.types";
 
 interface FlyerBoardProps {
@@ -33,17 +41,21 @@ function seededRandom(seed: string): () => number {
 /**
  * Digital Board Layout - Distributes flyers in a scattered 2D space
  * Creates an organic, pinboard-like arrangement
+ * Flyers maintain 2:3 portrait aspect ratio
  */
 function calculateFlyerPositions(
   events: FeedEvent[],
-  _containerWidth: number
+  isMobile: boolean
 ): PositionedEvent[] {
-  const cardWidth = 140;
-  const cardHeight = 200;
-  const gapX = 30;
-  const gapY = 40;
-  const cardsPerRow = 6; // Wide board layout
-  const boardWidth = cardsPerRow * (cardWidth + gapX);
+  const { width: cardWidth, height: cardHeight } = isMobile
+    ? FLYER_SIZES.mobile
+    : FLYER_SIZES.desktop;
+  const { x: gapX, y: gapY } = isMobile ? FLYER_GAP.mobile : FLYER_GAP.desktop;
+  const { x: maxOffsetX, y: maxOffsetY } = isMobile
+    ? FLYER_OFFSET.mobile
+    : FLYER_OFFSET.desktop;
+  const maxRotation = isMobile ? FLYER_ROTATION.mobile : FLYER_ROTATION.desktop;
+  const cardsPerRow = isMobile ? CARDS_PER_ROW.mobile : CARDS_PER_ROW.desktop;
 
   return events.map((event, index) => {
     const rng = seededRandom(event.id);
@@ -59,12 +71,12 @@ function calculateFlyerPositions(
     const baseY = row * (cardHeight + gapY);
 
     // Add organic randomness
-    const offsetX = (rng() - 0.5) * 60; // -30 to +30
-    const offsetY = (rng() - 0.5) * 40; // -20 to +20
-    const rotation = (rng() - 0.5) * 8; // -4 to +4 degrees
+    const offsetX = (rng() - 0.5) * maxOffsetX * 2;
+    const offsetY = (rng() - 0.5) * maxOffsetY * 2;
+    const rotation = (rng() - 0.5) * maxRotation * 2;
 
-    // Random scale variation for depth effect (0.9 to 1.1)
-    const scale = 0.9 + rng() * 0.2;
+    // Subtle scale variation for depth effect (0.95 to 1.05)
+    const scale = 0.95 + rng() * 0.1;
 
     return {
       ...event,
@@ -100,18 +112,20 @@ export function FlyerBoard({ events, loading, onLoadMore }: FlyerBoardProps) {
   }, []);
 
   const positionedEvents = useMemo(
-    () => calculateFlyerPositions(events, isMobile ? 375 : window.innerWidth),
+    () => calculateFlyerPositions(events, isMobile),
     [events, isMobile]
   );
 
   // Calculate board dimensions for infinite loading
   const boardHeight = useMemo(() => {
-    const cardHeight = 200;
-    const gapY = 40;
-    const cardsPerRow = 6;
+    const { height: cardHeight } = isMobile
+      ? FLYER_SIZES.mobile
+      : FLYER_SIZES.desktop;
+    const { y: gapY } = isMobile ? FLYER_GAP.mobile : FLYER_GAP.desktop;
+    const cardsPerRow = isMobile ? CARDS_PER_ROW.mobile : CARDS_PER_ROW.desktop;
     const totalRows = Math.ceil(events.length / cardsPerRow);
     return totalRows * (cardHeight + gapY);
-  }, [events.length]);
+  }, [events.length, isMobile]);
 
   // Load more events when user pans near edges
   useEffect(() => {
