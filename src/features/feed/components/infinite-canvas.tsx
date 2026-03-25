@@ -87,56 +87,45 @@ export function InfiniteCanvas({
     <div
       ref={containerRef}
       className="relative h-full w-full overflow-hidden bg-cave-dark"
-      style={{ touchAction: "none" }}
+      style={{ touchAction: "none", cursor: cursorStyle }}
+      {...handlers}
     >
-      {/* Canvas container - captures all pointer events */}
-      <div
-        className="absolute inset-0"
+      {/* Transform layer */}
+      <motion.div
+        className="absolute origin-top-left will-change-transform"
         style={{
-          cursor: cursorStyle,
-          touchAction: "none",
-          userSelect: "none",
-          WebkitUserSelect: "none",
+          x: springX,
+          y: springY,
+          scale: springScale,
         }}
-        {...handlers}
       >
-        {/* Transform layer */}
-        <motion.div
-          className="absolute origin-top-left will-change-transform"
-          style={{
-            x: springX,
-            y: springY,
-            scale: springScale,
-          }}
-        >
-          {/* Events layer */}
-          <div className="relative">
-            {events.map((event, index) => (
-              <CanvasFlyerItem
-                key={event.id}
-                event={event}
-                index={index}
-                isMobile={isMobile}
-                onTap={onFlyerTap}
-                onDoubleTap={onFlyerDoubleTap}
-              />
-            ))}
-          </div>
-        </motion.div>
+        {/* Events layer */}
+        <div className="relative">
+          {events.map((event, index) => (
+            <CanvasFlyerItem
+              key={event.id}
+              event={event}
+              index={index}
+              isMobile={isMobile}
+              onTap={onFlyerTap}
+              onDoubleTap={onFlyerDoubleTap}
+            />
+          ))}
+        </div>
+      </motion.div>
 
-        {/* Grid pattern for depth perception */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `
+      {/* Grid pattern for depth perception */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage: `
               linear-gradient(rgba(57, 255, 20, 0.5) 1px, transparent 1px),
               linear-gradient(90deg, rgba(57, 255, 20, 0.5) 1px, transparent 1px)
             `,
-            backgroundSize: `${gridSize}px ${gridSize}px`,
-            backgroundPosition: `${gridOffsetX}px ${gridOffsetY}px`,
-          }}
-        />
-      </div>
+          backgroundSize: `${gridSize}px ${gridSize}px`,
+          backgroundPosition: `${gridOffsetX}px ${gridOffsetY}px`,
+        }}
+      />
 
       {/* Hand cursor hint */}
       {showHandCursor && !isDragging && (
