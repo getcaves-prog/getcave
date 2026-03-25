@@ -157,6 +157,42 @@ export type Database = {
           },
         ]
       }
+      flyers: {
+        Row: {
+          canvas_x: number
+          canvas_y: number
+          created_at: string
+          height: number
+          id: string
+          image_url: string
+          rotation: number
+          title: string | null
+          width: number
+        }
+        Insert: {
+          canvas_x?: number
+          canvas_y?: number
+          created_at?: string
+          height?: number
+          id?: string
+          image_url: string
+          rotation?: number
+          title?: string | null
+          width?: number
+        }
+        Update: {
+          canvas_x?: number
+          canvas_y?: number
+          created_at?: string
+          height?: number
+          id?: string
+          image_url?: string
+          rotation?: number
+          title?: string | null
+          width?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
