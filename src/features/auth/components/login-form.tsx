@@ -9,7 +9,7 @@ export function LoginForm() {
 
   const handleGuestAccess = () => {
     document.cookie = "guest_mode=true; path=/; max-age=86400";
-    router.push("/");
+    window.location.href = "/";
   };
 
   const handleGoogleLogin = async () => {

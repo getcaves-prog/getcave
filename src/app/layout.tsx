@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Mono, Pinyon_Script } from "next/font/google";
-import { GrainOverlay } from "@/shared/components/layout/grain-overlay";
 import "./globals.css";
 
 const inter = Inter({
@@ -44,7 +43,6 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${inter.variable} ${spaceMono.variable} ${pinyonScript.variable}`}>
       <body className="bg-cave-black text-white font-[family-name:var(--font-inter)] antialiased">
-        <GrainOverlay />
         {children}
       </body>
     </html>
