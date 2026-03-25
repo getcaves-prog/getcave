@@ -3,13 +3,7 @@
 import { useMemo, useCallback, useState, useEffect } from "react";
 import { InfiniteCanvas } from "./infinite-canvas";
 import { FlyerBoardOverlay } from "./flyer-board-overlay";
-import {
-  FLYER_SIZES,
-  FLYER_GAP,
-  FLYER_OFFSET,
-  FLYER_ROTATION,
-  CARDS_PER_ROW,
-} from "../constants/flyer";
+import { FLYER_SIZES, FLYER_GAP, FLYER_OFFSET, FLYER_ROTATION, CARDS_PER_ROW } from "../constants/flyer";
 import type { FeedEvent, PositionedEvent } from "../types/feed.types";
 
 interface FlyerBoardProps {
@@ -85,20 +79,12 @@ export function FlyerBoard({ events, loading }: FlyerBoardProps) {
     [events, isMobile]
   );
 
-  // Find focused event
   const focusedEvent = useMemo(
     () => events.find((e) => e.id === focusedFlyer) ?? null,
     [events, focusedFlyer]
   );
 
   const handleFlyerTap = useCallback(
-    (eventId: string) => {
-      setFocusedFlyer(eventId);
-    },
-    []
-  );
-
-  const handleFlyerDoubleTap = useCallback(
     (eventId: string) => {
       setFocusedFlyer(eventId);
     },
@@ -115,22 +101,7 @@ export function FlyerBoard({ events, loading }: FlyerBoardProps) {
         events={positionedEvents}
         isMobile={isMobile}
         onFlyerTap={handleFlyerTap}
-        onFlyerDoubleTap={handleFlyerDoubleTap}
       />
-
-      {/* Loading indicator */}
-      {loading && (
-        <div className="absolute bottom-24 left-1/2 z-20 -translate-x-1/2 pointer-events-none">
-          <div className="flex items-center gap-2 rounded-full bg-cave-dark/90 px-4 py-2 text-xs text-cave-fog backdrop-blur-sm border border-cave-rock">
-            <div className="w-2 h-2 rounded-full bg-neon-green animate-pulse" />
-            <span className="font-[family-name:var(--font-space-mono)]">
-              Cargando más eventos...
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Expanded flyer overlay */}
       <FlyerBoardOverlay event={focusedEvent} onClose={clearFocus} />
     </div>
   );
