@@ -1,14 +1,15 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { FLYER_SIZES, BREAKPOINT_MOBILE } from "../constants/flyer";
+import { FLYER_SIZES } from "../constants/flyer";
 import type { PositionedEvent } from "../types/feed.types";
 
 interface CanvasFlyerItemProps {
   event: PositionedEvent;
   index: number;
+  isMobile: boolean;
   onTap: (eventId: string) => void;
   onDoubleTap?: (eventId: string) => void;
 }
@@ -16,21 +17,12 @@ interface CanvasFlyerItemProps {
 const STAGGER_DELAY = 0.03;
 const DRAG_THRESHOLD = 5;
 
-export function CanvasFlyerItem({ event, index, onTap, onDoubleTap }: CanvasFlyerItemProps) {
-  const [isMobile, setIsMobile] = useState(false);
+export function CanvasFlyerItem({ event, index, isMobile, onTap, onDoubleTap }: CanvasFlyerItemProps) {
   const [isHovered, setIsHovered] = useState(false);
   const lastTapRef = useRef(0);
   const startPosRef = useRef<{ x: number; y: number } | null>(null);
   const isDraggingRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Detect mobile
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < BREAKPOINT_MOBILE);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     // Only handle if it's a direct touch on the flyer
