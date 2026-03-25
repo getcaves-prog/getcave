@@ -50,7 +50,7 @@ export function FeedEmpty() {
                         duration: 0.3,
                         ease: [0.25, 0.46, 0.45, 0.94],
                       }}
-                      whileTap={{ scale: 0.93, brightness: 1.2 }}
+                      whileTap={{ scale: 0.93 }}
                       onClick={() => setExpanded(globalIndex)}
                       className="rounded bg-[#111] transition-shadow active:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
                     />
