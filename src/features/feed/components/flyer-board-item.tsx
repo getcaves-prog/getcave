@@ -85,6 +85,8 @@ export function FlyerBoardItem({ event, index, onTap, onDoubleTap }: FlyerBoardI
     }, DOUBLE_TAP_THRESHOLD);
   }, [event.id, onTap, onDoubleTap]);
 
+  const baseScale = event.scale ?? 1;
+
   return (
     <motion.div
       className="absolute cursor-pointer"
@@ -93,8 +95,8 @@ export function FlyerBoardItem({ event, index, onTap, onDoubleTap }: FlyerBoardI
         top: event.y,
         rotate: event.rotation,
       }}
-      initial={{ scale: 0, opacity: 0, z: -100 }}
-      animate={{ scale: 1, opacity: 1, z: 0 }}
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: baseScale, opacity: 1 }}
       transition={{
         type: "spring",
         stiffness: 260,
