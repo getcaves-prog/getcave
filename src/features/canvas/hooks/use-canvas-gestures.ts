@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useGesture } from "@use-gesture/react";
 import { useSpring } from "framer-motion";
 import { CANVAS_LIMITS } from "../types/canvas.types";
@@ -11,6 +11,8 @@ function clampScale(scale: number): number {
 }
 
 export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
+  const [isDragging, setIsDragging] = useState(false);
+
   const transformRef = useRef<CanvasTransform>({
     x: initialTransform?.x ?? 0,
     y: initialTransform?.y ?? 0,
@@ -56,8 +58,10 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
 
   const bind = useGesture(
     {
-      onDrag: ({ delta: [dx, dy], pinching }) => {
+      onDrag: ({ delta: [dx, dy], pinching, first, last }) => {
         if (pinching) return;
+        if (first) setIsDragging(true);
+        if (last) setIsDragging(false);
         updateTransform({
           x: transformRef.current.x + dx,
           y: transformRef.current.y + dy,
@@ -91,6 +95,7 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
     springY,
     springScale,
     transformRef,
+    isDragging,
     bind,
     jumpTo,
   };
