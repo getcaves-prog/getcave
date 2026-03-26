@@ -175,7 +175,7 @@ export function ProfileEditModal({ onBack, onClose }: ProfileEditModalProps) {
 
   return (
     <motion.div
-      className="relative z-10 flex flex-col w-full max-w-[420px] max-h-[85vh] overflow-y-auto rounded-2xl bg-cave-rock border border-cave-ash p-6 scrollbar-hide"
+      className="relative z-10 flex flex-col w-full max-w-[380px] max-h-[70vh] overflow-y-auto rounded-2xl bg-cave-rock border border-cave-ash p-5 scrollbar-hide"
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.9, opacity: 0 }}
