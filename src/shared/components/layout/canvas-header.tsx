@@ -51,18 +51,14 @@ export function CanvasHeader() {
           Caves
         </h1>
 
-        {/* Right: Upload button (auth only) */}
-        {user ? (
-          <button
-            onClick={handleUploadClick}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-neon-green text-cave-black font-bold text-xl leading-none"
-            aria-label="Upload flyer"
-          >
-            +
-          </button>
-        ) : (
-          <div className="w-10 h-10" aria-hidden="true" />
-        )}
+        {/* Right: Upload button */}
+        <button
+          onClick={handleUploadClick}
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-neon-green text-cave-black font-bold text-xl leading-none"
+          aria-label="Upload flyer"
+        >
+          +
+        </button>
       </header>
 
       <SlideMenu

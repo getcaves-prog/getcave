@@ -1,40 +1,25 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import type { LayoutFlyer } from "../types/canvas.types";
 
-const DOUBLE_TAP_DELAY = 300;
-
 interface CanvasFlyerProps {
   flyer: LayoutFlyer;
-  onDoubleTap: () => void;
 }
 
-export function CanvasFlyer({ flyer, onDoubleTap }: CanvasFlyerProps) {
+export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
   const [imageError, setImageError] = useState(false);
-  const lastTapRef = useRef(0);
-
-  const handleClick = useCallback(() => {
-    const now = Date.now();
-    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
-      lastTapRef.current = 0;
-      onDoubleTap();
-    } else {
-      lastTapRef.current = now;
-    }
-  }, [onDoubleTap]);
 
   return (
     <div
-      className="absolute group transition-transform duration-200 hover:z-10 hover:scale-[1.02]"
+      className="absolute pointer-events-none select-none"
       style={{
         left: flyer.layout_x,
         top: flyer.layout_y,
         width: flyer.layout_width,
         height: flyer.layout_height,
       }}
-      onClick={handleClick}
     >
       <div
         className={`
@@ -60,7 +45,8 @@ export function CanvasFlyer({ flyer, onDoubleTap }: CanvasFlyerProps) {
             alt={flyer.title ?? "Event flyer"}
             fill
             sizes={`${flyer.layout_width}px`}
-            className="object-cover"
+            className="object-cover pointer-events-none"
+            draggable={false}
             onError={() => setImageError(true)}
             unoptimized
           />
