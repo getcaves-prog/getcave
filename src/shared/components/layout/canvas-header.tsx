@@ -16,6 +16,10 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleUploadClick = () => {
+    if (!user) {
+      window.location.href = "/auth/signup";
+      return;
+    }
     alert("Coming soon");
   };
 
