@@ -1,0 +1,140 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import {
+  getUsers,
+  updateUserRole,
+} from "@/features/admin/services/admin.service";
+import type { Profile, UserRole } from "@/features/admin/types/admin.types";
+
+const ROLES: UserRole[] = ["admin", "user", "lector"];
+
+export function UserTable() {
+  const [users, setUsers] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const data = await getUsers();
+      setUsers(data);
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleRoleChange = async (userId: string, role: UserRole) => {
+    try {
+      await updateUserRole(userId, role);
+      await fetchUsers();
+    } catch (err) {
+      console.error("Failed to update role:", err);
+    }
+  };
+
+  return (
+    <div>
+      <h2 className="mb-6 font-[family-name:var(--font-space-mono)] text-lg text-cave-white">
+        User Management
+      </h2>
+
+      <div className="overflow-x-auto rounded-xl border border-cave-ash">
+        <table className="w-full min-w-[540px]">
+          <thead>
+            <tr className="border-b border-cave-ash bg-cave-stone">
+              <th className="px-4 py-3 text-left font-[family-name:var(--font-space-mono)] text-xs tracking-wider text-cave-fog uppercase">
+                Username
+              </th>
+              <th className="px-4 py-3 text-left font-[family-name:var(--font-space-mono)] text-xs tracking-wider text-cave-fog uppercase">
+                City
+              </th>
+              <th className="px-4 py-3 text-left font-[family-name:var(--font-space-mono)] text-xs tracking-wider text-cave-fog uppercase">
+                Role
+              </th>
+              <th className="px-4 py-3 text-left font-[family-name:var(--font-space-mono)] text-xs tracking-wider text-cave-fog uppercase">
+                Created
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="px-4 py-8 text-center text-cave-fog"
+                >
+                  Loading...
+                </td>
+              </tr>
+            ) : users.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="px-4 py-8 text-center text-cave-fog"
+                >
+                  No users found
+                </td>
+              </tr>
+            ) : (
+              users.map((user) => (
+                <tr
+                  key={user.id}
+                  className="border-b border-cave-ash last:border-0 transition-colors hover:bg-cave-stone/50"
+                >
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      {user.avatar_url ? (
+                        <img
+                          src={user.avatar_url}
+                          alt={user.username}
+                          className="h-8 w-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cave-rock font-[family-name:var(--font-space-mono)] text-xs text-cave-fog">
+                          {user.username[0]?.toUpperCase() ?? "?"}
+                        </div>
+                      )}
+                      <span className="text-sm text-cave-white">
+                        {user.username}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-cave-fog">
+                    {user.city ?? "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={user.role}
+                      onChange={(e) =>
+                        handleRoleChange(
+                          user.id,
+                          e.target.value as UserRole
+                        )
+                      }
+                      className="rounded-lg border border-cave-ash bg-cave-rock px-2 py-1 font-[family-name:var(--font-space-mono)] text-xs text-cave-white outline-none focus:border-cave-fog"
+                    >
+                      {ROLES.map((role) => (
+                        <option key={role} value={role}>
+                          {role}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-4 py-3 font-[family-name:var(--font-space-mono)] text-xs text-cave-fog">
+                    {new Date(user.created_at).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

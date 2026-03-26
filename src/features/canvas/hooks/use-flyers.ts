@@ -1,27 +1,66 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getFlyers } from "../services/canvas.service";
+import { getFlyers, getNearbyFlyers } from "../services/canvas.service";
+import { useLocationStore } from "@/shared/stores/location.store";
 import type { Flyer } from "../types/canvas.types";
+
+const MIN_NEARBY_RESULTS = 10;
+const EXPANDED_RADIUS_KM = 200;
+const DEFAULT_RADIUS_KM = 50;
 
 export function useFlyers() {
   const [flyers, setFlyers] = useState<Flyer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const latitude = useLocationStore((s) => s.latitude);
+  const longitude = useLocationStore((s) => s.longitude);
+  const locationLoading = useLocationStore((s) => s.loading);
+
   useEffect(() => {
+    // Wait for geolocation to resolve before fetching
+    if (locationLoading) return;
+
     let cancelled = false;
 
     async function fetchFlyers() {
+      setLoading(true);
+      setError(null);
+
       try {
-        const data = await getFlyers();
+        let data: Flyer[];
+
+        if (latitude !== null && longitude !== null) {
+          // Try nearby with default radius first
+          data = await getNearbyFlyers(latitude, longitude, DEFAULT_RADIUS_KM);
+
+          // If too few results, expand radius to cover all of Nuevo Leon
+          if (data.length < MIN_NEARBY_RESULTS) {
+            data = await getNearbyFlyers(
+              latitude,
+              longitude,
+              EXPANDED_RADIUS_KM
+            );
+          }
+
+          // If still no results, fallback to all flyers
+          if (data.length === 0) {
+            data = await getFlyers();
+          }
+        } else {
+          // No location available — fetch all flyers
+          data = await getFlyers();
+        }
+
         if (!cancelled) {
           setFlyers(data);
-          setError(null);
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to fetch flyers");
+          setError(
+            err instanceof Error ? err.message : "Failed to fetch flyers"
+          );
         }
       } finally {
         if (!cancelled) {
@@ -35,7 +74,7 @@ export function useFlyers() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [latitude, longitude, locationLoading]);
 
   return { flyers, loading, error };
 }
