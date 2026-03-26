@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { getLocationByIp } from "@/shared/lib/geocoding/ip-location";
 
 const SESSION_KEY = "cavesapp:geolocation";
 
@@ -62,17 +63,17 @@ export function useGeolocation() {
     };
   });
 
-  const requestLocation = useCallback(() => {
+  const requestBrowserLocation = useCallback(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setState((prev) => ({
         ...prev,
         loading: false,
-        error: "Geolocation is not supported by this browser.",
+        error: prev.latitude === null
+          ? "Geolocation is not supported by this browser."
+          : null,
       }));
       return;
     }
-
-    setState((prev) => ({ ...prev, loading: true, error: null }));
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -87,11 +88,13 @@ export function useGeolocation() {
           error: null,
         });
       },
-      (err) => {
+      () => {
+        // Browser geolocation failed/denied — keep IP location if we have one
         setState((prev) => ({
           ...prev,
           loading: false,
-          error: err.message,
+          // Only set error if we have NO location at all
+          error: prev.latitude === null ? "Location unavailable" : null,
         }));
       },
       {
@@ -105,16 +108,42 @@ export function useGeolocation() {
   useEffect(() => {
     const stored = getStoredLocation();
 
-    if (!stored) {
-      requestLocation();
+    // If we already have a stored (precise) location, skip IP lookup
+    if (stored) return;
+
+    let cancelled = false;
+
+    async function resolveLocation() {
+      // Step 1: Try IP geolocation (instant, no permission)
+      const ipResult = await getLocationByIp();
+
+      if (cancelled) return;
+
+      if (ipResult) {
+        storeLocation(ipResult.lat, ipResult.lng);
+        setState({
+          latitude: ipResult.lat,
+          longitude: ipResult.lng,
+          loading: false,
+          error: null,
+        });
+      } else {
+        setState((prev) => ({ ...prev, loading: false }));
+      }
     }
-  }, [requestLocation]);
+
+    resolveLocation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [requestBrowserLocation]);
 
   return {
     latitude: state.latitude,
     longitude: state.longitude,
     loading: state.loading,
     error: state.error,
-    requestLocation,
+    requestLocation: requestBrowserLocation,
   };
 }
