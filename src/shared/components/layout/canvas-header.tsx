@@ -116,9 +116,20 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
           {locationName && (
             <button
               onClick={() => { openSearch(); handleSearchInteraction(); }}
-              className="text-xs text-cave-fog tracking-wider uppercase truncate max-w-[200px] cursor-pointer transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+              className="flex items-center gap-1 mt-0.5 cursor-pointer transition-colors hover:text-cave-white group"
             >
-              {locationName}
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="text-cave-white/70 group-hover:text-cave-white shrink-0"
+              >
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" />
+              </svg>
+              <span className="text-[11px] text-cave-white/80 tracking-wide truncate max-w-[180px] font-[family-name:var(--font-space-mono)] group-hover:text-cave-white">
+                {locationName}
+              </span>
             </button>
           )}
         </div>
