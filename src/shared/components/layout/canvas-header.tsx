@@ -61,7 +61,7 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
       style={{
         minHeight: 56,
         paddingTop: "max(env(safe-area-inset-top), 0px)",
-        backgroundColor: hovered ? "rgba(5, 5, 5, 0.92)" : "rgba(5, 5, 5, 0.55)",
+        backgroundColor: hovered ? "rgba(5, 5, 5, 0.75)" : "rgba(5, 5, 5, 0.35)",
         WebkitBackdropFilter: "blur(12px)",
       }}
       onMouseEnter={() => setHovered(true)}
