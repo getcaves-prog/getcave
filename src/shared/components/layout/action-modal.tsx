@@ -52,7 +52,7 @@ export function ActionModal({ isOpen, onClose }: ActionModalProps) {
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center p-6"
+          className="fixed inset-0 z-50 flex items-start justify-center pt-[25vh] px-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -97,7 +97,7 @@ export function ActionModal({ isOpen, onClose }: ActionModalProps) {
             {view === "menu" && (
               <motion.div
                 key="menu"
-                className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-[420px]"
+                className="relative z-10 grid grid-cols-2 gap-3 w-full max-w-[280px]"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -106,11 +106,11 @@ export function ActionModal({ isOpen, onClose }: ActionModalProps) {
                 {/* Upload Flyer option */}
                 <button
                   onClick={() => setView("upload")}
-                  className="flex flex-col items-center justify-center gap-4 p-8 rounded-2xl bg-cave-rock border border-cave-ash hover:border-cave-white transition-colors group"
+                  className="flex flex-col items-center justify-center gap-3 p-5 rounded-xl bg-cave-rock border border-cave-ash hover:border-cave-white transition-colors group"
                 >
                   <svg
-                    width="40"
-                    height="40"
+                    width="28"
+                    height="28"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -131,11 +131,11 @@ export function ActionModal({ isOpen, onClose }: ActionModalProps) {
                 {/* My Profile option */}
                 <button
                   onClick={() => setView("profile")}
-                  className="flex flex-col items-center justify-center gap-4 p-8 rounded-2xl bg-cave-rock border border-cave-ash hover:border-cave-white transition-colors group"
+                  className="flex flex-col items-center justify-center gap-3 p-5 rounded-xl bg-cave-rock border border-cave-ash hover:border-cave-white transition-colors group"
                 >
                   <svg
-                    width="40"
-                    height="40"
+                    width="28"
+                    height="28"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
