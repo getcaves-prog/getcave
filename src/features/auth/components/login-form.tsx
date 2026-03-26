@@ -125,7 +125,7 @@ export function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
-          className="h-12 w-full rounded-xl border border-cave-ash bg-cave-rock px-4 text-cave-white placeholder:text-cave-fog focus:border-cave-white focus:outline-none font-[family-name:var(--font-inter)]"
+          className="h-12 w-full rounded-xl border border-cave-ash bg-cave-rock px-4 text-base text-cave-white placeholder:text-cave-fog focus:border-cave-white focus:outline-none font-[family-name:var(--font-inter)]"
         />
         <input
           type="password"
@@ -133,7 +133,7 @@ export function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
-          className="h-12 w-full rounded-xl border border-cave-ash bg-cave-rock px-4 text-cave-white placeholder:text-cave-fog focus:border-cave-white focus:outline-none font-[family-name:var(--font-inter)]"
+          className="h-12 w-full rounded-xl border border-cave-ash bg-cave-rock px-4 text-base text-cave-white placeholder:text-cave-fog focus:border-cave-white focus:outline-none font-[family-name:var(--font-inter)]"
         />
 
         {error && (

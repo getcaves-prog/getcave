@@ -80,6 +80,8 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
     {
       drag: {
         filterTaps: true,
+        // Prevent iOS Safari from intercepting drag as scroll/pull-to-refresh
+        preventScrollAxis: "xy" as const,
       },
       wheel: {
         eventOptions: { passive: false },

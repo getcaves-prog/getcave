@@ -70,6 +70,7 @@ export function ActionModal({ isOpen, onClose }: ActionModalProps) {
             style={{
               background:
                 "radial-gradient(ellipse at center, rgba(5,5,5,0.7) 0%, rgba(5,5,5,0.92) 70%, rgba(0,0,0,0.97) 100%)",
+              WebkitBackdropFilter: "blur(40px)",
             }}
           />
 
@@ -102,7 +103,8 @@ export function ActionModal({ isOpen, onClose }: ActionModalProps) {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                style={{ willChange: "transform, opacity" }}
               >
                 {/* Upload Flyer option */}
                 <button
