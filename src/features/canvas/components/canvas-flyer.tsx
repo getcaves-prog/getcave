@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Image from "next/image";
 import type { LayoutFlyer } from "../types/canvas.types";
 
@@ -8,29 +8,56 @@ interface CanvasFlyerProps {
   flyer: LayoutFlyer;
 }
 
+/**
+ * Detects whether the device supports hover (mouse/trackpad).
+ * Touch-only devices return false — used to disable the 3D tilt effect
+ * which doesn't work well with touch interactions on iOS Safari.
+ */
+function useHasHover(): boolean {
+  const [hasHover, setHasHover] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    setHasHover(mq.matches);
+
+    const handler = (e: MediaQueryListEvent) => setHasHover(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  return hasHover;
+}
+
 export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
   const [imageError, setImageError] = useState(false);
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
   const cardRef = useRef<HTMLDivElement>(null);
+  const hasHover = useHasHover();
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    const el = cardRef.current;
-    if (!el) return;
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!hasHover) return;
+      const el = cardRef.current;
+      if (!el) return;
 
-    const rect = el.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
+      const rect = el.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
 
-    // Subtle tilt: max ±4 degrees
-    setTilt({
-      rotateX: (0.5 - y) * 8,
-      rotateY: (x - 0.5) * 8,
-    });
-  }, []);
+      // Subtle tilt: max +/-4 degrees
+      setTilt({
+        rotateX: (0.5 - y) * 8,
+        rotateY: (x - 0.5) * 8,
+      });
+    },
+    [hasHover]
+  );
 
   const handleMouseLeave = useCallback(() => {
     setTilt({ rotateX: 0, rotateY: 0 });
   }, []);
+
+  const isTilted = tilt.rotateX !== 0 || tilt.rotateY !== 0;
 
   return (
     <div
@@ -41,14 +68,17 @@ export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
         width: flyer.layout_width,
         height: flyer.layout_height,
         perspective: 600,
+        WebkitPerspective: 600,
       }}
     >
       <div
         ref={cardRef}
         className="relative w-full h-full overflow-hidden transition-transform duration-200 ease-out"
         style={{
-          transform: `rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg) scale(${tilt.rotateX || tilt.rotateY ? 1.02 : 1})`,
+          transform: `rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg) scale(${isTilted ? 1.02 : 1})`,
+          WebkitTransformStyle: "preserve-3d",
           transformStyle: "preserve-3d",
+          willChange: hasHover ? "transform" : "auto",
         }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
@@ -64,12 +94,13 @@ export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
             className="object-cover pointer-events-none"
             draggable={false}
             onError={() => setImageError(true)}
+            loading="lazy"
             unoptimized
           />
         )}
 
-        {/* Subtle light reflection on hover */}
-        {(tilt.rotateX !== 0 || tilt.rotateY !== 0) && (
+        {/* Subtle light reflection on hover — only on non-touch devices */}
+        {hasHover && isTilted && (
           <div
             className="absolute inset-0 pointer-events-none opacity-[0.07]"
             style={{

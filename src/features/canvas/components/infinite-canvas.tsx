@@ -183,7 +183,7 @@ export function InfiniteCanvas() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen bg-cave-black text-cave-fog">
+      <div className="flex items-center justify-center h-dvh bg-cave-black text-cave-fog">
         <p className="font-mono text-sm">Error loading flyers: {error}</p>
       </div>
     );
@@ -194,7 +194,7 @@ export function InfiniteCanvas() {
       {...bind()}
       onClick={handleCanvasClick}
       className="w-screen overflow-hidden bg-cave-black touch-none select-none"
-      style={{ height: "100vh" }}
+      style={{ height: "100dvh", overscrollBehavior: "none", position: "fixed", inset: 0 }}
     >
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -213,6 +213,7 @@ export function InfiniteCanvas() {
           scale: springScale,
           width: "1px",
           height: "1px",
+          willChange: "transform",
         }}
       >
         {visibleFlyers.map((flyer) => (

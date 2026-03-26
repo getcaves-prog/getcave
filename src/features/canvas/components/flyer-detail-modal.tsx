@@ -25,11 +25,12 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center p-6 safe-area-bottom"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
+      style={{ willChange: "opacity" }}
     >
       {/* Gaussian blur backdrop */}
       <motion.div
@@ -41,6 +42,7 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
         transition={{ duration: 0.4 }}
         style={{
           background: "radial-gradient(ellipse at center, rgba(5,5,5,0.7) 0%, rgba(5,5,5,0.92) 70%, rgba(0,0,0,0.97) 100%)",
+          WebkitBackdropFilter: "blur(40px)",
         }}
       />
 
@@ -52,10 +54,11 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
         exit={{ scale: 0.15, opacity: 0, y: 40 }}
         transition={{
           type: "spring",
-          stiffness: 200,
-          damping: 22,
-          mass: 1.2,
+          stiffness: 240,
+          damping: 26,
+          mass: 0.9,
         }}
+        style={{ willChange: "transform, opacity" }}
       >
         {/* Close button */}
         <button
@@ -94,6 +97,7 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
             fill
             sizes="420px"
             className="object-cover"
+            loading="eager"
             unoptimized
           />
         </motion.div>
