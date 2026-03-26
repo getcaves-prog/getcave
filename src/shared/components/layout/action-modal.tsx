@@ -52,7 +52,8 @@ export function ActionModal({ isOpen, onClose }: ActionModalProps) {
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-start justify-center pt-[25vh] px-6"
+          className="fixed inset-0 z-40 flex items-start justify-center px-6"
+          style={{ top: 56, paddingTop: 16 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
