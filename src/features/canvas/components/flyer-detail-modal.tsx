@@ -31,25 +31,16 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Dark cave backdrop — starts fully black */}
+      {/* Gaussian blur backdrop */}
       <motion.div
-        className="absolute inset-0 bg-black"
+        className="absolute inset-0 backdrop-blur-2xl"
         onClick={onClose}
-        initial={{ opacity: 1 }}
-        animate={{ opacity: 0.92 }}
-        exit={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      />
-
-      {/* Vignette overlay — cave tunnel effect */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        initial={{ opacity: 1 }}
-        animate={{ opacity: 0 }}
-        exit={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.4 }}
         style={{
-          background: "radial-gradient(circle at center, transparent 30%, black 100%)",
+          background: "radial-gradient(ellipse at center, rgba(5,5,5,0.7) 0%, rgba(5,5,5,0.92) 70%, rgba(0,0,0,0.97) 100%)",
         }}
       />
 
