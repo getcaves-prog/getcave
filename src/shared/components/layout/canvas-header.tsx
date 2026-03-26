@@ -49,4 +49,5 @@ export function CanvasHeader() {
         +
       </button>
     </header>
+  );
 }
