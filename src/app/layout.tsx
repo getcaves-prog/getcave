@@ -26,6 +26,11 @@ export const metadata: Metadata = {
   },
   description: "Discover what's happening around you",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://joincaves.com"),
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Caves",
+  },
 };
 
 export const viewport: Viewport = {
@@ -34,7 +39,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#0A0A0A",
+  themeColor: "#000000",
 };
 
 export default function RootLayout({

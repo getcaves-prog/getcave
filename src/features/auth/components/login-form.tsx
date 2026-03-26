@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/shared/lib/supabase/client";
 
@@ -66,8 +67,7 @@ export function LoginForm() {
     });
   };
 
-  const handleGuestAccess = () => {
-    document.cookie = "guest_mode=true; path=/; max-age=86400";
+  const handleBackToFeed = () => {
     window.location.href = "/";
   };
 
@@ -75,18 +75,16 @@ export function LoginForm() {
   if (view === "landing") {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center bg-cave-black">
-        <h1 className="mb-auto mt-[35dvh] text-8xl text-cave-white font-[family-name:var(--font-pinyon-script)]">
-          Caves
-        </h1>
+        <Image
+          src="/Logo.png"
+          alt="Caves"
+          width={280}
+          height={100}
+          priority
+          className="mb-auto mt-[30dvh] h-auto w-[280px]"
+        />
 
         <div className="mb-[12dvh] flex flex-col items-center gap-3">
-          <button
-            type="button"
-            onClick={handleGuestAccess}
-            className="w-[210px] rounded-full border border-cave-smoke bg-transparent px-6 py-3 text-sm font-medium tracking-widest text-cave-fog uppercase transition-colors hover:border-cave-white hover:text-cave-white"
-          >
-            Guest.
-          </button>
           <button
             type="button"
             onClick={() => setView("email")}
@@ -94,6 +92,12 @@ export function LoginForm() {
           >
             Log in.
           </button>
+          <Link
+            href="/auth/signup"
+            className="w-[210px] rounded-full border border-cave-smoke bg-transparent px-6 py-3 text-center text-sm font-medium tracking-widest text-cave-fog uppercase transition-colors hover:border-cave-white hover:text-cave-white"
+          >
+            Sign up.
+          </Link>
           <button
             type="button"
             onClick={handleGoogleLogin}
@@ -115,9 +119,14 @@ export function LoginForm() {
   // Email login view — form with inputs
   return (
     <div className="flex min-h-dvh flex-col items-center bg-cave-black px-6">
-      <h1 className="mt-[15dvh] mb-10 text-8xl text-cave-white font-[family-name:var(--font-pinyon-script)]">
-        Caves
-      </h1>
+      <Image
+        src="/Logo.png"
+        alt="Caves"
+        width={200}
+        height={72}
+        priority
+        className="mt-[12dvh] mb-10 h-auto w-[200px]"
+      />
 
       <form onSubmit={handleEmailLogin} className="flex w-full max-w-sm flex-col gap-4">
         <input
@@ -191,10 +200,10 @@ export function LoginForm() {
 
       <button
         type="button"
-        onClick={handleGuestAccess}
+        onClick={handleBackToFeed}
         className="mt-3 text-sm tracking-widest text-cave-fog uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
       >
-        Enter as Guest
+        Back to feed
       </button>
 
       <div className="mt-auto mb-[8dvh] flex flex-col items-center gap-2">

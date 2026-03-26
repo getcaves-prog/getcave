@@ -19,6 +19,7 @@ export function LocationSearch({ isOpen, onClose, onInteraction }: LocationSearc
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const setLocation = useLocationStore((s) => s.setLocation);
+  const setLocationName = useLocationStore((s) => s.setLocationName);
 
   // Focus input when opened
   useEffect(() => {
@@ -56,9 +57,10 @@ export function LocationSearch({ isOpen, onClose, onInteraction }: LocationSearc
   const handleSelect = useCallback(
     (result: GeocodingResult) => {
       setLocation(result.lat, result.lng);
+      setLocationName(result.displayName);
       onClose();
     },
-    [setLocation, onClose]
+    [setLocation, setLocationName, onClose]
   );
 
   const handleKeyDown = useCallback(

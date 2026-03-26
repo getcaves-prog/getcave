@@ -1,15 +1,17 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { InfiniteCanvas } from "@/features/canvas/components/infinite-canvas";
 import { CanvasHeader } from "@/shared/components/layout/canvas-header";
 import { useGeolocation } from "@/shared/hooks/use-geolocation";
 import { useLocationStore } from "@/shared/stores/location.store";
 import { useCanvasReadyStore } from "@/features/canvas/stores/canvas-ready.store";
+import { reverseGeocode } from "@/shared/lib/geocoding/geocoding.service";
 
 /** Max time to wait for canvas readiness before forcing the intro exit */
-const MAX_WAIT_MS = 4000;
+const MAX_WAIT_MS = 2500;
 
 export default function HomePage() {
   const [introComplete, setIntroComplete] = useState(false);
@@ -27,6 +29,13 @@ export default function HomePage() {
   useEffect(() => {
     if (latitude !== null && longitude !== null) {
       useLocationStore.getState().setLocation(latitude, longitude);
+
+      // Non-blocking reverse geocoding to get place name
+      reverseGeocode({ lat: latitude, lng: longitude }).then((result) => {
+        if (result) {
+          useLocationStore.getState().setLocationName(result.displayName);
+        }
+      });
     } else if (!geoLoading && geoError) {
       useLocationStore.getState().setError(geoError);
     } else if (!geoLoading) {
@@ -91,7 +100,7 @@ export default function HomePage() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: introComplete ? 1 : 0 }}
-        transition={{ duration: 1.2, ease: "easeOut" }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
         className="h-full w-full"
         style={{ willChange: "opacity" }}
       >
@@ -109,9 +118,9 @@ export default function HomePage() {
             exit={{ backgroundColor: "rgba(5,5,5,0)" }}
             transition={{ duration: 0.8 }}
           >
-            <motion.h1
-              className="text-cave-white font-[family-name:var(--font-pinyon-script)] select-none"
-              style={{ fontSize: "6rem", willChange: "transform, opacity" }}
+            <motion.div
+              className="select-none"
+              style={{ willChange: "transform, opacity" }}
               initial={{ scale: 1, y: 0, opacity: 1 }}
               animate={{
                 scale: 0.55,
@@ -121,15 +130,22 @@ export default function HomePage() {
               exit={{ opacity: 0 }}
               transition={{
                 type: "spring",
-                stiffness: 120,
-                damping: 22,
-                mass: 0.8,
-                delay: 0.4,
+                stiffness: 200,
+                damping: 28,
+                mass: 0.6,
+                delay: 0.2,
               }}
               onAnimationComplete={handleAnimationComplete}
             >
-              Caves
-            </motion.h1>
+              <Image
+                src="/Logo.png"
+                alt="Caves"
+                width={320}
+                height={115}
+                priority
+                className="h-auto w-[320px]"
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
