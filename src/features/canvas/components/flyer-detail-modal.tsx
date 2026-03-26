@@ -46,7 +46,7 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
 
       {/* Content — emerges from deep in the cave */}
       <motion.div
-        className="relative z-10 flex flex-col items-center max-w-[360px] w-full"
+        className="relative z-10 flex flex-col items-center max-w-[420px] w-full"
         initial={{ scale: 0.15, opacity: 0, y: 40 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.15, opacity: 0, y: 40 }}
@@ -92,7 +92,7 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
             src={flyer.image_url}
             alt={flyer.title ?? "Event flyer"}
             fill
-            sizes="360px"
+            sizes="420px"
             className="object-cover"
             unoptimized
           />
