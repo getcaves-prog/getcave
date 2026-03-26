@@ -106,17 +106,12 @@ export function InfiniteCanvas() {
     initializedRef.current = true;
 
     const windowW = window.innerWidth;
-    const windowH = window.innerHeight - CANVAS_LIMITS.HEADER_HEIGHT;
-
-    jumpTo(windowW / 2, windowH / 2, 1);
+    jumpTo(windowW / 2, window.innerHeight / 2, 1);
   }, [flyers, jumpTo]);
 
   const updateViewport = useCallback((x: number, y: number, scale: number) => {
     const windowW = typeof window !== "undefined" ? window.innerWidth : 1920;
-    const windowH =
-      typeof window !== "undefined"
-        ? window.innerHeight - CANVAS_LIMITS.HEADER_HEIGHT
-        : 1080;
+    const windowH = typeof window !== "undefined" ? window.innerHeight : 1080;
 
     setViewport({
       left: -x / scale - VIEWPORT_PADDING,
@@ -199,7 +194,7 @@ export function InfiniteCanvas() {
       {...bind()}
       onClick={handleCanvasClick}
       className="w-screen overflow-hidden bg-cave-black touch-none select-none"
-      style={{ height: `calc(100vh - ${CANVAS_LIMITS.HEADER_HEIGHT}px)` }}
+      style={{ height: "100vh" }}
     >
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
