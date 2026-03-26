@@ -141,7 +141,7 @@ export function FlyerTable() {
               <div className="flex gap-3">
                 <img
                   src={flyer.image_url}
-                  alt={flyer.title}
+                  alt={flyer.title ?? ""}
                   className="h-16 w-16 shrink-0 rounded-lg object-cover"
                 />
                 <div className="min-w-0 flex-1">
@@ -245,7 +245,7 @@ export function FlyerTable() {
                   <td className="px-4 py-3">
                     <img
                       src={flyer.image_url}
-                      alt={flyer.title}
+                      alt={flyer.title ?? ""}
                       className="h-10 w-10 rounded-lg object-cover"
                     />
                   </td>
