@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useAuth } from "@/features/auth/hooks/use-auth";
+import { createClient } from "@/shared/lib/supabase/client";
 import Link from "next/link";
 import { LocationSearch } from "@/shared/components/layout/location-search";
 import { ActionModal } from "@/shared/components/layout/action-modal";
@@ -11,11 +12,11 @@ interface CanvasHeaderProps {
 }
 
 export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
   const [locked, setLocked] = useState(false);
   const [actionModalOpen, setActionModalOpen] = useState(false);
-  const [hovered, setHovered] = useState(false);
+  const [active, setActive] = useState(false);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleUploadClick = () => {
@@ -26,30 +27,32 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
     setActionModalOpen(true);
   };
 
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = "/auth/login";
+  };
+
   const openSearch = useCallback(() => {
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     setSearchOpen(true);
+    setActive(true);
   }, []);
 
   const closeSearch = useCallback(() => {
     setSearchOpen(false);
     setLocked(false);
-  }, []);
-
-  // Desktop: hover opens, leaving starts a close timer
-  const handleZoneMouseEnter = useCallback(() => {
-    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
-    setSearchOpen(true);
+    setActive(false);
   }, []);
 
   const handleZoneMouseLeave = useCallback(() => {
-    if (locked) return; // Don't close if user clicked/interacted with search
+    if (locked) return;
     closeTimeoutRef.current = setTimeout(() => {
       setSearchOpen(false);
+      setActive(false);
     }, 300);
   }, [locked]);
 
-  // Lock search open when user interacts with it (click/focus)
   const handleSearchInteraction = useCallback(() => {
     setLocked(true);
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
@@ -61,18 +64,14 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
       style={{
         minHeight: 56,
         paddingTop: "max(env(safe-area-inset-top), 0px)",
-        backgroundColor: hovered ? "rgba(5, 5, 5, 0.55)" : "rgba(5, 5, 5, 0.25)",
+        backgroundColor: active ? "rgba(5, 5, 5, 0.55)" : "rgba(5, 5, 5, 0.25)",
         WebkitBackdropFilter: "blur(12px)",
       }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onTouchStart={() => setHovered(true)}
-      onTouchEnd={() => setTimeout(() => setHovered(false), 1000)}
     >
       {/* Left: Auth action */}
       {user ? (
         <button
-          onClick={() => signOut()}
+          onClick={handleSignOut}
           className="flex items-center justify-center w-11 h-11 text-cave-fog hover:text-cave-white transition-colors"
           aria-label="Log out"
         >
@@ -96,25 +95,14 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
         </Link>
       )}
 
-      {/* Center: Logo + Search zone — hover area includes dropdown */}
+      {/* Center: Logo + Search zone */}
       <div
         className="absolute left-1/2 -translate-x-1/2"
-        onMouseEnter={handleZoneMouseEnter}
         onMouseLeave={handleZoneMouseLeave}
       >
         <div className="flex items-center gap-2">
-          {/* Desktop: logo is clickable + hoverable */}
           <h1
-            className="text-4xl text-cave-white font-[family-name:var(--font-pinyon-script)] transition-opacity duration-300 cursor-pointer hidden md:block"
-            style={{ opacity: hidelogo ? 0 : 1 }}
-            onClick={() => { openSearch(); handleSearchInteraction(); }}
-          >
-            Caves
-          </h1>
-
-          {/* Mobile: logo only — tap opens search */}
-          <h1
-            className="text-4xl text-cave-white font-[family-name:var(--font-pinyon-script)] transition-opacity duration-300 cursor-pointer md:hidden"
+            className="text-4xl text-cave-white font-[family-name:var(--font-pinyon-script)] transition-opacity duration-300 cursor-pointer"
             style={{ opacity: hidelogo ? 0 : 1 }}
             onClick={() => { openSearch(); handleSearchInteraction(); }}
           >
@@ -122,7 +110,6 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
           </h1>
         </div>
 
-        {/* Search dropdown — inside hover zone so mouse can move to it */}
         <LocationSearch
           isOpen={searchOpen}
           onClose={closeSearch}
@@ -142,7 +129,6 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
         </svg>
       </button>
 
-      {/* Action modal */}
       <ActionModal
         isOpen={actionModalOpen}
         onClose={() => setActionModalOpen(false)}
