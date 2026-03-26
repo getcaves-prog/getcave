@@ -72,9 +72,9 @@ export function LocationSearch({ isOpen, onClose, onInteraction }: LocationSearc
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Mobile backdrop — tap outside closes */}
+          {/* Backdrop — tap/click outside closes */}
           <motion.div
-            className="fixed inset-0 z-[45] md:hidden"
+            className="fixed inset-0 z-[45]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
