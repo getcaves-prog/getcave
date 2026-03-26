@@ -88,7 +88,7 @@ export default function AdminDashboardPage() {
               >
                 <img
                   src={flyer.image_url}
-                  alt={flyer.title}
+                  alt={flyer.title ?? ""}
                   className="h-10 w-10 rounded-lg object-cover"
                 />
                 <div className="min-w-0 flex-1">
