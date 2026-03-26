@@ -1,8 +1,8 @@
 import { createClient } from "@/shared/lib/supabase/client";
 import type {
   AdminStats,
-  CreateEventPayload,
-  EventStatus,
+  CreateFlyerPayload,
+  FlyerStatus,
   UserRole,
 } from "@/features/admin/types/admin.types";
 
@@ -10,9 +10,9 @@ export async function getStats(): Promise<AdminStats> {
   const supabase = createClient();
 
   const [flyersRes, pendingRes, usersRes] = await Promise.all([
-    supabase.from("events").select("id", { count: "exact", head: true }),
+    supabase.from("flyers").select("id", { count: "exact", head: true }),
     supabase
-      .from("events")
+      .from("flyers")
       .select("id", { count: "exact", head: true })
       .eq("status", "pending"),
     supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -29,7 +29,7 @@ export async function getFlyers(status?: string) {
   const supabase = createClient();
 
   let query = supabase
-    .from("events")
+    .from("flyers")
     .select("*")
     .order("created_at", { ascending: false });
 
@@ -46,7 +46,7 @@ export async function getRecentFlyers() {
   const supabase = createClient();
 
   const { data, error } = await supabase
-    .from("events")
+    .from("flyers")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(5);
@@ -55,11 +55,11 @@ export async function getRecentFlyers() {
   return data;
 }
 
-export async function updateFlyerStatus(id: string, status: EventStatus) {
+export async function updateFlyerStatus(id: string, status: FlyerStatus) {
   const supabase = createClient();
 
   const { error } = await supabase
-    .from("events")
+    .from("flyers")
     .update({ status })
     .eq("id", id);
 
@@ -69,38 +69,52 @@ export async function updateFlyerStatus(id: string, status: EventStatus) {
 export async function deleteFlyer(id: string) {
   const supabase = createClient();
 
-  const { error } = await supabase.from("events").delete().eq("id", id);
+  // First get the flyer to check if image is in Supabase storage
+  const { data: flyer } = await supabase
+    .from("flyers")
+    .select("image_url")
+    .eq("id", id)
+    .single();
+
+  // Delete the image from storage if it's a Supabase storage URL
+  if (flyer?.image_url?.includes("supabase.co/storage")) {
+    const path = flyer.image_url.split("/storage/v1/object/public/")[1];
+    if (path) {
+      const [bucket, ...rest] = path.split("/");
+      await supabase.storage.from(bucket).remove([rest.join("/")]);
+    }
+  }
+
+  const { error } = await supabase.from("flyers").delete().eq("id", id);
   if (error) throw error;
 }
 
-export async function createFlyer(data: CreateEventPayload) {
+export async function createFlyer(data: CreateFlyerPayload) {
   const supabase = createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) throw new Error("Not authenticated");
-
-  // Build location as EWKT string for PostGIS if coordinates are available
-  const location =
-    data.latitude !== undefined && data.longitude !== undefined
-      ? `SRID=4326;POINT(${data.longitude} ${data.latitude})`
-      : `SRID=4326;POINT(-100.3161 25.6866)`; // Default: Monterrey
-
-  const { error } = await supabase.from("events").insert({
+  const insertData: Record<string, unknown> = {
     title: data.title,
-    flyer_url: data.image_url,
-    venue_address: data.address,
-    venue_name: data.address,
+    image_url: data.image_url,
+    address: data.address,
     status: data.status,
-    user_id: user.id,
-    category_id: "00000000-0000-0000-0000-000000000000",
-    date: new Date().toISOString().split("T")[0],
-    time_start: "00:00",
-    location,
-  });
+  };
 
+  // Build PostGIS location if coordinates are available
+  if (data.latitude !== undefined && data.longitude !== undefined) {
+    insertData.location = `SRID=4326;POINT(${data.longitude} ${data.latitude})`;
+  }
+
+  const { error } = await supabase.from("flyers").insert(insertData);
+
+  if (error) throw error;
+}
+
+export async function deleteAllTestFlyers() {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("flyers")
+    .delete()
+    .like("image_url", "%picsum.photos%");
   if (error) throw error;
 }
 

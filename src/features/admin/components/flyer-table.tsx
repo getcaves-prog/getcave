@@ -5,15 +5,16 @@ import {
   getFlyers,
   updateFlyerStatus,
   deleteFlyer,
+  deleteAllTestFlyers,
 } from "@/features/admin/services/admin.service";
 import { StatusDot } from "@/features/admin/components/status-dot";
 import { FlyerCreateForm } from "@/features/admin/components/flyer-create-form";
-import type { Event, EventStatus } from "@/features/admin/types/admin.types";
+import type { Flyer, FlyerStatus } from "@/features/admin/types/admin.types";
 
 const TABS = ["all", "pending", "approved", "rejected"] as const;
 
 export function FlyerTable() {
-  const [flyers, setFlyers] = useState<Event[]>([]);
+  const [flyers, setFlyers] = useState<Flyer[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [showCreate, setShowCreate] = useState(false);
@@ -34,7 +35,7 @@ export function FlyerTable() {
     fetchFlyers();
   }, [fetchFlyers]);
 
-  const handleStatusChange = async (id: string, status: EventStatus) => {
+  const handleStatusChange = async (id: string, status: FlyerStatus) => {
     try {
       await updateFlyerStatus(id, status);
       await fetchFlyers();
@@ -60,12 +61,33 @@ export function FlyerTable() {
         <h2 className="font-[family-name:var(--font-space-mono)] text-lg text-cave-white">
           Flyer Management
         </h2>
-        <button
-          onClick={() => setShowCreate(!showCreate)}
-          className="rounded-full bg-cave-white px-4 py-2 font-[family-name:var(--font-space-mono)] text-xs font-bold text-cave-black transition-opacity hover:opacity-80"
-        >
-          {showCreate ? "Cancel" : "Create Flyer"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              if (
+                !window.confirm(
+                  "Delete ALL test flyers? This action cannot be undone."
+                )
+              )
+                return;
+              try {
+                await deleteAllTestFlyers();
+                await fetchFlyers();
+              } catch (err) {
+                console.error("Failed to delete test flyers:", err);
+              }
+            }}
+            className="rounded-full border border-red-500 px-4 py-2 font-[family-name:var(--font-space-mono)] text-xs font-bold text-red-500 transition-colors hover:bg-red-500 hover:text-cave-white"
+          >
+            Delete Test Flyers
+          </button>
+          <button
+            onClick={() => setShowCreate(!showCreate)}
+            className="rounded-full bg-cave-white px-4 py-2 font-[family-name:var(--font-space-mono)] text-xs font-bold text-cave-black transition-opacity hover:opacity-80"
+          >
+            {showCreate ? "Cancel" : "Create Flyer"}
+          </button>
+        </div>
       </div>
 
       {/* Create form */}
@@ -147,7 +169,7 @@ export function FlyerTable() {
                 >
                   <td className="px-4 py-3">
                     <img
-                      src={flyer.flyer_url}
+                      src={flyer.image_url}
                       alt={flyer.title}
                       className="h-10 w-10 rounded-lg object-cover"
                     />
@@ -156,7 +178,7 @@ export function FlyerTable() {
                     {flyer.title}
                   </td>
                   <td className="px-4 py-3 text-sm text-cave-fog">
-                    {flyer.venue_address}
+                    {flyer.address}
                   </td>
                   <td className="px-4 py-3">
                     <StatusDot status={flyer.status} />
