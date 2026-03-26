@@ -194,7 +194,7 @@ export function InfiniteCanvas() {
       {...bind()}
       onClick={handleCanvasClick}
       className="w-screen overflow-hidden bg-cave-black touch-none select-none"
-      style={{ height: "100dvh", overscrollBehavior: "none", position: "fixed", inset: 0 }}
+      style={{ height: "100dvh", overscrollBehavior: "none" }}
     >
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
