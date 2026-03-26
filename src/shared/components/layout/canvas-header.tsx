@@ -21,7 +21,7 @@ export function CanvasHeader() {
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 backdrop-blur-md"
         style={{
           height: 56,
-          backgroundColor: "rgba(5, 5, 5, 0.8)",
+          backgroundColor: "rgba(5, 5, 5, 0.45)",
         }}
       >
         {/* Left: Hamburger */}
@@ -47,7 +47,7 @@ export function CanvasHeader() {
         </button>
 
         {/* Center: Logo */}
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-3xl text-cave-white font-[family-name:var(--font-pinyon-script)]">
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-5xl text-cave-white font-[family-name:var(--font-pinyon-script)]">
           Caves
         </h1>
 
