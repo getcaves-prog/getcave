@@ -12,10 +12,77 @@ import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import type { GeocodingResult } from "@/shared/lib/geocoding/types";
 
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_DIMENSION = 4096;
+
 const flyerSchema = z.object({
   image: z.instanceof(File, { message: "Image is required" }),
   address: z.string().min(1, "Address is required"),
 });
+
+function validateImageFile(file: File): string | null {
+  if (!ACCEPTED_TYPES.includes(file.type)) {
+    return `Invalid format. Accepted: JPG, PNG, WebP, GIF, HEIC`;
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    return `File too large. Max ${MAX_FILE_SIZE / 1024 / 1024}MB (yours: ${(file.size / 1024 / 1024).toFixed(1)}MB)`;
+  }
+  return null;
+}
+
+function validateImageDimensions(file: File): Promise<string | null> {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = () => {
+      URL.revokeObjectURL(img.src);
+      if (img.width > MAX_DIMENSION || img.height > MAX_DIMENSION) {
+        resolve(`Image too large. Max ${MAX_DIMENSION}x${MAX_DIMENSION}px (yours: ${img.width}x${img.height})`);
+      } else if (img.width < 200 || img.height < 200) {
+        resolve(`Image too small. Min 200x200px (yours: ${img.width}x${img.height})`);
+      } else {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve("Could not read image");
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function convertToWebp(file: File, quality = 0.85): Promise<File> {
+  // If already webp, return as-is
+  if (file.type === "image/webp") return file;
+
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { resolve(file); return; }
+
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { resolve(file); return; }
+          const webpFile = new File(
+            [blob],
+            file.name.replace(/\.[^.]+$/, ".webp"),
+            { type: "image/webp" }
+          );
+          resolve(webpFile);
+        },
+        "image/webp",
+        quality
+      );
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = () => reject(new Error("Failed to load image for conversion"));
+    img.src = URL.createObjectURL(file);
+  });
+}
 
 interface FlyerUploadModalProps {
   onBack: () => void;
@@ -43,19 +110,59 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
+  const [imageInfo, setImageInfo] = useState<string | null>(null);
+  const [converting, setConverting] = useState(false);
+
   const handleImageSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      setImageFile(file);
+      // Validate type and size
+      const typeError = validateImageFile(file);
+      if (typeError) {
+        setErrors((prev) => ({ ...prev, image: typeError }));
+        return;
+      }
+
+      // Validate dimensions
+      const dimError = await validateImageDimensions(file);
+      if (dimError) {
+        setErrors((prev) => ({ ...prev, image: dimError }));
+        return;
+      }
+
+      // Convert to WebP
+      setConverting(true);
       setErrors((prev) => ({ ...prev, image: "" }));
 
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setImagePreview(ev.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const webpFile = await convertToWebp(file, 0.85);
+        setImageFile(webpFile);
+
+        const savedKb = Math.max(0, file.size - webpFile.size);
+        const info = `${webpFile.name} · ${(webpFile.size / 1024).toFixed(0)}KB`;
+        const savings = savedKb > 1024 ? ` · saved ${(savedKb / 1024).toFixed(0)}KB` : "";
+        setImageInfo(info + savings);
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setImagePreview(ev.target?.result as string);
+        };
+        reader.readAsDataURL(webpFile);
+      } catch {
+        // Fallback to original file
+        setImageFile(file);
+        setImageInfo(`${file.name} · ${(file.size / 1024).toFixed(0)}KB`);
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setImagePreview(ev.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } finally {
+        setConverting(false);
+      }
     },
     []
   );
@@ -90,17 +197,49 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
     setShowSuggestions(false);
   }, []);
 
+  const [locatingMe, setLocatingMe] = useState(false);
+
   const handleUseMyLocation = useCallback(async () => {
+    // If we already have coords in store, use them
     if (latitude && longitude) {
+      setLocatingMe(true);
       setSelectedCoords({ lat: latitude, lng: longitude });
       const { reverseGeocode } = await import(
         "@/shared/lib/geocoding/geocoding.service"
       );
       const result = await reverseGeocode({ lat: latitude, lng: longitude });
-      if (result) {
-        setAddress(result.address);
-      }
+      if (result) setAddress(result.address);
+      setLocatingMe(false);
+      return;
     }
+
+    // Otherwise request browser geolocation directly
+    if (!navigator.geolocation) {
+      setErrors((prev) => ({ ...prev, address: "Geolocation not supported" }));
+      return;
+    }
+
+    setLocatingMe(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setSelectedCoords({ lat, lng });
+        useLocationStore.getState().setLocation(lat, lng);
+
+        const { reverseGeocode } = await import(
+          "@/shared/lib/geocoding/geocoding.service"
+        );
+        const result = await reverseGeocode({ lat, lng });
+        if (result) setAddress(result.address);
+        setLocatingMe(false);
+      },
+      (err) => {
+        setErrors((prev) => ({ ...prev, address: `Location error: ${err.message}` }));
+        setLocatingMe(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   }, [latitude, longitude]);
 
   const handleSubmit = useCallback(async () => {
@@ -133,7 +272,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
     try {
       const supabase = createClient();
       const file = imageFile!;
-      const fileName = `${Date.now()}-${file.name}`;
+      const fileName = `${Date.now()}-${file.name.replace(/\.[^.]+$/, ".webp")}`;
 
       const { error: uploadError } = await supabase.storage
         .from("flyers")
@@ -218,7 +357,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept=".jpg,.jpeg,.png,.webp,.gif,.heic,.heif"
         onChange={handleImageSelect}
         className="hidden"
       />
@@ -259,9 +398,21 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
           </>
         )}
       </button>
-      {errors.image && (
-        <p className="text-xs text-neon-pink mb-2">{errors.image}</p>
+      {converting && (
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-3 h-3 border border-cave-fog border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs text-cave-fog">Converting to WebP...</span>
+        </div>
       )}
+      {imageInfo && !converting && (
+        <p className="text-xs text-cave-fog mb-2 font-[family-name:var(--font-space-mono)]">{imageInfo}</p>
+      )}
+      {errors.image && (
+        <p className="text-xs text-red-400 mb-2">{errors.image}</p>
+      )}
+      <p className="text-[10px] text-cave-smoke mb-4 font-[family-name:var(--font-space-mono)]">
+        JPG, PNG, WebP, GIF, HEIC · Max 10MB · 200–4096px
+      </p>
 
       {/* Title */}
       <div className="mb-4">
@@ -302,12 +453,15 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
       </div>
 
       {/* Use my location button */}
-      {latitude && longitude && (
-        <button
-          type="button"
-          onClick={handleUseMyLocation}
-          className="flex items-center gap-2 text-sm text-cave-fog hover:text-cave-white transition-colors mb-4"
-        >
+      <button
+        type="button"
+        onClick={handleUseMyLocation}
+        disabled={locatingMe}
+        className="flex items-center gap-2 text-sm text-cave-fog hover:text-cave-white transition-colors mb-4 disabled:opacity-50"
+      >
+        {locatingMe ? (
+          <div className="w-3.5 h-3.5 border border-cave-fog border-t-transparent rounded-full animate-spin" />
+        ) : (
           <svg
             width="14"
             height="14"
@@ -325,9 +479,9 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
             <line x1="2" y1="12" x2="6" y2="12" />
             <line x1="18" y1="12" x2="22" y2="12" />
           </svg>
-          Use my location
-        </button>
-      )}
+        )}
+        {locatingMe ? "Getting location..." : "Use my location"}
+      </button>
 
       {/* Selected coordinates */}
       {selectedCoords && (
