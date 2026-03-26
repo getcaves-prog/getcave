@@ -32,6 +32,7 @@ export interface Viewport {
 /** Grid layout configuration per breakpoint */
 export interface GridConfig {
   columns: number;
+  rows: number;
   flyerWidth: number;
   flyerHeight: number;
   gap: number;
@@ -39,13 +40,15 @@ export interface GridConfig {
 
 export const GRID_CONFIG = {
   desktop: {
-    columns: 6,
+    columns: 30,
+    rows: 3,
     flyerWidth: 280,
     flyerHeight: 400,
     gap: 0,
   },
   mobile: {
-    columns: 3,
+    columns: 20,
+    rows: 3,
     flyerWidth: 160,
     flyerHeight: 230,
     gap: 0,

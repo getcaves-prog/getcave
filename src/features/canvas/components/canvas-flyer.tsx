@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import type { LayoutFlyer } from "../types/canvas.types";
 
@@ -10,30 +10,51 @@ interface CanvasFlyerProps {
 
 export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
   const [imageError, setImageError] = useState(false);
+  const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const el = cardRef.current;
+    if (!el) return;
+
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+
+    // Subtle tilt: max ±4 degrees
+    setTilt({
+      rotateX: (0.5 - y) * 8,
+      rotateY: (x - 0.5) * 8,
+    });
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setTilt({ rotateX: 0, rotateY: 0 });
+  }, []);
 
   return (
     <div
-      className="absolute pointer-events-none select-none"
+      className="absolute select-none"
       style={{
         left: flyer.layout_x,
         top: flyer.layout_y,
         width: flyer.layout_width,
         height: flyer.layout_height,
+        perspective: 600,
       }}
     >
       <div
-        className="relative w-full h-full overflow-hidden border border-cave-ash/60"
+        ref={cardRef}
+        className="relative w-full h-full overflow-hidden transition-transform duration-200 ease-out"
         style={{
-          boxShadow:
-            "0 2px 8px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255,255,255,0.03)",
+          transform: `rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg) scale(${tilt.rotateX || tilt.rotateY ? 1.02 : 1})`,
+          transformStyle: "preserve-3d",
         }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
       >
         {imageError ? (
-          <div className="w-full h-full bg-cave-stone flex items-center justify-center">
-            <span className="text-cave-fog text-sm font-mono text-center px-4">
-              {flyer.title ?? "Event Flyer"}
-            </span>
-          </div>
+          <div className="w-full h-full bg-cave-stone" />
         ) : (
           <Image
             src={flyer.image_url}
@@ -47,15 +68,15 @@ export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
           />
         )}
 
-        {flyer.title && !imageError && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 pt-6">
-            <p className="text-cave-white text-[10px] font-mono truncate leading-tight">
-              {flyer.title}
-            </p>
-          </div>
+        {/* Subtle light reflection on hover */}
+        {(tilt.rotateX !== 0 || tilt.rotateY !== 0) && (
+          <div
+            className="absolute inset-0 pointer-events-none opacity-[0.07]"
+            style={{
+              background: `radial-gradient(circle at ${50 + tilt.rotateY * 6}% ${50 - tilt.rotateX * 6}%, white, transparent 60%)`,
+            }}
+          />
         )}
-
-        <div className="absolute inset-0 pointer-events-none border border-white/[0.02]" />
       </div>
     </div>
   );

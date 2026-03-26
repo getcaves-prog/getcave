@@ -18,7 +18,7 @@ import type {
   GridConfig,
 } from "../types/canvas.types";
 
-const VIEWPORT_PADDING = 400;
+const VIEWPORT_PADDING = 600;
 const DOUBLE_TAP_DELAY = 300;
 
 function getGridConfig(): GridConfig {
@@ -28,53 +28,51 @@ function getGridConfig(): GridConfig {
     : GRID_CONFIG.desktop;
 }
 
-function computeGridLayout(flyers: Flyer[], config: GridConfig): LayoutFlyer[] {
-  const { columns, flyerWidth, flyerHeight, gap } = config;
-  const rows = Math.ceil(flyers.length / columns);
+/**
+ * Generates flyers that tile infinitely in all directions.
+ * Uses modulo to repeat the source flyers across an infinite grid.
+ * Only generates flyers visible in the current viewport.
+ */
+function generateVisibleFlyers(
+  sourceFlyers: Flyer[],
+  viewport: Viewport,
+  config: GridConfig
+): LayoutFlyer[] {
+  if (sourceFlyers.length === 0) return [];
 
-  const gridWidth = columns * flyerWidth + (columns - 1) * gap;
-  const gridHeight = rows * flyerHeight + (rows - 1) * gap;
+  const { flyerWidth, flyerHeight, gap } = config;
+  const cellW = flyerWidth + gap;
+  const cellH = flyerHeight + gap;
 
-  const offsetX = -gridWidth / 2;
-  const offsetY = -gridHeight / 2;
+  // Determine which grid cells are visible
+  const colStart = Math.floor(viewport.left / cellW) - 1;
+  const colEnd = Math.ceil(viewport.right / cellW) + 1;
+  const rowStart = Math.floor(viewport.top / cellH) - 1;
+  const rowEnd = Math.ceil(viewport.bottom / cellH) + 1;
 
-  return flyers.map((flyer, index) => {
-    const col = index % columns;
-    const row = Math.floor(index / columns);
+  const result: LayoutFlyer[] = [];
+  const sourceCount = sourceFlyers.length;
 
-    return {
-      ...flyer,
-      layout_x: offsetX + col * (flyerWidth + gap),
-      layout_y: offsetY + row * (flyerHeight + gap),
-      layout_width: flyerWidth,
-      layout_height: flyerHeight,
-      layout_rotation: 0,
-    };
-  });
-}
+  for (let row = rowStart; row <= rowEnd; row++) {
+    for (let col = colStart; col <= colEnd; col++) {
+      // Use a deterministic index based on grid position
+      // Modulo to cycle through source flyers
+      const rawIndex = ((row * 7919 + col * 104729) % sourceCount + sourceCount) % sourceCount;
+      const flyer = sourceFlyers[rawIndex];
 
-function computeCenter(flyers: LayoutFlyer[]): { x: number; y: number } {
-  if (flyers.length === 0) return { x: 0, y: 0 };
+      result.push({
+        ...flyer,
+        id: `${col},${row}`,
+        layout_x: col * cellW,
+        layout_y: row * cellH,
+        layout_width: flyerWidth,
+        layout_height: flyerHeight,
+        layout_rotation: 0,
+      });
+    }
+  }
 
-  const sumX = flyers.reduce((acc, f) => acc + f.layout_x, 0);
-  const sumY = flyers.reduce((acc, f) => acc + f.layout_y, 0);
-
-  return {
-    x: sumX / flyers.length,
-    y: sumY / flyers.length,
-  };
-}
-
-function isInViewport(flyer: LayoutFlyer, viewport: Viewport): boolean {
-  const flyerRight = flyer.layout_x + flyer.layout_width;
-  const flyerBottom = flyer.layout_y + flyer.layout_height;
-
-  return (
-    flyerRight >= viewport.left &&
-    flyer.layout_x <= viewport.right &&
-    flyerBottom >= viewport.top &&
-    flyer.layout_y <= viewport.bottom
-  );
+  return result;
 }
 
 export function InfiniteCanvas() {
@@ -84,12 +82,13 @@ export function InfiniteCanvas() {
   const [gridConfig, setGridConfig] = useState<GridConfig>(getGridConfig);
   const [selectedFlyer, setSelectedFlyer] = useState<LayoutFlyer | null>(null);
   const lastTapRef = useRef(0);
+  const initializedRef = useRef(false);
 
   const [viewport, setViewport] = useState<Viewport>({
-    left: -5000,
-    top: -5000,
-    right: 5000,
-    bottom: 5000,
+    left: -2000,
+    top: -2000,
+    right: 2000,
+    bottom: 2000,
   });
 
   useEffect(() => {
@@ -101,27 +100,18 @@ export function InfiniteCanvas() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const layoutFlyers = useMemo(
-    () => computeGridLayout(flyers, gridConfig),
-    [flyers, gridConfig]
-  );
-
+  // Center on (0,0) when first loaded
   useEffect(() => {
-    if (layoutFlyers.length === 0) return;
+    if (flyers.length === 0 || initializedRef.current) return;
+    initializedRef.current = true;
 
-    const center = computeCenter(layoutFlyers);
     const windowW = window.innerWidth;
-    const windowH = window.innerHeight - CANVAS_LIMITS.HEADER_HEIGHT;
-
-    jumpTo(-center.x + windowW / 2, -center.y + windowH / 2, 0.8);
-  }, [layoutFlyers, jumpTo]);
+    jumpTo(windowW / 2, window.innerHeight / 2, 1);
+  }, [flyers, jumpTo]);
 
   const updateViewport = useCallback((x: number, y: number, scale: number) => {
     const windowW = typeof window !== "undefined" ? window.innerWidth : 1920;
-    const windowH =
-      typeof window !== "undefined"
-        ? window.innerHeight - CANVAS_LIMITS.HEADER_HEIGHT
-        : 1080;
+    const windowH = typeof window !== "undefined" ? window.innerHeight : 1080;
 
     setViewport({
       left: -x / scale - VIEWPORT_PADDING,
@@ -141,12 +131,12 @@ export function InfiniteCanvas() {
     updateViewport(springX.get(), springY.get(), scale);
   });
 
+  // Generate only visible flyers on-demand from viewport
   const visibleFlyers = useMemo(
-    () => layoutFlyers.filter((f) => isInViewport(f, viewport)),
-    [layoutFlyers, viewport]
+    () => generateVisibleFlyers(flyers, viewport, gridConfig),
+    [flyers, viewport, gridConfig]
   );
 
-  // Double-tap detection via canvas hit-testing
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       if (isDragging) return;
@@ -166,17 +156,29 @@ export function InfiniteCanvas() {
       const canvasX = (clientX - rect.left - tx) / scale;
       const canvasY = (clientY - rect.top - ty) / scale;
 
-      const tapped = layoutFlyers.find(
-        (f) =>
-          canvasX >= f.layout_x &&
-          canvasX <= f.layout_x + f.layout_width &&
-          canvasY >= f.layout_y &&
-          canvasY <= f.layout_y + f.layout_height
-      );
+      // Find tapped flyer from visible set
+      const { flyerWidth, flyerHeight, gap } = gridConfig;
+      const cellW = flyerWidth + gap;
+      const cellH = flyerHeight + gap;
+      const col = Math.floor(canvasX / cellW);
+      const row = Math.floor(canvasY / cellH);
 
-      if (tapped) setSelectedFlyer(tapped);
+      if (flyers.length === 0) return;
+
+      const rawIndex = ((row * 7919 + col * 104729) % flyers.length + flyers.length) % flyers.length;
+      const flyer = flyers[rawIndex];
+
+      setSelectedFlyer({
+        ...flyer,
+        id: `${col},${row}`,
+        layout_x: col * cellW,
+        layout_y: row * cellH,
+        layout_width: flyerWidth,
+        layout_height: flyerHeight,
+        layout_rotation: 0,
+      });
     },
-    [isDragging, layoutFlyers, transformRef]
+    [isDragging, flyers, gridConfig, transformRef]
   );
 
   if (error) {
@@ -192,7 +194,7 @@ export function InfiniteCanvas() {
       {...bind()}
       onClick={handleCanvasClick}
       className="w-screen overflow-hidden bg-cave-black touch-none select-none"
-      style={{ height: `calc(100vh - ${CANVAS_LIMITS.HEADER_HEIGHT}px)` }}
+      style={{ height: "100vh" }}
     >
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -204,7 +206,7 @@ export function InfiniteCanvas() {
       )}
 
       <motion.div
-        className="relative origin-top-left pointer-events-none"
+        className="relative origin-top-left"
         style={{
           x: springX,
           y: springY,
