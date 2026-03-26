@@ -1,7 +1,7 @@
 import type { EventStatus } from "@/features/admin/types/admin.types";
 
 interface StatusDotProps {
-  status: string;
+  status: string | null;
 }
 
 const STATUS_STYLES: Record<EventStatus, string> = {
@@ -11,13 +11,14 @@ const STATUS_STYLES: Record<EventStatus, string> = {
 };
 
 export function StatusDot({ status }: StatusDotProps) {
-  const style = STATUS_STYLES[status as EventStatus] ?? STATUS_STYLES.pending;
+  const s = status ?? "pending";
+  const style = STATUS_STYLES[s as EventStatus] ?? STATUS_STYLES.pending;
 
   return (
     <span className="inline-flex items-center gap-2">
       <span className={`inline-block h-2 w-2 rounded-full ${style}`} />
       <span className="font-[family-name:var(--font-space-mono)] text-xs capitalize text-cave-fog">
-        {status}
+        {s}
       </span>
     </span>
   );
