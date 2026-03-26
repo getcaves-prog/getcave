@@ -7,7 +7,7 @@ import {
 } from "@/features/admin/services/admin.service";
 import { StatsCard } from "@/features/admin/components/stats-card";
 import { StatusDot } from "@/features/admin/components/status-dot";
-import type { AdminStats, Event } from "@/features/admin/types/admin.types";
+import type { AdminStats, Flyer } from "@/features/admin/types/admin.types";
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminStats>({
@@ -15,7 +15,7 @@ export default function AdminDashboardPage() {
     pendingFlyers: 0,
     totalUsers: 0,
   });
-  const [recentFlyers, setRecentFlyers] = useState<Event[]>([]);
+  const [recentFlyers, setRecentFlyers] = useState<Flyer[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -87,7 +87,7 @@ export default function AdminDashboardPage() {
                 className="flex items-center gap-4 rounded-lg border border-cave-ash p-3 transition-colors hover:bg-cave-rock/50"
               >
                 <img
-                  src={flyer.flyer_url}
+                  src={flyer.image_url}
                   alt={flyer.title}
                   className="h-10 w-10 rounded-lg object-cover"
                 />
@@ -96,7 +96,7 @@ export default function AdminDashboardPage() {
                     {flyer.title}
                   </p>
                   <p className="truncate font-[family-name:var(--font-space-mono)] text-xs text-cave-fog">
-                    {flyer.venue_address}
+                    {flyer.address}
                   </p>
                 </div>
                 <StatusDot status={flyer.status} />
