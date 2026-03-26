@@ -92,19 +92,18 @@ export async function deleteFlyer(id: string) {
 export async function createFlyer(data: CreateFlyerPayload) {
   const supabase = createClient();
 
-  const insertData: Record<string, unknown> = {
+  const location =
+    data.latitude !== undefined && data.longitude !== undefined
+      ? `SRID=4326;POINT(${data.longitude} ${data.latitude})`
+      : undefined;
+
+  const { error } = await supabase.from("flyers").insert({
     title: data.title,
     image_url: data.image_url,
     address: data.address,
     status: data.status,
-  };
-
-  // Build PostGIS location if coordinates are available
-  if (data.latitude !== undefined && data.longitude !== undefined) {
-    insertData.location = `SRID=4326;POINT(${data.longitude} ${data.latitude})`;
-  }
-
-  const { error } = await supabase.from("flyers").insert(insertData);
+    ...(location && { location }),
+  });
 
   if (error) throw error;
 }
