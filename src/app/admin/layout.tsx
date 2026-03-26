@@ -28,7 +28,7 @@ export default function AdminLayout({
 
   if (loading || !ready) {
     return (
-      <div className="flex h-screen items-center justify-center bg-cave-black">
+      <div className="flex h-dvh items-center justify-center bg-cave-black">
         <p className="font-[family-name:var(--font-space-mono)] text-sm text-cave-fog animate-pulse">
           Loading...
         </p>
@@ -37,9 +37,9 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-cave-black">
+    <div className="flex min-h-dvh bg-cave-black">
       <AdminSidebar />
-      <main className="flex-1 px-4 py-6 md:ml-60 md:px-8 md:py-8">
+      <main className="flex-1 px-4 pt-16 pb-6 md:ml-60 md:px-8 md:pt-8 md:pb-8">
         {children}
       </main>
     </div>

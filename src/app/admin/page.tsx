@@ -44,7 +44,7 @@ export default function AdminDashboardPage() {
       </h1>
 
       {/* Stats */}
-      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+      <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatsCard
           label="Total Flyers"
           value={stats.totalFlyers}
@@ -63,7 +63,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Recent flyers */}
-      <div className="rounded-xl border border-cave-ash bg-cave-stone p-6">
+      <div className="rounded-xl border border-cave-ash bg-cave-stone p-4 sm:p-6">
         <h2 className="mb-4 font-[family-name:var(--font-space-mono)] text-sm text-cave-fog uppercase tracking-wider">
           Recent Flyers
         </h2>
