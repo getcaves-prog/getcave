@@ -12,10 +12,10 @@
   --color-cave-light: #E0E0E0;
   --color-cave-white: #F5F5F5;
 
-  /* Neon accents */
-  --color-neon-green: #39FF14;
-  --color-neon-orange: #FF6B2B;
-  --color-neon-pink: #FF2D7B;
+  /* Accents — monochrome */
+  --color-neon-green: #FFFFFF;
+  --color-neon-orange: #CCCCCC;
+  --color-neon-pink: #999999;
 
   /* Font families */
   --font-inter: var(--font-inter);
@@ -33,9 +33,9 @@
   --color-cave-fog: #8A8A8A;
   --color-cave-light: #E0E0E0;
   --color-cave-white: #F5F5F5;
-  --neon-green: #39FF14;
-  --neon-orange: #FF6B2B;
-  --neon-pink: #FF2D7B;
+  --neon-green: #FFFFFF;
+  --neon-orange: #CCCCCC;
+  --neon-pink: #999999;
 }
 
 /* Safe area for bottom nav on iOS */

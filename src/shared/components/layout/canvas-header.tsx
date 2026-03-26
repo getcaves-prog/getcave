@@ -27,7 +27,7 @@ export function CanvasHeader() {
         {/* Left: Hamburger */}
         <button
           onClick={openMenu}
-          className="flex items-center justify-center w-10 h-10 text-neon-green"
+          className="flex items-center justify-center w-10 h-10 text-cave-white"
           aria-label="Open menu"
         >
           <svg
@@ -55,7 +55,7 @@ export function CanvasHeader() {
         {user ? (
           <button
             onClick={handleUploadClick}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-neon-green text-cave-black font-bold text-xl leading-none"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-cave-white text-cave-black font-bold text-xl leading-none"
             aria-label="Upload flyer"
           >
             +

@@ -51,7 +51,7 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute -top-2 -right-2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-cave-black/80 border border-cave-ash/40 text-cave-fog hover:text-neon-green hover:border-neon-green/50 transition-colors"
+          className="absolute -top-2 -right-2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-cave-black/80 border border-cave-ash/40 text-cave-fog hover:text-cave-white hover:border-cave-white/50 transition-colors"
           aria-label="Close flyer detail"
         >
           <svg
