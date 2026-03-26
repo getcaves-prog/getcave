@@ -21,7 +21,7 @@ export function CanvasHeader() {
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 backdrop-blur-md"
         style={{
           height: 56,
-          backgroundColor: "rgba(5, 5, 5, 0.45)",
+          backgroundColor: "rgba(5, 5, 5, 0.6)",
         }}
       >
         {/* Left: Hamburger */}
