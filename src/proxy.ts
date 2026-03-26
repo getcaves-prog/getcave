@@ -29,23 +29,22 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Public paths that don't require authentication
-  const publicPaths = ["/auth/login", "/auth/signup", "/auth/callback", "/auth/confirm"];
-  const isPublicRoute =
-    publicPaths.some((path) => request.nextUrl.pathname.startsWith(path));
+  // Protected paths — require authentication
+  const protectedPaths = ["/upload", "/profile"];
+  const isProtectedRoute =
+    protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
-  // Allow guest mode access (cookie set from login screen)
-  const isGuest = request.cookies.get("guest_mode")?.value === "true";
-
-  // Redirect unauthenticated users to login
-  if (!user && !isGuest && !isPublicRoute) {
+  // Redirect unauthenticated users to login only for protected routes
+  if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
+    url.searchParams.set("redirectTo", request.nextUrl.pathname);
     return NextResponse.redirect(url);
   }
 
   // Redirect authenticated users away from auth pages
-  if (user && publicPaths.some((p) => request.nextUrl.pathname.startsWith(p))) {
+  const authPaths = ["/auth/login", "/auth/signup"];
+  if (user && authPaths.some((p) => request.nextUrl.pathname.startsWith(p))) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);

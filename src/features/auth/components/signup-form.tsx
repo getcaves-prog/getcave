@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { createClient } from "@/shared/lib/supabase/client";
@@ -72,9 +73,14 @@ export function SignupForm() {
   return (
     <div className="flex min-h-dvh flex-col items-center bg-cave-black px-6">
       {/* Logo */}
-      <h1 className="mt-[15dvh] mb-10 text-8xl text-cave-white font-[family-name:var(--font-pinyon-script)]">
-        Caves
-      </h1>
+      <Image
+        src="/Logo.png"
+        alt="Caves"
+        width={200}
+        height={72}
+        priority
+        className="mt-[12dvh] mb-10 h-auto w-[200px]"
+      />
 
       {/* Form */}
       <form

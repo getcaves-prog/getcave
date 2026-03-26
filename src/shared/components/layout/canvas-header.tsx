@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
+import Image from "next/image";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { createClient } from "@/shared/lib/supabase/client";
 import Link from "next/link";
 import { LocationSearch } from "@/shared/components/layout/location-search";
 import { ActionModal } from "@/shared/components/layout/action-modal";
+import { useLocationStore } from "@/shared/stores/location.store";
 
 interface CanvasHeaderProps {
   hidelogo?: boolean;
@@ -13,6 +15,7 @@ interface CanvasHeaderProps {
 
 export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
   const { user } = useAuth();
+  const locationName = useLocationStore((s) => s.locationName);
   const [searchOpen, setSearchOpen] = useState(false);
   const [locked, setLocked] = useState(false);
   const [actionModalOpen, setActionModalOpen] = useState(false);
@@ -100,14 +103,24 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
         className="absolute left-1/2 -translate-x-1/2"
         onMouseLeave={handleZoneMouseLeave}
       >
-        <div className="flex items-center gap-2">
-          <h1
-            className="text-4xl text-cave-white font-[family-name:var(--font-pinyon-script)] transition-opacity duration-300 cursor-pointer"
+        <div className="flex flex-col items-center">
+          <Image
+            src="/Logo.png"
+            alt="Caves"
+            width={120}
+            height={43}
+            className="h-auto w-[120px] transition-opacity duration-300 cursor-pointer"
             style={{ opacity: hidelogo ? 0 : 1 }}
             onClick={() => { openSearch(); handleSearchInteraction(); }}
-          >
-            Caves
-          </h1>
+          />
+          {locationName && (
+            <button
+              onClick={() => { openSearch(); handleSearchInteraction(); }}
+              className="text-xs text-cave-fog tracking-wider uppercase truncate max-w-[200px] cursor-pointer transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+            >
+              {locationName}
+            </button>
+          )}
         </div>
 
         <LocationSearch
