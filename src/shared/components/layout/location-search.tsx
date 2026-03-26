@@ -9,9 +9,10 @@ import type { GeocodingResult } from "@/shared/lib/geocoding/types";
 interface LocationSearchProps {
   isOpen: boolean;
   onClose: () => void;
+  onInteraction: () => void;
 }
 
-export function LocationSearch({ isOpen, onClose }: LocationSearchProps) {
+export function LocationSearch({ isOpen, onClose, onInteraction }: LocationSearchProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeocodingResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -71,9 +72,9 @@ export function LocationSearch({ isOpen, onClose }: LocationSearchProps) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Mobile backdrop — tap outside closes */}
           <motion.div
-            className="fixed inset-0 z-[45]"
+            className="fixed inset-0 z-[45] md:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -88,6 +89,8 @@ export function LocationSearch({ isOpen, onClose }: LocationSearchProps) {
             animate={{ opacity: 1, y: 0, scaleY: 1 }}
             exit={{ opacity: 0, y: -8, scaleY: 0.95 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
+            onClick={onInteraction}
+            onFocus={onInteraction}
           >
             {/* Input */}
             <div className="flex items-center gap-2 rounded-t-xl border border-cave-ash bg-cave-rock px-3 h-11">
@@ -111,6 +114,7 @@ export function LocationSearch({ isOpen, onClose }: LocationSearchProps) {
                 value={query}
                 onChange={(e) => handleSearch(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onFocus={onInteraction}
                 placeholder="Search city, neighborhood..."
                 className="flex-1 bg-transparent text-sm text-cave-white placeholder:text-cave-fog/60 focus:outline-none font-[family-name:var(--font-inter)]"
               />
