@@ -16,7 +16,7 @@ interface CanvasReadyState {
 }
 
 /** Minimum images loaded before we consider the canvas "ready" */
-const MIN_IMAGES_FOR_READY = 2;
+const MIN_IMAGES_FOR_READY = 1;
 
 function computeReady(flyersLoaded: boolean, imagesLoadedCount: number): boolean {
   return flyersLoaded && imagesLoadedCount >= MIN_IMAGES_FOR_READY;

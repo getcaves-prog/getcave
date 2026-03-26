@@ -19,9 +19,9 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
     scale: initialTransform?.scale ?? 1,
   });
 
-  const springX = useSpring(transformRef.current.x, { stiffness: 300, damping: 30 });
-  const springY = useSpring(transformRef.current.y, { stiffness: 300, damping: 30 });
-  const springScale = useSpring(transformRef.current.scale, { stiffness: 300, damping: 30 });
+  const springX = useSpring(transformRef.current.x, { stiffness: 400, damping: 35 });
+  const springY = useSpring(transformRef.current.y, { stiffness: 400, damping: 35 });
+  const springScale = useSpring(transformRef.current.scale, { stiffness: 400, damping: 35 });
 
   const updateTransform = useCallback(
     (updates: Partial<CanvasTransform>) => {
@@ -69,7 +69,7 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
       },
       onWheel: ({ delta: [, dy], event }) => {
         event.preventDefault();
-        const zoomFactor = 1 - dy * 0.001;
+        const zoomFactor = 1 - dy * 0.0015;
         const newScale = transformRef.current.scale * zoomFactor;
         updateTransform({ scale: newScale });
       },
