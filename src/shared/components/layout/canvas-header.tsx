@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from "react";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import Link from "next/link";
 import { LocationSearch } from "@/shared/components/layout/location-search";
+import { ActionModal } from "@/shared/components/layout/action-modal";
 
 interface CanvasHeaderProps {
   hidelogo?: boolean;
@@ -13,6 +14,7 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
   const { user, signOut } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
   const [locked, setLocked] = useState(false);
+  const [actionModalOpen, setActionModalOpen] = useState(false);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleUploadClick = () => {
@@ -20,7 +22,7 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
       window.location.href = "/auth/signup";
       return;
     }
-    alert("Coming soon");
+    setActionModalOpen(true);
   };
 
   const openSearch = useCallback(() => {
@@ -98,24 +100,14 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
             Caves
           </h1>
 
-          {/* Mobile: logo + search icon */}
+          {/* Mobile: logo only — tap opens search */}
           <h1
-            className="text-5xl text-cave-white font-[family-name:var(--font-pinyon-script)] transition-opacity duration-300 md:hidden"
+            className="text-5xl text-cave-white font-[family-name:var(--font-pinyon-script)] transition-opacity duration-300 cursor-pointer md:hidden"
             style={{ opacity: hidelogo ? 0 : 1 }}
+            onClick={() => { openSearch(); handleSearchInteraction(); }}
           >
             Caves
           </h1>
-          <button
-            onClick={() => { openSearch(); handleSearchInteraction(); }}
-            className="flex items-center justify-center w-7 h-7 text-cave-fog hover:text-cave-white transition-colors md:hidden"
-            aria-label="Search location"
-            style={{ opacity: hidelogo ? 0 : 1 }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-          </button>
         </div>
 
         {/* Search dropdown — inside hover zone so mouse can move to it */}
@@ -137,6 +129,12 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
           <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
       </button>
+
+      {/* Action modal */}
+      <ActionModal
+        isOpen={actionModalOpen}
+        onClose={() => setActionModalOpen(false)}
+      />
     </header>
   );
 }
