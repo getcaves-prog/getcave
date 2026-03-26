@@ -197,17 +197,49 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
     setShowSuggestions(false);
   }, []);
 
+  const [locatingMe, setLocatingMe] = useState(false);
+
   const handleUseMyLocation = useCallback(async () => {
+    // If we already have coords in store, use them
     if (latitude && longitude) {
+      setLocatingMe(true);
       setSelectedCoords({ lat: latitude, lng: longitude });
       const { reverseGeocode } = await import(
         "@/shared/lib/geocoding/geocoding.service"
       );
       const result = await reverseGeocode({ lat: latitude, lng: longitude });
-      if (result) {
-        setAddress(result.address);
-      }
+      if (result) setAddress(result.address);
+      setLocatingMe(false);
+      return;
     }
+
+    // Otherwise request browser geolocation directly
+    if (!navigator.geolocation) {
+      setErrors((prev) => ({ ...prev, address: "Geolocation not supported" }));
+      return;
+    }
+
+    setLocatingMe(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setSelectedCoords({ lat, lng });
+        useLocationStore.getState().setLocation(lat, lng);
+
+        const { reverseGeocode } = await import(
+          "@/shared/lib/geocoding/geocoding.service"
+        );
+        const result = await reverseGeocode({ lat, lng });
+        if (result) setAddress(result.address);
+        setLocatingMe(false);
+      },
+      (err) => {
+        setErrors((prev) => ({ ...prev, address: `Location error: ${err.message}` }));
+        setLocatingMe(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   }, [latitude, longitude]);
 
   const handleSubmit = useCallback(async () => {
@@ -421,12 +453,15 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
       </div>
 
       {/* Use my location button */}
-      {latitude && longitude && (
-        <button
-          type="button"
-          onClick={handleUseMyLocation}
-          className="flex items-center gap-2 text-sm text-cave-fog hover:text-cave-white transition-colors mb-4"
-        >
+      <button
+        type="button"
+        onClick={handleUseMyLocation}
+        disabled={locatingMe}
+        className="flex items-center gap-2 text-sm text-cave-fog hover:text-cave-white transition-colors mb-4 disabled:opacity-50"
+      >
+        {locatingMe ? (
+          <div className="w-3.5 h-3.5 border border-cave-fog border-t-transparent rounded-full animate-spin" />
+        ) : (
           <svg
             width="14"
             height="14"
@@ -444,9 +479,9 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
             <line x1="2" y1="12" x2="6" y2="12" />
             <line x1="18" y1="12" x2="22" y2="12" />
           </svg>
-          Use my location
-        </button>
-      )}
+        )}
+        {locatingMe ? "Getting location..." : "Use my location"}
+      </button>
 
       {/* Selected coordinates */}
       {selectedCoords && (
