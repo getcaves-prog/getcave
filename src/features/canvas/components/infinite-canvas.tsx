@@ -28,41 +28,38 @@ function getGridConfig(): GridConfig {
     : GRID_CONFIG.desktop;
 }
 
-function computeGridLayout(flyers: Flyer[], config: GridConfig): LayoutFlyer[] {
-  const { columns, flyerWidth, flyerHeight, gap } = config;
-  const rows = Math.ceil(flyers.length / columns);
+/**
+ * Fills a grid of `rows` x `columns` with flyers, repeating cyclically.
+ * 3 rows fixed vertically, extends horizontally.
+ */
+function computeInfiniteGrid(flyers: Flyer[], config: GridConfig): LayoutFlyer[] {
+  if (flyers.length === 0) return [];
 
-  const gridWidth = columns * flyerWidth + (columns - 1) * gap;
+  const { columns, rows, flyerWidth, flyerHeight, gap } = config;
+  const totalSlots = rows * columns;
+
   const gridHeight = rows * flyerHeight + (rows - 1) * gap;
-
-  const offsetX = -gridWidth / 2;
   const offsetY = -gridHeight / 2;
 
-  return flyers.map((flyer, index) => {
-    const col = index % columns;
-    const row = Math.floor(index / columns);
+  const result: LayoutFlyer[] = [];
 
-    return {
+  for (let i = 0; i < totalSlots; i++) {
+    const flyer = flyers[i % flyers.length];
+    const col = Math.floor(i / rows);
+    const row = i % rows;
+
+    result.push({
       ...flyer,
-      layout_x: offsetX + col * (flyerWidth + gap),
+      id: `${flyer.id}-${i}`,
+      layout_x: col * (flyerWidth + gap),
       layout_y: offsetY + row * (flyerHeight + gap),
       layout_width: flyerWidth,
       layout_height: flyerHeight,
       layout_rotation: 0,
-    };
-  });
-}
+    });
+  }
 
-function computeCenter(flyers: LayoutFlyer[]): { x: number; y: number } {
-  if (flyers.length === 0) return { x: 0, y: 0 };
-
-  const sumX = flyers.reduce((acc, f) => acc + f.layout_x, 0);
-  const sumY = flyers.reduce((acc, f) => acc + f.layout_y, 0);
-
-  return {
-    x: sumX / flyers.length,
-    y: sumY / flyers.length,
-  };
+  return result;
 }
 
 function isInViewport(flyer: LayoutFlyer, viewport: Viewport): boolean {
@@ -102,18 +99,19 @@ export function InfiniteCanvas() {
   }, []);
 
   const layoutFlyers = useMemo(
-    () => computeGridLayout(flyers, gridConfig),
+    () => computeInfiniteGrid(flyers, gridConfig),
     [flyers, gridConfig]
   );
 
+  // Center vertically, start at the left edge
   useEffect(() => {
     if (layoutFlyers.length === 0) return;
 
-    const center = computeCenter(layoutFlyers);
     const windowW = window.innerWidth;
     const windowH = window.innerHeight - CANVAS_LIMITS.HEADER_HEIGHT;
 
-    jumpTo(-center.x + windowW / 2, -center.y + windowH / 2, 0.8);
+    // Start centered vertically, slightly offset from left
+    jumpTo(windowW * 0.1, windowH / 2, 0.8);
   }, [layoutFlyers, jumpTo]);
 
   const updateViewport = useCallback((x: number, y: number, scale: number) => {
@@ -146,7 +144,6 @@ export function InfiniteCanvas() {
     [layoutFlyers, viewport]
   );
 
-  // Double-tap detection via canvas hit-testing
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       if (isDragging) return;

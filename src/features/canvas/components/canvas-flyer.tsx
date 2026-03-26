@@ -21,19 +21,9 @@ export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
         height: flyer.layout_height,
       }}
     >
-      <div
-        className="relative w-full h-full overflow-hidden border border-cave-ash/60"
-        style={{
-          boxShadow:
-            "0 2px 8px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255,255,255,0.03)",
-        }}
-      >
+      <div className="relative w-full h-full overflow-hidden">
         {imageError ? (
-          <div className="w-full h-full bg-cave-stone flex items-center justify-center">
-            <span className="text-cave-fog text-sm font-mono text-center px-4">
-              {flyer.title ?? "Event Flyer"}
-            </span>
-          </div>
+          <div className="w-full h-full bg-cave-stone" />
         ) : (
           <Image
             src={flyer.image_url}
@@ -46,16 +36,6 @@ export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
             unoptimized
           />
         )}
-
-        {flyer.title && !imageError && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 pt-6">
-            <p className="text-cave-white text-[10px] font-mono truncate leading-tight">
-              {flyer.title}
-            </p>
-          </div>
-        )}
-
-        <div className="absolute inset-0 pointer-events-none border border-white/[0.02]" />
       </div>
     </div>
   );
