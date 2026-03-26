@@ -65,8 +65,8 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
     <header
       className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 backdrop-blur-md safe-area-top transition-colors duration-300"
       style={{
-        minHeight: 56,
-        paddingTop: "max(env(safe-area-inset-top), 0px)",
+        minHeight: 72,
+        paddingTop: "max(env(safe-area-inset-top), 12px)",
         backgroundColor: active ? "rgba(5, 5, 5, 0.55)" : "rgba(5, 5, 5, 0.25)",
         WebkitBackdropFilter: "blur(12px)",
       }}
@@ -116,18 +116,23 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
           {locationName && (
             <button
               onClick={() => { openSearch(); handleSearchInteraction(); }}
-              className="flex items-center gap-1 mt-0.5 cursor-pointer transition-colors hover:text-cave-white group"
+              className="flex items-center gap-1.5 mt-1 cursor-pointer transition-colors hover:text-cave-white group"
             >
               <svg
-                width="10"
-                height="10"
+                width="12"
+                height="12"
                 viewBox="0 0 24 24"
-                fill="currentColor"
-                className="text-cave-white/70 group-hover:text-cave-white shrink-0"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-cave-white group-hover:text-cave-white shrink-0"
               >
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" />
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
               </svg>
-              <span className="text-[11px] text-cave-white/80 tracking-wide truncate max-w-[180px] font-[family-name:var(--font-space-mono)] group-hover:text-cave-white">
+              <span className="text-xs text-cave-white tracking-wide truncate max-w-[180px] font-[family-name:var(--font-space-mono)] group-hover:text-cave-light">
                 {locationName}
               </span>
             </button>
