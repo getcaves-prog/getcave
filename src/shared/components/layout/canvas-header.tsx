@@ -3,7 +3,11 @@
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import Link from "next/link";
 
-export function CanvasHeader() {
+interface CanvasHeaderProps {
+  hidelogo?: boolean;
+}
+
+export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
   const { user, signOut } = useAuth();
 
   const handleUploadClick = () => {
@@ -41,7 +45,10 @@ export function CanvasHeader() {
       )}
 
       {/* Center: Logo */}
-      <h1 className="absolute left-1/2 -translate-x-1/2 text-5xl text-cave-white font-[family-name:var(--font-pinyon-script)]">
+      <h1
+        className="absolute left-1/2 -translate-x-1/2 text-5xl text-cave-white font-[family-name:var(--font-pinyon-script)] transition-opacity duration-300"
+        style={{ opacity: hidelogo ? 0 : 1 }}
+      >
         Caves
       </h1>
 
