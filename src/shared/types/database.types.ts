@@ -159,35 +159,44 @@ export type Database = {
       }
       flyers: {
         Row: {
+          address: string | null
           canvas_x: number
           canvas_y: number
           created_at: string
           height: number
           id: string
           image_url: string
+          location: unknown
           rotation: number
+          status: string | null
           title: string | null
           width: number
         }
         Insert: {
+          address?: string | null
           canvas_x?: number
           canvas_y?: number
           created_at?: string
           height?: number
           id?: string
           image_url: string
+          location?: unknown
           rotation?: number
+          status?: string | null
           title?: string | null
           width?: number
         }
         Update: {
+          address?: string | null
           canvas_x?: number
           canvas_y?: number
           created_at?: string
           height?: number
           id?: string
           image_url?: string
+          location?: unknown
           rotation?: number
+          status?: string | null
           title?: string | null
           width?: number
         }
@@ -268,6 +277,29 @@ export type Database = {
         }[]
       }
       increment_view_count: { Args: { event_id: string }; Returns: undefined }
+      nearby_flyers: {
+        Args: { radius_km?: number; user_lat: number; user_lng: number }
+        Returns: {
+          address: string | null
+          canvas_x: number
+          canvas_y: number
+          created_at: string
+          height: number
+          id: string
+          image_url: string
+          location: unknown
+          rotation: number
+          status: string | null
+          title: string | null
+          width: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "flyers"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       toggle_event_heat: { Args: { p_event_id: string }; Returns: Json }
     }
     Enums: {

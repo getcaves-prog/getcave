@@ -15,3 +15,23 @@ export async function getFlyers(): Promise<Flyer[]> {
 
   return data;
 }
+
+export async function getNearbyFlyers(
+  lat: number,
+  lng: number,
+  radiusKm: number = 50
+): Promise<Flyer[]> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("nearby_flyers", {
+    user_lat: lat,
+    user_lng: lng,
+    radius_km: radiusKm,
+  });
+
+  if (error) {
+    throw new Error(`Failed to fetch nearby flyers: ${error.message}`);
+  }
+
+  return data ?? [];
+}

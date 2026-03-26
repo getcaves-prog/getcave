@@ -4,10 +4,26 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { InfiniteCanvas } from "@/features/canvas/components/infinite-canvas";
 import { CanvasHeader } from "@/shared/components/layout/canvas-header";
+import { useGeolocation } from "@/shared/hooks/use-geolocation";
+import { useLocationStore } from "@/shared/stores/location.store";
 
 export default function HomePage() {
   const [introComplete, setIntroComplete] = useState(false);
   const [targetY, setTargetY] = useState(0);
+
+  const { latitude, longitude, loading: geoLoading, error: geoError } = useGeolocation();
+
+  // Sync geolocation into Zustand store
+  useEffect(() => {
+    if (latitude !== null && longitude !== null) {
+      useLocationStore.getState().setLocation(latitude, longitude);
+    } else if (!geoLoading && geoError) {
+      useLocationStore.getState().setError(geoError);
+    } else if (!geoLoading) {
+      // Geolocation finished but no coordinates (denied/unavailable)
+      useLocationStore.getState().setError("Location unavailable");
+    }
+  }, [latitude, longitude, geoLoading, geoError]);
 
   useEffect(() => {
     setTargetY(-(window.innerHeight / 2 - 28));
