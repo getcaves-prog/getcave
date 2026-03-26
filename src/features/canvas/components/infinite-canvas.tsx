@@ -206,7 +206,7 @@ export function InfiniteCanvas() {
       )}
 
       <motion.div
-        className="relative origin-top-left pointer-events-none"
+        className="relative origin-top-left"
         style={{
           x: springX,
           y: springY,
