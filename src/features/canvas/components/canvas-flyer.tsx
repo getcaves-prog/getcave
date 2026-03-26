@@ -6,6 +6,7 @@ import type { LayoutFlyer } from "../types/canvas.types";
 
 interface CanvasFlyerProps {
   flyer: LayoutFlyer;
+  onImageLoad?: () => void;
 }
 
 /**
@@ -28,11 +29,17 @@ function useHasHover(): boolean {
   return hasHover;
 }
 
-export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
+export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
   const cardRef = useRef<HTMLDivElement>(null);
   const hasHover = useHasHover();
+
+  const handleImageLoad = useCallback(() => {
+    setImageLoaded(true);
+    onImageLoad?.();
+  }, [onImageLoad]);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
@@ -69,6 +76,8 @@ export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
         height: flyer.layout_height,
         perspective: 600,
         WebkitPerspective: 600,
+        contentVisibility: "auto",
+        containIntrinsicSize: `${flyer.layout_width}px ${flyer.layout_height}px`,
       }}
     >
       <div
@@ -83,6 +92,11 @@ export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
+        {/* Skeleton placeholder — visible until image loads */}
+        {!imageLoaded && !imageError && (
+          <div className="absolute inset-0 bg-cave-black animate-pulse" />
+        )}
+
         {imageError ? (
           <div className="w-full h-full bg-cave-stone" />
         ) : (
@@ -91,9 +105,12 @@ export function CanvasFlyer({ flyer }: CanvasFlyerProps) {
             alt={flyer.title ?? "Event flyer"}
             fill
             sizes={`${flyer.layout_width}px`}
-            className="object-cover pointer-events-none"
+            className={`object-cover pointer-events-none transition-opacity duration-300 ${
+              imageLoaded ? "opacity-100" : "opacity-0"
+            }`}
             draggable={false}
             onError={() => setImageError(true)}
+            onLoad={handleImageLoad}
             loading="lazy"
             unoptimized
           />

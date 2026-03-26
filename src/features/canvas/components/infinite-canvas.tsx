@@ -4,6 +4,7 @@ import { useEffect, useMemo, useCallback, useState, useRef } from "react";
 import { motion, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import { useFlyers } from "../hooks/use-flyers";
 import { useCanvasGestures } from "../hooks/use-canvas-gestures";
+import { useCanvasReadyStore } from "../stores/canvas-ready.store";
 import { CanvasFlyer } from "./canvas-flyer";
 import { FlyerDetailModal } from "./flyer-detail-modal";
 import {
@@ -78,6 +79,11 @@ function generateVisibleFlyers(
 export function InfiniteCanvas() {
   const { flyers, loading, error } = useFlyers();
   const { springX, springY, springScale, isDragging, bind, jumpTo, transformRef } = useCanvasGestures();
+  const incrementImagesLoaded = useCanvasReadyStore((s) => s.incrementImagesLoaded);
+
+  const handleImageLoad = useCallback(() => {
+    incrementImagesLoaded();
+  }, [incrementImagesLoaded]);
 
   const [gridConfig, setGridConfig] = useState<GridConfig>(getGridConfig);
   const [selectedFlyer, setSelectedFlyer] = useState<LayoutFlyer | null>(null);
@@ -217,7 +223,7 @@ export function InfiniteCanvas() {
         }}
       >
         {visibleFlyers.map((flyer) => (
-          <CanvasFlyer key={flyer.id} flyer={flyer} />
+          <CanvasFlyer key={flyer.id} flyer={flyer} onImageLoad={handleImageLoad} />
         ))}
       </motion.div>
 
