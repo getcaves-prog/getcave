@@ -24,7 +24,7 @@ export function AdminSidebar() {
       {/* Mobile hamburger */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-lg border border-cave-ash bg-cave-stone md:hidden"
+        className="fixed top-4 left-4 z-50 flex h-11 w-11 items-center justify-center rounded-xl border border-cave-ash bg-cave-stone md:hidden"
         aria-label="Toggle menu"
       >
         <span className="flex flex-col gap-1">
@@ -50,14 +50,34 @@ export function AdminSidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 z-40 flex h-full w-60 flex-col border-r border-cave-ash bg-cave-dark transition-transform md:translate-x-0 ${
+        className={`fixed left-0 top-0 z-40 flex h-dvh w-60 flex-col border-r border-cave-ash bg-cave-dark transition-transform md:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="border-b border-cave-ash px-6 py-5">
+        <div className="flex items-center justify-between border-b border-cave-ash px-6 py-5">
           <h1 className="font-[family-name:var(--font-space-mono)] text-sm font-bold tracking-widest text-cave-white uppercase">
             Caves Admin
           </h1>
+          {/* Mobile close button */}
+          <button
+            onClick={() => setOpen(false)}
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-cave-fog transition-colors hover:text-cave-white md:hidden"
+            aria-label="Close menu"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
         <nav className="mt-4 flex flex-1 flex-col gap-1 px-3">
@@ -66,7 +86,7 @@ export function AdminSidebar() {
               key={item.href}
               href={item.href}
               onClick={() => setOpen(false)}
-              className={`rounded-lg px-3 py-2.5 font-[family-name:var(--font-space-mono)] text-sm transition-colors ${
+              className={`flex min-h-[44px] items-center rounded-lg px-3 font-[family-name:var(--font-space-mono)] text-sm transition-colors ${
                 isActive(item.href)
                   ? "border-l-2 border-cave-white bg-cave-stone text-cave-white"
                   : "text-cave-fog hover:bg-cave-stone hover:text-cave-light"
@@ -80,7 +100,7 @@ export function AdminSidebar() {
         <div className="border-t border-cave-ash px-6 py-4">
           <Link
             href="/"
-            className="font-[family-name:var(--font-space-mono)] text-xs text-cave-fog transition-colors hover:text-cave-white"
+            className="flex min-h-[44px] items-center font-[family-name:var(--font-space-mono)] text-xs text-cave-fog transition-colors hover:text-cave-white"
           >
             Back to app
           </Link>

@@ -44,8 +44,75 @@ export function UserTable() {
         User Management
       </h2>
 
-      <div className="overflow-x-auto rounded-xl border border-cave-ash">
-        <table className="w-full min-w-[540px]">
+      {/* Mobile cards */}
+      <div className="space-y-3 md:hidden">
+        {loading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-24 animate-pulse rounded-xl bg-cave-stone"
+              />
+            ))}
+          </div>
+        ) : users.length === 0 ? (
+          <div className="rounded-xl border border-cave-ash p-8 text-center text-cave-fog">
+            No users found
+          </div>
+        ) : (
+          users.map((user) => (
+            <div
+              key={user.id}
+              className="rounded-xl border border-cave-ash bg-cave-stone p-4"
+            >
+              <div className="flex items-start gap-3">
+                {user.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt={user.username}
+                    className="h-10 w-10 shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cave-rock font-[family-name:var(--font-space-mono)] text-xs text-cave-fog">
+                    {user.username[0]?.toUpperCase() ?? "?"}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-cave-white">
+                    {user.username}
+                  </p>
+                  <p className="mt-0.5 text-xs text-cave-fog">
+                    {user.city ?? "No city"}
+                  </p>
+                  <p className="mt-0.5 font-[family-name:var(--font-space-mono)] text-xs text-cave-smoke">
+                    {new Date(user.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <select
+                  value={user.role}
+                  onChange={(e) =>
+                    handleRoleChange(
+                      user.id,
+                      e.target.value as UserRole
+                    )
+                  }
+                  className="min-h-[44px] shrink-0 rounded-lg border border-cave-ash bg-cave-rock px-3 py-2 font-[family-name:var(--font-space-mono)] text-xs text-cave-white outline-none focus:border-cave-fog"
+                >
+                  {ROLES.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden overflow-x-auto rounded-xl border border-cave-ash md:block">
+        <table className="w-full">
           <thead>
             <tr className="border-b border-cave-ash bg-cave-stone">
               <th className="px-4 py-3 text-left font-[family-name:var(--font-space-mono)] text-xs tracking-wider text-cave-fog uppercase">
@@ -106,7 +173,7 @@ export function UserTable() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-sm text-cave-fog">
-                    {user.city ?? "—"}
+                    {user.city ?? "\u2014"}
                   </td>
                   <td className="px-4 py-3">
                     <select
