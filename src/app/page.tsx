@@ -10,45 +10,52 @@ export default function HomePage() {
   const [targetY, setTargetY] = useState(0);
 
   useEffect(() => {
-    // Calculate how far the logo needs to travel: from center to header (28px from top)
     setTargetY(-(window.innerHeight / 2 - 28));
   }, []);
 
   return (
     <main className="h-screen w-screen overflow-hidden bg-cave-black">
-      {/* Canvas + Header */}
+      {/* Canvas + Header — always mounted, fades in smoothly */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: introComplete ? 1 : 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
         className="h-full w-full"
       >
         <CanvasHeader hidelogo={!introComplete} />
         <InfiniteCanvas />
       </motion.div>
 
-      {/* Intro — logo animates from center to header */}
+      {/* Intro overlay */}
       <AnimatePresence>
         {!introComplete && (
           <motion.div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-cave-black"
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center"
+            initial={{ backgroundColor: "rgba(5,5,5,1)" }}
+            animate={{ backgroundColor: "rgba(5,5,5,1)" }}
+            exit={{ backgroundColor: "rgba(5,5,5,0)" }}
+            transition={{ duration: 0.8 }}
           >
             <motion.h1
               className="text-cave-white font-[family-name:var(--font-pinyon-script)] select-none"
-              initial={{ scale: 1, y: 0 }}
+              style={{ fontSize: "6rem" }}
+              initial={{ scale: 1, y: 0, opacity: 1 }}
               animate={{
                 scale: 0.55,
                 y: targetY,
+                opacity: 1,
               }}
+              exit={{ opacity: 0 }}
               transition={{
-                duration: 0.85,
-                delay: 0.6,
-                ease: [0.22, 1, 0.36, 1],
+                type: "spring",
+                stiffness: 80,
+                damping: 18,
+                mass: 1,
+                delay: 0.4,
               }}
-              onAnimationComplete={() => setIntroComplete(true)}
-              style={{ fontSize: "6rem" }}
+              onAnimationComplete={() => {
+                setTimeout(() => setIntroComplete(true), 200);
+              }}
             >
               Caves
             </motion.h1>
