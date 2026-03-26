@@ -35,14 +35,14 @@ export function LoginForm() {
         <button
           type="button"
           onClick={handleGuestAccess}
-          className="w-[210px] rounded-full border border-cave-smoke bg-transparent px-6 py-3 text-sm font-medium tracking-widest text-cave-fog uppercase transition-colors hover:border-neon-green hover:text-neon-green"
+          className="w-[210px] rounded-full border border-cave-smoke bg-transparent px-6 py-3 text-sm font-medium tracking-widest text-cave-fog uppercase transition-colors hover:border-cave-white hover:text-cave-white"
         >
           Guest.
         </button>
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className="w-[210px] rounded-full border border-transparent bg-neon-green px-6 py-3 text-sm font-medium tracking-widest text-cave-black uppercase transition-colors hover:brightness-110"
+          className="w-[210px] rounded-full border border-transparent bg-cave-white px-6 py-3 text-sm font-medium tracking-widest text-cave-black uppercase transition-colors hover:bg-cave-light"
         >
           Log in.
         </button>
@@ -50,7 +50,7 @@ export function LoginForm() {
           type="button"
           onClick={handleGoogleLogin}
           aria-label="Sign in with Google"
-          className="mt-2 flex h-11 w-11 items-center justify-center rounded-full border border-cave-rock bg-cave-ash transition-colors hover:border-neon-green"
+          className="mt-2 flex h-11 w-11 items-center justify-center rounded-full border border-cave-rock bg-cave-ash transition-colors hover:border-cave-white"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
             <path
