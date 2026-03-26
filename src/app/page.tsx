@@ -30,13 +30,14 @@ export default function HomePage() {
   }, []);
 
   return (
-    <main className="h-screen w-screen overflow-hidden bg-cave-black">
+    <main className="h-dvh w-screen overflow-hidden bg-cave-black" style={{ position: "fixed", inset: 0 }}>
       {/* Canvas + Header — always mounted, fades in smoothly */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: introComplete ? 1 : 0 }}
         transition={{ duration: 1.2, ease: "easeOut" }}
         className="h-full w-full"
+        style={{ willChange: "opacity" }}
       >
         <CanvasHeader hidelogo={!introComplete} />
         <InfiniteCanvas />
@@ -54,7 +55,7 @@ export default function HomePage() {
           >
             <motion.h1
               className="text-cave-white font-[family-name:var(--font-pinyon-script)] select-none"
-              style={{ fontSize: "6rem" }}
+              style={{ fontSize: "6rem", willChange: "transform, opacity" }}
               initial={{ scale: 1, y: 0, opacity: 1 }}
               animate={{
                 scale: 0.55,
@@ -64,9 +65,9 @@ export default function HomePage() {
               exit={{ opacity: 0 }}
               transition={{
                 type: "spring",
-                stiffness: 80,
-                damping: 18,
-                mass: 1,
+                stiffness: 120,
+                damping: 22,
+                mass: 0.8,
                 delay: 0.4,
               }}
               onAnimationComplete={() => {

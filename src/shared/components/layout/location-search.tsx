@@ -116,7 +116,12 @@ export function LocationSearch({ isOpen, onClose, onInteraction }: LocationSearc
                 onKeyDown={handleKeyDown}
                 onFocus={onInteraction}
                 placeholder="Search city, neighborhood..."
-                className="flex-1 bg-transparent text-sm text-cave-white placeholder:text-cave-fog/60 focus:outline-none font-[family-name:var(--font-inter)]"
+                autoComplete="off"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="search"
+                className="flex-1 bg-transparent text-base text-cave-white placeholder:text-cave-fog/60 focus:outline-none font-[family-name:var(--font-inter)]"
               />
               {searching && (
                 <div className="w-3 h-3 border border-cave-fog border-t-transparent rounded-full animate-spin" />

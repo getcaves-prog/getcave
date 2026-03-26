@@ -38,6 +38,32 @@
   --neon-pink: #999999;
 }
 
+/* ── iOS Safari / Edge compatibility ── */
+
+/* Prevent iOS rubber-banding and text size adjustment */
+html, body {
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Prevent iOS input zoom — inputs below 16px trigger auto-zoom */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* Backdrop filter cross-browser (Safari / Edge need -webkit- prefix) */
+.backdrop-blur-md {
+  -webkit-backdrop-filter: blur(12px);
+}
+.backdrop-blur-2xl {
+  -webkit-backdrop-filter: blur(40px);
+}
+
+/* Safe area support for notch iPhones */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
 /* Safe area for bottom nav on iOS */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom);
@@ -48,13 +74,34 @@
   height: 100dvh;
 }
 
+/* dvh fallback for browsers that don't support it */
+@supports not (height: 100dvh) {
+  .h-dvh { height: 100vh; }
+  .min-h-dvh { min-height: 100vh; }
+  .h-screen-safe { height: 100vh; }
+}
+
 /* Hide scrollbar but keep scrolling */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Smooth scrolling in modals for iOS */
+.overflow-y-auto,
+.overflow-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 3D tilt effect — only on devices with hover (mouse, trackpad) */
+@media (hover: hover) and (pointer: fine) {
+  .tilt-enabled {
+    transition: transform 0.2s ease-out;
+  }
 }
 
 /* Grain overlay */
