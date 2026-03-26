@@ -1,20 +1,64 @@
 "use client";
 
 import { useEffect, useMemo, useCallback, useState } from "react";
-import { motion, useMotionValueEvent } from "framer-motion";
+import { motion, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import { useFlyers } from "../hooks/use-flyers";
 import { useCanvasGestures } from "../hooks/use-canvas-gestures";
 import { CanvasFlyer } from "./canvas-flyer";
-import { CANVAS_LIMITS } from "../types/canvas.types";
-import type { Viewport, Flyer } from "../types/canvas.types";
+import { FlyerDetailModal } from "./flyer-detail-modal";
+import {
+  CANVAS_LIMITS,
+  GRID_CONFIG,
+  MOBILE_BREAKPOINT,
+} from "../types/canvas.types";
+import type {
+  Viewport,
+  Flyer,
+  LayoutFlyer,
+  GridConfig,
+} from "../types/canvas.types";
 
 const VIEWPORT_PADDING = 400;
 
-function computeCenter(flyers: Flyer[]): { x: number; y: number } {
+function getGridConfig(): GridConfig {
+  if (typeof window === "undefined") return GRID_CONFIG.desktop;
+  return window.innerWidth < MOBILE_BREAKPOINT
+    ? GRID_CONFIG.mobile
+    : GRID_CONFIG.desktop;
+}
+
+function computeGridLayout(flyers: Flyer[], config: GridConfig): LayoutFlyer[] {
+  const { columns, flyerWidth, flyerHeight, gap } = config;
+  const rows = Math.ceil(flyers.length / columns);
+
+  // Total grid dimensions
+  const gridWidth = columns * flyerWidth + (columns - 1) * gap;
+  const gridHeight = rows * flyerHeight + (rows - 1) * gap;
+
+  // Offset to center the grid around (0, 0)
+  const offsetX = -gridWidth / 2;
+  const offsetY = -gridHeight / 2;
+
+  return flyers.map((flyer, index) => {
+    const col = index % columns;
+    const row = Math.floor(index / columns);
+
+    return {
+      ...flyer,
+      layout_x: offsetX + col * (flyerWidth + gap),
+      layout_y: offsetY + row * (flyerHeight + gap),
+      layout_width: flyerWidth,
+      layout_height: flyerHeight,
+      layout_rotation: 0,
+    };
+  });
+}
+
+function computeCenter(flyers: LayoutFlyer[]): { x: number; y: number } {
   if (flyers.length === 0) return { x: 0, y: 0 };
 
-  const sumX = flyers.reduce((acc, f) => acc + f.canvas_x, 0);
-  const sumY = flyers.reduce((acc, f) => acc + f.canvas_y, 0);
+  const sumX = flyers.reduce((acc, f) => acc + f.layout_x, 0);
+  const sumY = flyers.reduce((acc, f) => acc + f.layout_y, 0);
 
   return {
     x: sumX / flyers.length,
@@ -22,21 +66,24 @@ function computeCenter(flyers: Flyer[]): { x: number; y: number } {
   };
 }
 
-function isInViewport(flyer: Flyer, viewport: Viewport): boolean {
-  const flyerRight = flyer.canvas_x + flyer.width;
-  const flyerBottom = flyer.canvas_y + flyer.height;
+function isInViewport(flyer: LayoutFlyer, viewport: Viewport): boolean {
+  const flyerRight = flyer.layout_x + flyer.layout_width;
+  const flyerBottom = flyer.layout_y + flyer.layout_height;
 
   return (
     flyerRight >= viewport.left &&
-    flyer.canvas_x <= viewport.right &&
+    flyer.layout_x <= viewport.right &&
     flyerBottom >= viewport.top &&
-    flyer.canvas_y <= viewport.bottom
+    flyer.layout_y <= viewport.bottom
   );
 }
 
 export function InfiniteCanvas() {
   const { flyers, loading, error } = useFlyers();
-  const { springX, springY, springScale, bind, jumpTo } = useCanvasGestures();
+  const { springX, springY, springScale, isDragging, bind, jumpTo } = useCanvasGestures();
+
+  const [gridConfig, setGridConfig] = useState<GridConfig>(getGridConfig);
+  const [selectedFlyer, setSelectedFlyer] = useState<LayoutFlyer | null>(null);
 
   const [viewport, setViewport] = useState<Viewport>({
     left: -5000,
@@ -45,16 +92,32 @@ export function InfiniteCanvas() {
     bottom: 5000,
   });
 
+  // Listen for window resize to update grid config
+  useEffect(() => {
+    function handleResize() {
+      setGridConfig(getGridConfig());
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Compute grid layout from raw flyers
+  const layoutFlyers = useMemo(
+    () => computeGridLayout(flyers, gridConfig),
+    [flyers, gridConfig]
+  );
+
   // Center on flyer cluster when loaded
   useEffect(() => {
-    if (flyers.length === 0) return;
+    if (layoutFlyers.length === 0) return;
 
-    const center = computeCenter(flyers);
+    const center = computeCenter(layoutFlyers);
     const windowW = window.innerWidth;
     const windowH = window.innerHeight - CANVAS_LIMITS.HEADER_HEIGHT;
 
     jumpTo(-center.x + windowW / 2, -center.y + windowH / 2, 0.8);
-  }, [flyers, jumpTo]);
+  }, [layoutFlyers, jumpTo]);
 
   // Update viewport bounds on transform changes
   const updateViewport = useCallback((x: number, y: number, scale: number) => {
@@ -83,8 +146,8 @@ export function InfiniteCanvas() {
   });
 
   const visibleFlyers = useMemo(
-    () => flyers.filter((f) => isInViewport(f, viewport)),
-    [flyers, viewport]
+    () => layoutFlyers.filter((f) => isInViewport(f, viewport)),
+    [layoutFlyers, viewport]
   );
 
   if (error) {
@@ -118,14 +181,28 @@ export function InfiniteCanvas() {
           scale: springScale,
           width: "1px",
           height: "1px",
+          pointerEvents: isDragging ? "none" : "auto",
         }}
       >
         {visibleFlyers.map((flyer) => (
-          <CanvasFlyer key={flyer.id} flyer={flyer} />
+          <CanvasFlyer
+            key={flyer.id}
+            flyer={flyer}
+            onDoubleTap={() => setSelectedFlyer(flyer)}
+          />
         ))}
       </motion.div>
 
       <div className="grain-overlay" />
+
+      <AnimatePresence>
+        {selectedFlyer && (
+          <FlyerDetailModal
+            flyer={selectedFlyer}
+            onClose={() => setSelectedFlyer(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
