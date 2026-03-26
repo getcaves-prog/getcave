@@ -25,39 +25,57 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: 0.3 }}
     >
-      {/* Backdrop */}
+      {/* Dark cave backdrop — starts fully black */}
       <motion.div
-        className="absolute inset-0 bg-black/85 backdrop-blur-md"
+        className="absolute inset-0 bg-black"
         onClick={onClose}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        initial={{ opacity: 1 }}
+        animate={{ opacity: 0.92 }}
+        exit={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
       />
 
-      {/* Content */}
+      {/* Vignette overlay — cave tunnel effect */}
       <motion.div
-        className="relative z-10 flex flex-col items-center max-w-[500px] w-full"
-        initial={{ scale: 0.7, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.7, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="absolute inset-0 pointer-events-none"
+        initial={{ opacity: 1 }}
+        animate={{ opacity: 0 }}
+        exit={{ opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        style={{
+          background: "radial-gradient(circle at center, transparent 30%, black 100%)",
+        }}
+      />
+
+      {/* Content — emerges from deep in the cave */}
+      <motion.div
+        className="relative z-10 flex flex-col items-center max-w-[360px] w-full"
+        initial={{ scale: 0.15, opacity: 0, y: 40 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.15, opacity: 0, y: 40 }}
+        transition={{
+          type: "spring",
+          stiffness: 200,
+          damping: 22,
+          mass: 1.2,
+        }}
       >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute -top-2 -right-2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-cave-black/80 border border-cave-ash/40 text-cave-fog hover:text-cave-white hover:border-cave-white/50 transition-colors"
+          className="absolute -top-3 -right-3 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-cave-black/90 border border-cave-ash/40 text-cave-fog hover:text-cave-white hover:border-cave-white/50 transition-colors"
           aria-label="Close flyer detail"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -71,26 +89,23 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
         </button>
 
         {/* Flyer image */}
-        <div
-          className="relative w-full overflow-hidden border border-cave-ash/60"
+        <motion.div
+          className="relative w-full overflow-hidden"
           style={{ aspectRatio: "7 / 10" }}
+          initial={{ filter: "brightness(0)" }}
+          animate={{ filter: "brightness(1)" }}
+          exit={{ filter: "brightness(0)" }}
+          transition={{ duration: 0.4, delay: 0.15 }}
         >
           <Image
             src={flyer.image_url}
             alt={flyer.title ?? "Event flyer"}
             fill
-            sizes="500px"
+            sizes="360px"
             className="object-cover"
             unoptimized
           />
-        </div>
-
-        {/* Title */}
-        {flyer.title && (
-          <p className="mt-3 text-cave-white font-mono text-sm text-center leading-tight">
-            {flyer.title}
-          </p>
-        )}
+        </motion.div>
       </motion.div>
     </motion.div>
   );
