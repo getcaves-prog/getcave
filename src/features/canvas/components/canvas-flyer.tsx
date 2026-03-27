@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import type { LayoutFlyer } from "../types/canvas.types";
 
-const IMAGE_LOAD_TIMEOUT_MS = 10_000;
+const IMAGE_LOAD_TIMEOUT_MS = 5_000;
 
 interface CanvasFlyerProps {
   flyer: LayoutFlyer;

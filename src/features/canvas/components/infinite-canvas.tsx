@@ -19,7 +19,7 @@ import type {
   GridConfig,
 } from "../types/canvas.types";
 
-const VIEWPORT_PADDING = 600;
+const VIEWPORT_PADDING = 1200;
 const DOUBLE_TAP_DELAY = 300;
 
 function getGridConfig(): GridConfig {
@@ -155,6 +155,18 @@ export function InfiniteCanvas() {
     () => generateVisibleFlyers(flyers, viewport, gridConfig),
     [flyers, viewport, gridConfig]
   );
+
+  // Prefetch images so they're in browser cache before mounting
+  const prefetchedRef = useRef(new Set<string>());
+  useEffect(() => {
+    for (const f of visibleFlyers) {
+      if (f.image_url && !prefetchedRef.current.has(f.image_url)) {
+        prefetchedRef.current.add(f.image_url);
+        const img = new window.Image();
+        img.src = f.image_url;
+      }
+    }
+  }, [visibleFlyers]);
 
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
