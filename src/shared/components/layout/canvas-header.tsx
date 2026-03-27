@@ -103,7 +103,31 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
         className="absolute left-1/2 -translate-x-1/2"
         onMouseLeave={handleZoneMouseLeave}
       >
-        <div className="flex flex-col items-center">
+        <div className="flex items-center gap-2">
+          {locationName && (
+            <button
+              onClick={() => { openSearch(); handleSearchInteraction(); }}
+              className="flex items-center gap-1 cursor-pointer transition-colors hover:text-cave-white group"
+            >
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-cave-fog group-hover:text-cave-white shrink-0"
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span className="text-[10px] text-cave-fog tracking-wide truncate max-w-[120px] font-[family-name:var(--font-space-mono)] group-hover:text-cave-white">
+                {locationName}
+              </span>
+            </button>
+          )}
           <Image
             src="/Logo.png"
             alt="Caves"
@@ -113,30 +137,6 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
             style={{ opacity: hidelogo ? 0 : 1 }}
             onClick={() => { openSearch(); handleSearchInteraction(); }}
           />
-          {locationName && (
-            <button
-              onClick={() => { openSearch(); handleSearchInteraction(); }}
-              className="flex items-center gap-1.5 mt-1 cursor-pointer transition-colors hover:text-cave-white group"
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-cave-white group-hover:text-cave-white shrink-0"
-              >
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              <span className="text-xs text-cave-white tracking-wide truncate max-w-[180px] font-[family-name:var(--font-space-mono)] group-hover:text-cave-light">
-                {locationName}
-              </span>
-            </button>
-          )}
         </div>
 
         <LocationSearch
