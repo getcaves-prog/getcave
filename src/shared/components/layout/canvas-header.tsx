@@ -150,8 +150,8 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
         }}
       >
         <svg
-          width="10"
-          height="10"
+          width="12"
+          height="12"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -163,7 +163,7 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
           <circle cx="12" cy="10" r="3" />
         </svg>
-        <span className="text-[10px] text-cave-fog tracking-wide truncate max-w-[120px] font-[family-name:var(--font-space-mono)] group-hover:text-cave-white">
+        <span className="text-xs text-cave-fog tracking-wide truncate max-w-[140px] font-[family-name:var(--font-space-mono)] group-hover:text-cave-white">
           {locationName}
         </span>
       </button>
