@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import type { LayoutFlyer } from "../types/canvas.types";
+
+const IMAGE_LOAD_TIMEOUT_MS = 10_000;
 
 interface CanvasFlyerProps {
   flyer: LayoutFlyer;
@@ -12,11 +14,50 @@ interface CanvasFlyerProps {
 export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [retried, setRetried] = useState(false);
+  const [imageSrc, setImageSrc] = useState(flyer.image_url);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearLoadTimeout = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
+  // Start a load timeout whenever src changes and image hasn't loaded yet
+  useEffect(() => {
+    if (imageLoaded || imageError) return;
+
+    timeoutRef.current = setTimeout(() => {
+      if (!retried) {
+        // Retry once with cache-busting param
+        setRetried(true);
+        setImageSrc(`${flyer.image_url}?t=${Date.now()}`);
+      } else {
+        setImageError(true);
+      }
+    }, IMAGE_LOAD_TIMEOUT_MS);
+
+    return clearLoadTimeout;
+  }, [imageSrc, imageLoaded, imageError, retried, flyer.image_url, clearLoadTimeout]);
 
   const handleImageLoad = useCallback(() => {
+    clearLoadTimeout();
     setImageLoaded(true);
     onImageLoad?.();
-  }, [onImageLoad]);
+  }, [onImageLoad, clearLoadTimeout]);
+
+  const handleImageError = useCallback(() => {
+    clearLoadTimeout();
+    if (!retried) {
+      // Retry once with cache-busting param
+      setRetried(true);
+      setImageSrc(`${flyer.image_url}?t=${Date.now()}`);
+    } else {
+      setImageError(true);
+    }
+  }, [retried, flyer.image_url, clearLoadTimeout]);
 
   return (
     <div
@@ -32,14 +73,14 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
     >
       <div className="relative w-full h-full overflow-hidden">
         {!imageLoaded && !imageError && (
-          <div className="absolute inset-0 bg-cave-black animate-pulse" />
+          <div className="absolute inset-0 bg-cave-stone/30" />
         )}
 
         {imageError ? (
           <div className="w-full h-full bg-cave-stone" />
         ) : (
           <Image
-            src={flyer.image_url}
+            src={imageSrc}
             alt={flyer.title ?? "Event flyer"}
             fill
             sizes={`${flyer.layout_width}px`}
@@ -47,10 +88,10 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
               imageLoaded ? "opacity-100" : "opacity-0"
             }`}
             draggable={false}
-            onError={() => setImageError(true)}
+            onError={handleImageError}
             onLoad={handleImageLoad}
-            loading="lazy"
-            unoptimized
+            loading="eager"
+            quality={75}
           />
         )}
       </div>

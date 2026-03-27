@@ -9,6 +9,12 @@ import type { Flyer } from "../types/canvas.types";
 const MIN_NEARBY_RESULTS = 10;
 const EXPANDED_RADIUS_KM = 200;
 const DEFAULT_RADIUS_KM = 50;
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 2_000;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export function useFlyers() {
   const [flyers, setFlyers] = useState<Flyer[]>([]);
@@ -28,56 +34,81 @@ export function useFlyers() {
     // Reset canvas readiness when we start a new fetch
     useCanvasReadyStore.getState().reset();
 
-    async function fetchFlyers() {
+    async function fetchFlyersOnce(): Promise<Flyer[]> {
+      let data: Flyer[];
+
+      if (latitude !== null && longitude !== null) {
+        // Try nearby with default radius first
+        data = await getNearbyFlyers(latitude, longitude, DEFAULT_RADIUS_KM);
+
+        // If too few results, expand radius to cover all of Nuevo Leon
+        if (data.length < MIN_NEARBY_RESULTS) {
+          data = await getNearbyFlyers(
+            latitude,
+            longitude,
+            EXPANDED_RADIUS_KM
+          );
+        }
+
+        // If still no results, fallback to all flyers
+        if (data.length === 0) {
+          data = await getFlyers();
+        }
+      } else {
+        // No location available — fetch all flyers
+        data = await getFlyers();
+      }
+
+      return data;
+    }
+
+    async function fetchWithRetry() {
       setLoading(true);
       setError(null);
 
-      try {
-        let data: Flyer[];
+      let lastError: unknown = null;
 
-        if (latitude !== null && longitude !== null) {
-          // Try nearby with default radius first
-          data = await getNearbyFlyers(latitude, longitude, DEFAULT_RADIUS_KM);
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        if (cancelled) return;
 
-          // If too few results, expand radius to cover all of Nuevo Leon
-          if (data.length < MIN_NEARBY_RESULTS) {
-            data = await getNearbyFlyers(
-              latitude,
-              longitude,
-              EXPANDED_RADIUS_KM
-            );
+        try {
+          if (attempt > 0) {
+            await delay(RETRY_DELAY_MS);
+            if (cancelled) return;
           }
 
-          // If still no results, fallback to all flyers
-          if (data.length === 0) {
-            data = await getFlyers();
-          }
-        } else {
-          // No location available — fetch all flyers
-          data = await getFlyers();
-        }
+          const data = await fetchFlyersOnce();
 
-        if (!cancelled) {
-          setFlyers(data);
-          // Signal that flyer data is loaded
-          useCanvasReadyStore.getState().setFlyersLoaded();
+          if (!cancelled) {
+            if (data.length === 0) {
+              setError("No flyers available at this time. Pull down to retry.");
+            } else {
+              setFlyers(data);
+            }
+            useCanvasReadyStore.getState().setFlyersLoaded();
+            return;
+          }
+        } catch (err) {
+          lastError = err;
         }
-      } catch (err) {
-        if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : "Failed to fetch flyers"
-          );
-          // Even on error, mark as loaded so intro doesn't hang forever
-          useCanvasReadyStore.getState().setFlyersLoaded();
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+      }
+
+      // All retries exhausted
+      if (!cancelled) {
+        setError(
+          lastError instanceof Error
+            ? lastError.message
+            : "Failed to fetch flyers after multiple attempts"
+        );
+        useCanvasReadyStore.getState().setFlyersLoaded();
       }
     }
 
-    fetchFlyers();
+    fetchWithRetry().finally(() => {
+      if (!cancelled) {
+        setLoading(false);
+      }
+    });
 
     return () => {
       cancelled = true;

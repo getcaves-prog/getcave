@@ -115,16 +115,29 @@ export function InfiniteCanvas() {
     jumpTo(windowW / 2, window.innerHeight / 2, 1);
   }, [flyers, jumpTo]);
 
-  const updateViewport = useCallback((x: number, y: number, scale: number) => {
-    const windowW = typeof window !== "undefined" ? window.innerWidth : 1920;
-    const windowH = typeof window !== "undefined" ? window.innerHeight : 1080;
+  const throttleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingViewportRef = useRef<{ x: number; y: number; scale: number } | null>(null);
 
-    setViewport({
-      left: -x / scale - VIEWPORT_PADDING,
-      top: -y / scale - VIEWPORT_PADDING,
-      right: (-x + windowW) / scale + VIEWPORT_PADDING,
-      bottom: (-y + windowH) / scale + VIEWPORT_PADDING,
-    });
+  const updateViewport = useCallback((x: number, y: number, scale: number) => {
+    pendingViewportRef.current = { x, y, scale };
+
+    if (throttleRef.current) return;
+
+    throttleRef.current = setTimeout(() => {
+      throttleRef.current = null;
+      const pending = pendingViewportRef.current;
+      if (!pending) return;
+
+      const windowW = typeof window !== "undefined" ? window.innerWidth : 1920;
+      const windowH = typeof window !== "undefined" ? window.innerHeight : 1080;
+
+      setViewport({
+        left: -pending.x / pending.scale - VIEWPORT_PADDING,
+        top: -pending.y / pending.scale - VIEWPORT_PADDING,
+        right: (-pending.x + windowW) / pending.scale + VIEWPORT_PADDING,
+        bottom: (-pending.y + windowH) / pending.scale + VIEWPORT_PADDING,
+      });
+    }, 100);
   }, []);
 
   useMotionValueEvent(springX, "change", (x) => {
