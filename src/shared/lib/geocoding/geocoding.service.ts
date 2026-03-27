@@ -118,8 +118,8 @@ async function nominatimReverse(
 
   if (!data.display_name) return null;
 
-  // Extract city name — filter out generic labels like "Perímetro Urbano", "Localidad", etc.
-  const junk = /^(per[ií]metro\s*urbano|localidad|zona\s*(urbana|rural)|cabecera|centro|urban|rural|downtown)$/i;
+  // Extract city name — filter out generic labels like "Perímetro Urbano X", "Localidad", etc.
+  const junk = /per[ií]metro\s*urbano|localidad|zona\s*(urbana|rural)|cabecera\s*municipal|^centro$/i;
   const candidates = [
     data.address?.city,
     data.address?.town,
