@@ -91,7 +91,7 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
             onError={handleImageError}
             onLoad={handleImageLoad}
             loading="eager"
-            quality={75}
+            unoptimized
           />
         )}
       </div>

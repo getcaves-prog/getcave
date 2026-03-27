@@ -11,7 +11,7 @@ import { useCanvasReadyStore } from "@/features/canvas/stores/canvas-ready.store
 import { reverseGeocode } from "@/shared/lib/geocoding/geocoding.service";
 
 /** Max time to wait for canvas readiness before forcing the intro exit */
-const MAX_WAIT_MS = 1800;
+const MAX_WAIT_MS = 800;
 
 export default function HomePage() {
   const [introComplete, setIntroComplete] = useState(false);
@@ -97,43 +97,32 @@ export default function HomePage() {
 
   return (
     <main className="h-dvh w-screen overflow-hidden bg-cave-black" style={{ position: "fixed", inset: 0 }}>
-      {/* Canvas + Header — always mounted, fades in smoothly */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: introComplete ? 1 : 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="h-full w-full"
-        style={{ willChange: "opacity" }}
-      >
+      {/* Canvas + Header — always mounted, renders behind intro */}
+      <div className="h-full w-full">
         <CanvasHeader hidelogo={!introComplete} />
         <InfiniteCanvas />
-      </motion.div>
+      </div>
 
-      {/* Intro overlay */}
+      {/* Intro overlay — fades out to reveal canvas underneath */}
       <AnimatePresence>
         {!introComplete && (
           <motion.div
-            className="fixed inset-0 z-[100] flex items-center justify-center"
-            initial={{ backgroundColor: "rgba(5,5,5,1)" }}
-            animate={{ backgroundColor: "rgba(5,5,5,1)" }}
-            exit={{ backgroundColor: "rgba(5,5,5,0)" }}
-            transition={{ duration: 0.8 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-cave-black"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
           >
             <motion.div
               className="select-none"
-              style={{ willChange: "transform, opacity" }}
-              initial={{ scale: 1, y: 0, opacity: 1 }}
+              style={{ willChange: "transform" }}
+              initial={{ scale: 1, y: 0 }}
               animate={{
                 scale: 0.4,
                 y: targetY,
-                opacity: 1,
               }}
-              exit={{ opacity: 0 }}
               transition={{
                 type: "tween",
-                duration: 0.7,
+                duration: 0.5,
                 ease: [0.22, 1, 0.36, 1],
-                delay: 0.1,
               }}
               onAnimationComplete={handleAnimationComplete}
             >
