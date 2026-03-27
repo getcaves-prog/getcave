@@ -118,8 +118,19 @@ async function nominatimReverse(
 
   if (!data.display_name) return null;
 
-  // Extract just the city name for display
-  const city = data.address?.city ?? data.address?.town ?? data.address?.village ?? data.address?.state ?? data.address?.country ?? data.display_name.split(",")[0];
+  // Extract city name — filter out generic labels like "Perímetro Urbano", "Localidad", etc.
+  const junk = /^(per[ií]metro\s*urbano|localidad|zona\s*(urbana|rural)|cabecera|centro|urban|rural|downtown)$/i;
+  const candidates = [
+    data.address?.city,
+    data.address?.town,
+    data.address?.municipality,
+    data.address?.village,
+    data.address?.county,
+    data.address?.state_district,
+    data.address?.state,
+    data.address?.country,
+  ];
+  const city = candidates.find((c) => c && !junk.test(c.trim())) ?? data.display_name.split(",")[0];
 
   return {
     displayName: city,
