@@ -114,12 +114,13 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
           onClick={() => { openSearch(); handleSearchInteraction(); }}
         />
 
-        <LocationSearch
-          isOpen={searchOpen}
-          onClose={closeSearch}
-          onInteraction={handleSearchInteraction}
-        />
       </div>
+
+      <LocationSearch
+        isOpen={searchOpen}
+        onClose={closeSearch}
+        onInteraction={handleSearchInteraction}
+      />
 
       {/* Right: Upload button */}
       <button
