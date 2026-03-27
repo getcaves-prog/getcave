@@ -143,7 +143,7 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
     {locationName && (
       <button
         onClick={() => { openSearch(); handleSearchInteraction(); }}
-        className="fixed z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cave-black/60 backdrop-blur-sm border border-cave-ash/30 cursor-pointer transition-all hover:bg-cave-black/80 hover:border-cave-ash/60 group"
+        className="fixed z-40 flex items-center gap-1.5 px-2 py-1 cursor-pointer transition-colors hover:text-cave-white group"
         style={{
           top: 56,
           left: 12,

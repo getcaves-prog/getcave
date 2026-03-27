@@ -118,8 +118,11 @@ async function nominatimReverse(
 
   if (!data.display_name) return null;
 
+  // Extract just the city name for display
+  const city = data.address?.city ?? data.address?.town ?? data.address?.village ?? data.address?.state ?? data.address?.country ?? data.display_name.split(",")[0];
+
   return {
-    displayName: data.display_name,
+    displayName: city,
     address: formatNominatimAddress(data.address) || data.display_name,
   };
 }
