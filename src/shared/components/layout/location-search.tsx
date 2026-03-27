@@ -85,8 +85,8 @@ export function LocationSearch({ isOpen, onClose, onInteraction }: LocationSearc
 
           {/* Search dropdown */}
           <motion.div
-            className="absolute left-1/2 -translate-x-1/2 z-[65] w-[90vw] max-w-sm"
-            style={{ top: 48 }}
+            className="fixed left-1/2 -translate-x-1/2 z-[65] w-[90vw] max-w-sm"
+            style={{ top: 56 }}
             initial={{ opacity: 0, y: -8, scaleY: 0.95 }}
             animate={{ opacity: 1, y: 0, scaleY: 1 }}
             exit={{ opacity: 0, y: -8, scaleY: 0.95 }}
