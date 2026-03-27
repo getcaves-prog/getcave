@@ -11,7 +11,7 @@ import { useCanvasReadyStore } from "@/features/canvas/stores/canvas-ready.store
 import { reverseGeocode } from "@/shared/lib/geocoding/geocoding.service";
 
 /** Max time to wait for canvas readiness before forcing the intro exit */
-const MAX_WAIT_MS = 2500;
+const MAX_WAIT_MS = 1800;
 
 export default function HomePage() {
   const [introComplete, setIntroComplete] = useState(false);
@@ -45,7 +45,8 @@ export default function HomePage() {
   }, [latitude, longitude, geoLoading, geoError]);
 
   useEffect(() => {
-    setTargetY(-(window.innerHeight / 2 - 28));
+    // Target: center of screen → header center (24px from top)
+    setTargetY(-(window.innerHeight / 2 - 24));
   }, []);
 
   // Attempt to complete intro when conditions are met
@@ -123,17 +124,16 @@ export default function HomePage() {
               style={{ willChange: "transform, opacity" }}
               initial={{ scale: 1, y: 0, opacity: 1 }}
               animate={{
-                scale: 0.55,
+                scale: 0.4,
                 y: targetY,
                 opacity: 1,
               }}
               exit={{ opacity: 0 }}
               transition={{
-                type: "spring",
-                stiffness: 200,
-                damping: 28,
-                mass: 0.6,
-                delay: 0.2,
+                type: "tween",
+                duration: 0.7,
+                ease: [0.22, 1, 0.36, 1],
+                delay: 0.1,
               }}
               onAnimationComplete={handleAnimationComplete}
             >

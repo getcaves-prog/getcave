@@ -65,8 +65,8 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
     <header
       className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 backdrop-blur-md safe-area-top transition-colors duration-300"
       style={{
-        minHeight: 72,
-        paddingTop: "max(env(safe-area-inset-top), 12px)",
+        minHeight: 48,
+        paddingTop: "max(env(safe-area-inset-top), 4px)",
         backgroundColor: active ? "rgba(5, 5, 5, 0.55)" : "rgba(5, 5, 5, 0.25)",
         WebkitBackdropFilter: "blur(12px)",
       }}
@@ -107,9 +107,9 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
           <Image
             src="/Logo.png"
             alt="Caves"
-            width={120}
-            height={43}
-            className="h-auto w-[120px] transition-opacity duration-300 cursor-pointer"
+            width={100}
+            height={36}
+            className="h-auto w-[100px] transition-opacity duration-300 cursor-pointer"
             style={{ opacity: hidelogo ? 0 : 1 }}
             onClick={() => { openSearch(); handleSearchInteraction(); }}
           />
