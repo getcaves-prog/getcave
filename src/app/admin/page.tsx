@@ -38,7 +38,7 @@ export default function AdminDashboardPage() {
   }, []);
 
   return (
-    <div>
+    <div className="px-4 sm:px-0">
       <h1 className="mb-8 font-[family-name:var(--font-space-mono)] text-xl text-cave-white">
         Dashboard
       </h1>
@@ -84,7 +84,7 @@ export default function AdminDashboardPage() {
             {recentFlyers.map((flyer) => (
               <div
                 key={flyer.id}
-                className="flex items-center gap-4 rounded-lg border border-cave-ash p-3 transition-colors hover:bg-cave-rock/50"
+                className="flex flex-wrap items-center gap-3 rounded-lg border border-cave-ash p-3 transition-colors hover:bg-cave-rock/50 sm:gap-4"
               >
                 <img
                   src={flyer.image_url}

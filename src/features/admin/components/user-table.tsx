@@ -65,7 +65,7 @@ export function UserTable() {
               key={user.id}
               className="rounded-xl border border-cave-ash bg-cave-stone p-4"
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-center gap-3">
                 {user.avatar_url ? (
                   <img
                     src={user.avatar_url}
@@ -88,23 +88,23 @@ export function UserTable() {
                     {new Date(user.created_at).toLocaleDateString()}
                   </p>
                 </div>
-                <select
-                  value={user.role}
-                  onChange={(e) =>
-                    handleRoleChange(
-                      user.id,
-                      e.target.value as UserRole
-                    )
-                  }
-                  className="min-h-[44px] shrink-0 rounded-lg border border-cave-ash bg-cave-rock px-3 py-2 font-[family-name:var(--font-space-mono)] text-xs text-cave-white outline-none focus:border-cave-fog"
-                >
-                  {ROLES.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
               </div>
+              <select
+                value={user.role}
+                onChange={(e) =>
+                  handleRoleChange(
+                    user.id,
+                    e.target.value as UserRole
+                  )
+                }
+                className="mt-3 min-h-[44px] w-full rounded-lg border border-cave-ash bg-cave-rock px-3 py-2 font-[family-name:var(--font-space-mono)] text-xs text-cave-white outline-none focus:border-cave-fog"
+              >
+                {ROLES.map((role) => (
+                  <option key={role} value={role}>
+                    {role}
+                  </option>
+                ))}
+              </select>
             </div>
           ))
         )}

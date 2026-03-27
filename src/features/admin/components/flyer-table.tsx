@@ -61,7 +61,7 @@ export function FlyerTable() {
         <h2 className="font-[family-name:var(--font-space-mono)] text-lg text-cave-white">
           Flyer Management
         </h2>
-        <div className="flex gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <button
             onClick={async () => {
               if (
@@ -101,7 +101,7 @@ export function FlyerTable() {
       )}
 
       {/* Status tabs — horizontally scrollable on mobile */}
-      <div className="mb-4 flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+      <div className="mb-4 flex flex-wrap gap-2 pb-1">
         {TABS.map((tab) => (
           <button
             key={tab}
