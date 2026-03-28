@@ -86,7 +86,7 @@ export function LocationSearch({ isOpen, onClose, onInteraction }: LocationSearc
           {/* Search dropdown */}
           <motion.div
             className="fixed left-1/2 -translate-x-1/2 z-[65] w-[90vw] max-w-sm"
-            style={{ top: 52 }}
+            style={{ top: "max(56px, calc(env(safe-area-inset-top) + 52px))" }}
             initial={{ opacity: 0, y: -8, scaleY: 0.95 }}
             animate={{ opacity: 1, y: 0, scaleY: 1 }}
             exit={{ opacity: 0, y: -8, scaleY: 0.95 }}
