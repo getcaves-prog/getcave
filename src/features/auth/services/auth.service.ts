@@ -1,14 +1,11 @@
-"use server";
-
-import { createClient } from "@/shared/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { createClient } from "@/shared/lib/supabase/client";
 import type {
   LoginCredentials,
   SignupCredentials,
 } from "@/features/auth/types/auth.types";
 
 export async function signIn(credentials: LoginCredentials) {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { error } = await supabase.auth.signInWithPassword({
     email: credentials.email,
@@ -19,11 +16,11 @@ export async function signIn(credentials: LoginCredentials) {
     return { error: error.message };
   }
 
-  redirect("/");
+  return { error: null };
 }
 
 export async function signUp(credentials: SignupCredentials) {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data, error } = await supabase.auth.signUp({
     email: credentials.email,
@@ -49,7 +46,6 @@ export async function signUp(credentials: SignupCredentials) {
 }
 
 export async function signOut() {
-  const supabase = await createClient();
+  const supabase = createClient();
   await supabase.auth.signOut();
-  redirect("/");
 }

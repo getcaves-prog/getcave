@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/shared/lib/supabase/client";
-import { signOut as serverSignOut } from "@/features/auth/services/auth.service";
+import { signOut as authSignOut } from "@/features/auth/services/auth.service";
 import type { AuthState, User } from "@/features/auth/types/auth.types";
 
 export function useAuth() {
@@ -35,7 +35,7 @@ export function useAuth() {
   }, []);
 
   const signOut = async () => {
-    await serverSignOut();
+    await authSignOut();
   };
 
   return {

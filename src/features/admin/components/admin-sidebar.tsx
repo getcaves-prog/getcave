@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/features/auth/services/auth.service";
+import { useRouter } from "next/navigation";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard" },
@@ -13,6 +14,7 @@ const NAV_ITEMS = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
 
   const isActive = (href: string) => {
@@ -98,7 +100,7 @@ export function AdminSidebar() {
           ))}
 
           <button
-            onClick={() => signOut()}
+            onClick={async () => { await signOut(); router.replace("/"); }}
             className="mt-auto flex min-h-[44px] items-center gap-2 rounded-lg px-3 font-[family-name:var(--font-space-mono)] text-sm text-cave-fog transition-colors hover:bg-cave-stone hover:text-cave-light"
           >
             <svg
