@@ -39,11 +39,21 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
     return clearLoadTimeout;
   }, [imageSrc, imageLoaded, imageError, retried, flyer.image_url, clearLoadTimeout]);
 
+  const imgRef = useRef<HTMLImageElement | null>(null);
+
   const handleImageLoad = useCallback(() => {
     clearLoadTimeout();
     setImageLoaded(true);
     onImageLoad?.();
   }, [onImageLoad, clearLoadTimeout]);
+
+  // Handle images that load from cache before onLoad listener is attached
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth > 0 && !imageLoaded) {
+      handleImageLoad();
+    }
+  });
 
   const handleImageError = useCallback(() => {
     clearLoadTimeout();
@@ -72,6 +82,7 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
       ) : (
         /* eslint-disable-next-line @next/next/no-img-element */
         <img
+          ref={imgRef}
           src={imageSrc}
           alt={flyer.title ?? "Event flyer"}
           width={flyer.layout_width}
