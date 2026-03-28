@@ -140,13 +140,13 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
       />
     </header>
 
-    {/* Location pill — floating below header */}
+    {/* Location pill — fixed to bottom left */}
     {locationName && (
       <button
         onClick={() => { openSearch(); handleSearchInteraction(); }}
-        className="fixed z-40 flex items-center gap-1.5 px-2 py-1 cursor-pointer transition-colors hover:text-cave-white group"
+        className="fixed z-40 flex items-center gap-1.5 px-3 py-2 cursor-pointer transition-colors hover:text-cave-white group safe-area-bottom"
         style={{
-          top: 56,
+          bottom: 16,
           left: 12,
         }}
       >

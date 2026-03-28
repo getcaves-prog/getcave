@@ -137,7 +137,7 @@ export function InfiniteCanvas() {
         right: (-pending.x + windowW) / pending.scale + VIEWPORT_PADDING,
         bottom: (-pending.y + windowH) / pending.scale + VIEWPORT_PADDING,
       });
-    }, 100);
+    }, 200);
   }, []);
 
   useMotionValueEvent(springX, "change", (x) => {

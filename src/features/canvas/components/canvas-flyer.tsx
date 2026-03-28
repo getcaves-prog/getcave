@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import Image from "next/image";
 import type { LayoutFlyer } from "../types/canvas.types";
 
 const IMAGE_LOAD_TIMEOUT_MS = 5_000;
@@ -25,13 +24,11 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
     }
   }, []);
 
-  // Start a load timeout whenever src changes and image hasn't loaded yet
   useEffect(() => {
     if (imageLoaded || imageError) return;
 
     timeoutRef.current = setTimeout(() => {
       if (!retried) {
-        // Retry once with cache-busting param
         setRetried(true);
         setImageSrc(`${flyer.image_url}?t=${Date.now()}`);
       } else {
@@ -51,7 +48,6 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
   const handleImageError = useCallback(() => {
     clearLoadTimeout();
     if (!retried) {
-      // Retry once with cache-busting param
       setRetried(true);
       setImageSrc(`${flyer.image_url}?t=${Date.now()}`);
     } else {
@@ -67,34 +63,31 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
         top: flyer.layout_y,
         width: flyer.layout_width,
         height: flyer.layout_height,
-        contentVisibility: "auto",
-        containIntrinsicSize: `${flyer.layout_width}px ${flyer.layout_height}px`,
+        transform: "translateZ(0)",
+        backfaceVisibility: "hidden",
       }}
     >
-      <div className="relative w-full h-full overflow-hidden">
-        {!imageLoaded && !imageError && (
-          <div className="absolute inset-0 bg-cave-stone/30" />
-        )}
-
-        {imageError ? (
-          <div className="w-full h-full bg-cave-stone" />
-        ) : (
-          <Image
-            src={imageSrc}
-            alt={flyer.title ?? "Event flyer"}
-            fill
-            sizes={`${flyer.layout_width}px`}
-            className={`object-cover pointer-events-none transition-opacity duration-300 ${
-              imageLoaded ? "opacity-100" : "opacity-0"
-            }`}
-            draggable={false}
-            onError={handleImageError}
-            onLoad={handleImageLoad}
-            loading="eager"
-            unoptimized
-          />
-        )}
-      </div>
+      {imageError ? (
+        <div className="w-full h-full bg-cave-stone/50 rounded-sm" />
+      ) : (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={imageSrc}
+          alt={flyer.title ?? "Event flyer"}
+          width={flyer.layout_width}
+          height={flyer.layout_height}
+          className="w-full h-full object-cover pointer-events-none"
+          style={{
+            opacity: imageLoaded ? 1 : 0,
+            transition: "opacity 0.2s",
+          }}
+          draggable={false}
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+          loading="eager"
+          decoding="async"
+        />
+      )}
     </div>
   );
 }
