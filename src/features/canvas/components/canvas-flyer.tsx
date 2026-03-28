@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { getOptimizedImageUrl } from "@/shared/lib/utils/image";
 import type { LayoutFlyer } from "../types/canvas.types";
 
-const IMAGE_LOAD_TIMEOUT_MS = 5_000;
+const IMAGE_LOAD_TIMEOUT_MS = 8_000;
 
 interface CanvasFlyerProps {
   flyer: LayoutFlyer;
@@ -14,8 +15,16 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [retried, setRetried] = useState(false);
-  const [imageSrc, setImageSrc] = useState(flyer.image_url);
+  const imgRef = useRef<HTMLImageElement | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Serve optimized thumbnail — 2x the display size for retina, quality 60
+  const optimizedUrl = useMemo(
+    () => getOptimizedImageUrl(flyer.image_url, flyer.layout_width * 2, 60),
+    [flyer.image_url, flyer.layout_width],
+  );
+
+  const [imageSrc, setImageSrc] = useState(optimizedUrl);
 
   const clearLoadTimeout = useCallback(() => {
     if (timeoutRef.current) {
@@ -29,8 +38,9 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
 
     timeoutRef.current = setTimeout(() => {
       if (!retried) {
+        // Retry with original URL (no transforms) as fallback
         setRetried(true);
-        setImageSrc(`${flyer.image_url}?t=${Date.now()}`);
+        setImageSrc(flyer.image_url);
       } else {
         setImageError(true);
       }
@@ -39,15 +49,13 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
     return clearLoadTimeout;
   }, [imageSrc, imageLoaded, imageError, retried, flyer.image_url, clearLoadTimeout]);
 
-  const imgRef = useRef<HTMLImageElement | null>(null);
-
   const handleImageLoad = useCallback(() => {
     clearLoadTimeout();
     setImageLoaded(true);
     onImageLoad?.();
   }, [onImageLoad, clearLoadTimeout]);
 
-  // Handle images that load from cache before onLoad listener is attached
+  // Handle images loaded from cache before onLoad listener attached
   useEffect(() => {
     const img = imgRef.current;
     if (img && img.complete && img.naturalWidth > 0 && !imageLoaded) {
@@ -58,8 +66,9 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
   const handleImageError = useCallback(() => {
     clearLoadTimeout();
     if (!retried) {
+      // Fallback to original URL without transforms
       setRetried(true);
-      setImageSrc(`${flyer.image_url}?t=${Date.now()}`);
+      setImageSrc(flyer.image_url);
     } else {
       setImageError(true);
     }
@@ -90,7 +99,7 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
           className="w-full h-full object-cover pointer-events-none"
           style={{
             opacity: imageLoaded ? 1 : 0,
-            transition: "opacity 0.2s",
+            transition: "opacity 0.15s",
           }}
           draggable={false}
           onError={handleImageError}
