@@ -9,6 +9,7 @@ import { useGeolocation } from "@/shared/hooks/use-geolocation";
 import { useLocationStore } from "@/shared/stores/location.store";
 import { useCanvasReadyStore } from "@/features/canvas/stores/canvas-ready.store";
 import { reverseGeocode } from "@/shared/lib/geocoding/geocoding.service";
+import { registerPushNotifications } from "@/shared/lib/notifications/push.service";
 
 /** Max time to wait for canvas readiness before forcing the intro exit */
 const MAX_WAIT_MS = 800;
@@ -24,6 +25,11 @@ export default function HomePage() {
   const maxWaitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { latitude, longitude, loading: geoLoading, error: geoError } = useGeolocation();
+
+  // Register push notifications on mount (Capacitor only, fire and forget)
+  useEffect(() => {
+    registerPushNotifications();
+  }, []);
 
   // Sync geolocation into Zustand store
   useEffect(() => {

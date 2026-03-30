@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { toggleSaveFlyer, isFlyerSaved } from "../services/favorites.service";
 import { getFlyerCreator } from "../services/canvas.service";
+import { trackFlyerView, getFlyerViewCount } from "../services/views.service";
 import type { LayoutFlyer } from "../types/canvas.types";
 
 function computeDaysRemaining(expiresAt: string): number | null {
@@ -32,21 +33,39 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
   const [saved, setSaved] = useState(false);
   const [savingInProgress, setSavingInProgress] = useState(false);
   const [creator, setCreator] = useState<CreatorInfo | null>(null);
+  const [viewCount, setViewCount] = useState<number>(0);
+  const [shareToast, setShareToast] = useState(false);
+  const viewTrackedRef = useRef(false);
 
   const daysRemaining = useMemo(() => {
     if (!flyer.expires_at) return null;
     return computeDaysRemaining(flyer.expires_at);
   }, [flyer.expires_at]);
 
+  // Track view with 1-second debounce (fire and forget)
+  useEffect(() => {
+    if (flyer.id.includes(",")) return;
+    if (viewTrackedRef.current) return;
+
+    const timer = setTimeout(() => {
+      viewTrackedRef.current = true;
+      // Fire and forget — non-blocking
+      trackFlyerView(flyer.id);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [flyer.id]);
+
+  // Fetch view count
+  useEffect(() => {
+    if (flyer.id.includes(",")) return;
+    getFlyerViewCount(flyer.id).then(setViewCount);
+  }, [flyer.id]);
+
   // Check if flyer is saved by current user
   useEffect(() => {
     if (!user || !flyer.id) return;
-
-    // The flyer.id from canvas grid is "col,row" format — we need the real DB id
-    // The real id is available on the source flyer object before layout mapping
-    // We use a heuristic: if id contains comma it's a grid id, skip save check
     if (flyer.id.includes(",")) return;
-
     isFlyerSaved(flyer.id).then(setSaved);
   }, [user, flyer.id]);
 
@@ -66,7 +85,6 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
 
   const handleToggleSave = useCallback(async () => {
     if (!user || savingInProgress) return;
-    // Skip save for grid-generated IDs
     if (flyer.id.includes(",")) return;
 
     setSavingInProgress(true);
@@ -77,6 +95,31 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
       setSavingInProgress(false);
     }
   }, [user, flyer.id, savingInProgress]);
+
+  const handleShare = useCallback(async () => {
+    const shareData = {
+      title: flyer.title || "Check out this event on Caves",
+      text: "Found this on Caves — discover events near you!",
+      url: `${window.location.origin}/flyer/${flyer.id}`,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch {
+        // User cancelled — do nothing
+      }
+    } else {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        setShareToast(true);
+        setTimeout(() => setShareToast(false), 2000);
+      } catch {
+        // Clipboard API not available
+      }
+    }
+  }, [flyer.id, flyer.title]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -152,27 +195,55 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
           </button>
         )}
 
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute -top-3 -right-3 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-cave-black/90 border border-cave-ash/40 text-cave-fog hover:text-cave-white hover:border-cave-white/50 transition-colors"
-          aria-label="Close flyer detail"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        {/* Top right buttons: Share + Close */}
+        <div className="absolute -top-3 -right-3 z-20 flex items-center gap-1.5">
+          {/* Share button */}
+          {!flyer.id.includes(",") && (
+            <button
+              onClick={handleShare}
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-cave-black/90 border border-cave-ash/40 text-cave-fog hover:text-cave-white hover:border-cave-white/50 transition-colors"
+              aria-label="Share flyer"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                <polyline points="16 6 12 2 8 6" />
+                <line x1="12" y1="2" x2="12" y2="15" />
+              </svg>
+            </button>
+          )}
+
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-cave-black/90 border border-cave-ash/40 text-cave-fog hover:text-cave-white hover:border-cave-white/50 transition-colors"
+            aria-label="Close flyer detail"
           >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
 
         {/* Flyer image */}
         <motion.div
@@ -257,9 +328,30 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
           </div>
         ) : null}
 
-        {/* Expiry badge */}
-        {daysRemaining !== null && (
-          <div className="mt-3 flex justify-center">
+        {/* Expiry badge + View count row */}
+        <div className="mt-3 flex items-center justify-center gap-3">
+          {/* View count */}
+          {!flyer.id.includes(",") && (
+            <span className="inline-flex items-center gap-1 text-xs text-cave-fog font-[family-name:var(--font-space-mono)]">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              {viewCount}
+            </span>
+          )}
+
+          {/* Expiry badge */}
+          {daysRemaining !== null && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cave-rock border border-cave-ash text-xs text-cave-fog font-[family-name:var(--font-space-mono)]">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" />
@@ -269,9 +361,21 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
                 ? "Expires today"
                 : `Expires in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}`}
             </span>
-          </div>
-        )}
+          )}
+        </div>
       </motion.div>
+
+      {/* Share toast — bottom center */}
+      {shareToast && (
+        <motion.div
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full bg-cave-rock border border-cave-ash text-xs text-cave-white font-[family-name:var(--font-space-mono)]"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+        >
+          Link copied to clipboard
+        </motion.div>
+      )}
     </motion.div>
   );
 }

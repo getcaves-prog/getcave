@@ -108,6 +108,70 @@ export async function createFlyer(data: CreateFlyerPayload) {
   if (error) throw error;
 }
 
+export async function getAnalytics() {
+  const supabase = createClient();
+
+  // Total views this week
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+
+  const { count: weeklyViews } = await supabase
+    .from("flyer_views")
+    .select("*", { count: "exact", head: true })
+    .gte("viewed_at", weekAgo.toISOString());
+
+  // Top 5 most viewed flyers (by view count from flyer_views)
+  const { data: topFlyersRaw } = await supabase
+    .from("flyers")
+    .select("id, title, image_url")
+    .eq("status", "approved")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  // Get view counts for top flyers
+  let topFlyers: { id: string; title: string | null; image_url: string; views_count: number }[] = [];
+  if (topFlyersRaw && topFlyersRaw.length > 0) {
+    const viewCounts = await Promise.all(
+      topFlyersRaw.map(async (f) => {
+        const { count } = await supabase
+          .from("flyer_views")
+          .select("*", { count: "exact", head: true })
+          .eq("flyer_id", f.id);
+        return { ...f, views_count: count ?? 0 };
+      })
+    );
+    topFlyers = viewCounts
+      .sort((a, b) => b.views_count - a.views_count)
+      .slice(0, 5);
+  }
+
+  // Active users (users who uploaded in last 30 days)
+  const monthAgo = new Date();
+  monthAgo.setDate(monthAgo.getDate() - 30);
+  const { count: activeUploaders } = await supabase
+    .from("flyers")
+    .select("user_id", { count: "exact", head: true })
+    .gte("created_at", monthAgo.toISOString())
+    .not("user_id", "is", null);
+
+  // Expiring soon (next 3 days)
+  const threeDays = new Date();
+  threeDays.setDate(threeDays.getDate() + 3);
+  const { count: expiringSoon } = await supabase
+    .from("flyers")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "approved")
+    .lte("expires_at", threeDays.toISOString())
+    .gte("expires_at", new Date().toISOString());
+
+  return {
+    weeklyViews: weeklyViews ?? 0,
+    topFlyers,
+    activeUploaders: activeUploaders ?? 0,
+    expiringSoon: expiringSoon ?? 0,
+  };
+}
+
 export async function deleteAllTestFlyers() {
   const supabase = createClient();
   const { error } = await supabase
