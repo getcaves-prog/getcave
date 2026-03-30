@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAVES - Documento de Entrega de Proyecto</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 20mm;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: #1a1a1a;
+      background: #f5f5f5;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .page {
+      width: 816px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 48px 56px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 4px solid #00ff88;
+    }
+
+    .header__logo {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: 16px;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .header__logo span {
+      color: #00ff88;
+    }
+
+    .header__subtitle {
+      font-size: 18px;
+      font-weight: 500;
+      color: #555;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .header__date {
+      font-size: 14px;
+      color: #888;
+    }
+
+    .accent-bar {
+      height: 4px;
+      background: linear-gradient(90deg, #00ff88 0%, #00cc6a 50%, #1a1a1a 100%);
+      border-radius: 2px;
+      margin-bottom: 32px;
+    }
+
+    /* Sections */
+    .section {
+      margin-bottom: 28px;
+      page-break-inside: avoid;
+    }
+
+    .section__title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a1a;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #00ff88;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section__title::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #00ff88;
+      border-radius: 2px;
+    }
+
+    /* Info grid */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 24px;
+    }
+
+    .info-item {
+      display: flex;
+      gap: 8px;
+      padding: 6px 0;
+    }
+
+    .info-item__label {
+      font-weight: 700;
+      color: #1a1a1a;
+      min-width: 120px;
+      flex-shrink: 0;
+    }
+
+    .info-item__value {
+      color: #444;
+    }
+
+    .info-item__value a {
+      color: #00995c;
+      text-decoration: none;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead th {
+      background: #1a1a1a;
+      color: #ffffff;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 12px;
+    }
+
+    thead th:first-child {
+      border-radius: 4px 0 0 0;
+    }
+
+    thead th:last-child {
+      border-radius: 0 4px 0 0;
+    }
+
+    tbody td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #e8e8e8;
+      color: #333;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    tbody tr:last-child td:first-child {
+      border-radius: 0 0 0 4px;
+    }
+
+    tbody tr:last-child td:last-child {
+      border-radius: 0 0 4px 0;
+    }
+
+    /* Credential box */
+    .credential-box {
+      border: 2px solid #00ff88;
+      border-radius: 8px;
+      padding: 20px 24px;
+      background: #f0fff7;
+      position: relative;
+    }
+
+    .credential-box::before {
+      content: 'CREDENCIALES';
+      position: absolute;
+      top: -10px;
+      left: 16px;
+      background: #ffffff;
+      padding: 0 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #00995c;
+      letter-spacing: 1px;
+    }
+
+    .credential-box .info-item {
+      padding: 4px 0;
+    }
+
+    .credential-note {
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: #e6fff2;
+      border-left: 3px solid #00ff88;
+      font-size: 12px;
+      color: #555;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* Checklist */
+    .checklist {
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 24px;
+    }
+
+    .checklist li {
+      padding: 5px 0;
+      font-size: 13px;
+      color: #333;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .checklist li .check {
+      color: #00cc6a;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* Code block */
+    .code-block {
+      background: #1a1a1a;
+      color: #e0e0e0;
+      padding: 20px 24px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .code-block .comment {
+      color: #6a9955;
+    }
+
+    .code-block .command {
+      color: #00ff88;
+    }
+
+    .code-block .path {
+      color: #9cdcfe;
+    }
+
+    .code-block .folder {
+      color: #dcdcaa;
+    }
+
+    /* Supabase info */
+    .supabase-box {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px 24px;
+      background: #fafafa;
+    }
+
+    .supabase-note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #888;
+      font-style: italic;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #e0e0e0;
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+    }
+
+    .footer__brand {
+      font-weight: 700;
+      color: #1a1a1a;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .footer__line {
+      margin-bottom: 2px;
+    }
+
+    /* Page breaks */
+    .page-break {
+      page-break-before: always;
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background: #ffffff;
+        font-size: 12px;
+      }
+
+      .page {
+        width: 100%;
+        padding: 0;
+        box-shadow: none;
+      }
+
+      .section {
+        page-break-inside: avoid;
+      }
+
+      .code-block {
+        background: #f0f0f0 !important;
+        color: #1a1a1a !important;
+        border: 1px solid #ccc;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .code-block .comment {
+        color: #6a9955 !important;
+      }
+
+      .code-block .command {
+        color: #00995c !important;
+      }
+
+      .code-block .path {
+        color: #0066aa !important;
+      }
+
+      thead th {
+        background: #1a1a1a !important;
+        color: #ffffff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .credential-box {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .accent-bar {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      a {
+        text-decoration: none;
+        color: #00995c !important;
+      }
+    }
+
+    @media screen {
+      .page {
+        box-shadow: 0 2px 24px rgba(0, 0, 0, 0.08);
+        margin: 32px auto;
+        border-radius: 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header__logo">C<span>A</span>VES</div>
+      <div class="header__subtitle">Documento de Entrega de Proyecto</div>
+      <div class="header__date">26 / 03 / 2026</div>
+    </div>
+    <div class="accent-bar"></div>
+
+    <!-- Section 1: Informacion del Proyecto -->
+    <div class="section">
+      <h2 class="section__title">Informaci&oacute;n del Proyecto</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-item__label">Proyecto:</span>
+          <span class="info-item__value">CavesApp - Plataforma de descubrimiento de eventos y flyers basada en geolocalizaci&oacute;n</span>
+        </div>
+        <div class="info-item">
+          <span class="info-item__label">Cliente:</span>
+          <span class="info-item__value">Andres (M&eacute;xico)</span>
+        </div>
+        <div class="info-item">
+          <span class="info-item__label">Contacto:</span>
+          <span class="info-item__value"><a href="mailto:cavesapp13@gmail.com">cavesapp13@gmail.com</a></span>
+        </div>
+        <div class="info-item">
+          <span class="info-item__label">Repositorio:</span>
+          <span class="info-item__value"><a href="https://github.com/cavesapp/cavesapp">github.com/cavesapp/cavesapp</a></span>
+        </div>
+        <div class="info-item">
+          <span class="info-item__label">URL Producci&oacute;n:</span>
+          <span class="info-item__value"><a href="https://getcaves.com">getcaves.com</a> (Vercel)</span>
+        </div>
+        <div class="info-item">
+          <span class="info-item__label">Base de Datos:</span>
+          <span class="info-item__value">Supabase (PostgreSQL + PostGIS)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Stack Tecnologico -->
+    <div class="section">
+      <h2 class="section__title">Stack Tecnol&oacute;gico</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Capa</th>
+            <th>Tecnolog&iacute;a</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Framework</td><td>Next.js 16 (App Router)</td></tr>
+          <tr><td>Lenguaje</td><td>TypeScript (strict)</td></tr>
+          <tr><td>Estilos</td><td>Tailwind CSS 4</td></tr>
+          <tr><td>Base de Datos</td><td>Supabase (PostgreSQL + PostGIS)</td></tr>
+          <tr><td>Autenticaci&oacute;n</td><td>Supabase Auth (Email + Google OAuth)</td></tr>
+          <tr><td>Almacenamiento</td><td>Supabase Storage</td></tr>
+          <tr><td>Estado</td><td>Zustand 5</td></tr>
+          <tr><td>Animaciones</td><td>Framer Motion 12</td></tr>
+          <tr><td>Deploy</td><td>Vercel</td></tr>
+          <tr><td>Tests</td><td>Vitest + Playwright</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Section 3: Credenciales de Administrador -->
+    <div class="section">
+      <h2 class="section__title">Credenciales de Administrador</h2>
+      <div class="credential-box">
+        <div class="info-item">
+          <span class="info-item__label">Email:</span>
+          <span class="info-item__value">cavesapp13@gmail.com</span>
+        </div>
+        <div class="info-item">
+          <span class="info-item__label">Contrase&ntilde;a:</span>
+          <span class="info-item__value"><strong>cavesapp13.</strong></span>
+        </div>
+        <div class="info-item">
+          <span class="info-item__label">Rol:</span>
+          <span class="info-item__value">admin</span>
+        </div>
+        <div class="info-item">
+          <span class="info-item__label">Panel Admin:</span>
+          <span class="info-item__value"><strong>/admin</strong></span>
+        </div>
+        <div class="credential-note">
+          Estas credenciales tienen acceso completo al panel de administraci&oacute;n.
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Usuarios del Sistema -->
+    <div class="section">
+      <h2 class="section__title">Usuarios del Sistema</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Email</th>
+            <th>Rol</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>cavesapp13</td><td>cavesapp13@gmail.com</td><td>admin</td></tr>
+          <tr><td>asepulvedadev</td><td>asepulvedadev@gmail.com</td><td>user</td></tr>
+          <tr><td>andres.floresafa1</td><td>andres.floresafa1@gmail.com</td><td>user</td></tr>
+          <tr><td>admin</td><td>admin@getcaves.com</td><td>user</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Section 5: Funcionalidades Implementadas -->
+    <div class="section">
+      <h2 class="section__title">Funcionalidades Implementadas</h2>
+      <ul class="checklist">
+        <li><span class="check">&#10003;</span> Canvas infinito con gestos t&aacute;ctiles (drag, pinch, zoom)</li>
+        <li><span class="check">&#10003;</span> Geolocalizaci&oacute;n por IP y GPS del navegador</li>
+        <li><span class="check">&#10003;</span> Upload de flyers con validaci&oacute;n de imagen y conversi&oacute;n WebP</li>
+        <li><span class="check">&#10003;</span> Sistema de autenticaci&oacute;n (Email, Google OAuth, Guest)</li>
+        <li><span class="check">&#10003;</span> Panel de administraci&oacute;n responsive (mobile + desktop)</li>
+        <li><span class="check">&#10003;</span> CRUD completo de flyers con aprobaci&oacute;n/rechazo</li>
+        <li><span class="check">&#10003;</span> Gesti&oacute;n de usuarios con asignaci&oacute;n de roles</li>
+        <li><span class="check">&#10003;</span> Upload de imagen en admin (drag &amp; drop + validaci&oacute;n)</li>
+        <li><span class="check">&#10003;</span> Eliminaci&oacute;n masiva de flyers de prueba</li>
+        <li><span class="check">&#10003;</span> Toggle de visibilidad de contrase&ntilde;a en login</li>
+        <li><span class="check">&#10003;</span> Pol&iacute;ticas RLS para operaciones de admin</li>
+        <li><span class="check">&#10003;</span> B&uacute;squeda de direcci&oacute;n con autocompletado</li>
+        <li><span class="check">&#10003;</span> Perfil de usuario con avatar</li>
+        <li><span class="check">&#10003;</span> PWA (Progressive Web App)</li>
+      </ul>
+    </div>
+
+    <!-- Section 6: Estructura del Proyecto -->
+    <div class="section">
+      <h2 class="section__title">Estructura del Proyecto</h2>
+      <div class="code-block"><span class="folder">src/</span>
+<span class="folder">&#9500;&#9472;&#9472; app/</span>                    <span class="comment"># Rutas Next.js (App Router)</span>
+<span class="folder">&#9474;   &#9500;&#9472;&#9472; admin/</span>              <span class="comment"># Panel de administraci&oacute;n</span>
+<span class="folder">&#9474;   &#9500;&#9472;&#9472; auth/</span>               <span class="comment"># Login, signup, callbacks</span>
+<span class="folder">&#9474;   &#9492;&#9472;&#9472; page.tsx</span>            <span class="comment"># Canvas principal</span>
+<span class="folder">&#9500;&#9472;&#9472; features/</span>               <span class="comment"># M&oacute;dulos por funcionalidad</span>
+<span class="folder">&#9474;   &#9500;&#9472;&#9472; admin/</span>              <span class="comment"># Servicios y componentes admin</span>
+<span class="folder">&#9474;   &#9500;&#9472;&#9472; auth/</span>               <span class="comment"># Autenticaci&oacute;n</span>
+<span class="folder">&#9474;   &#9500;&#9472;&#9472; canvas/</span>             <span class="comment"># Canvas infinito</span>
+<span class="folder">&#9474;   &#9500;&#9472;&#9472; flyers/</span>             <span class="comment"># Upload y gesti&oacute;n de flyers</span>
+<span class="folder">&#9474;   &#9492;&#9472;&#9472; profile/</span>            <span class="comment"># Perfil de usuario</span>
+<span class="folder">&#9500;&#9472;&#9472; shared/</span>                 <span class="comment"># C&oacute;digo compartido</span>
+<span class="folder">&#9474;   &#9500;&#9472;&#9472; components/</span>         <span class="comment"># Componentes reutilizables</span>
+<span class="folder">&#9474;   &#9500;&#9472;&#9472; lib/</span>                <span class="comment"># Supabase clients, utilidades</span>
+<span class="folder">&#9474;   &#9492;&#9472;&#9472; stores/</span>             <span class="comment"># Zustand stores</span>
+<span class="folder">&#9492;&#9472;&#9472; supabase/</span>
+<span class="folder">    &#9500;&#9472;&#9472; migrations/</span>         <span class="comment"># Migraciones SQL</span>
+<span class="folder">    &#9492;&#9472;&#9472; config.toml</span>         <span class="comment"># Configuraci&oacute;n local</span></div>
+    </div>
+
+    <!-- Section 7: Como Ejecutar Localmente -->
+    <div class="section">
+      <h2 class="section__title">C&oacute;mo Ejecutar Localmente</h2>
+      <div class="code-block"><span class="comment"># Clonar repositorio</span>
+<span class="command">git clone</span> https://github.com/cavesapp/cavesapp.git
+<span class="command">cd</span> cavesapp
+
+<span class="comment"># Instalar dependencias</span>
+<span class="command">pnpm install</span>
+
+<span class="comment"># Configurar variables de entorno</span>
+<span class="command">cp</span> .env.example .env.local
+<span class="comment"># Completar con las credenciales de Supabase</span>
+
+<span class="comment"># Ejecutar en desarrollo</span>
+<span class="command">pnpm dev</span>
+
+<span class="comment"># Abrir en navegador</span>
+<span class="path">http://localhost:3000</span></div>
+    </div>
+
+    <!-- Section 8: Supabase -->
+    <div class="section">
+      <h2 class="section__title">Supabase</h2>
+      <div class="supabase-box">
+        <div class="info-item">
+          <span class="info-item__label">URL:</span>
+          <span class="info-item__value"><a href="https://akcjzvftujuscaqnydzj.supabase.co">https://akcjzvftujuscaqnydzj.supabase.co</a></span>
+        </div>
+        <div class="info-item">
+          <span class="info-item__label">Dashboard:</span>
+          <span class="info-item__value"><a href="https://app.supabase.com">https://app.supabase.com</a> (proyecto: akcjzvftujuscaqnydzj)</span>
+        </div>
+        <p class="supabase-note">Las keys est&aacute;n en el archivo .env del proyecto.</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer__line">Documento generado el 26/03/2026</div>
+      <div class="footer__brand">Desarrollado por Sepulveda Dev</div>
+      <div class="footer__line">Todos los derechos reservados</div>
+    </div>
+
+  </div>
+</body>
+</html>

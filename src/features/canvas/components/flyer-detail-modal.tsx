@@ -1,9 +1,17 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import type { LayoutFlyer } from "../types/canvas.types";
+
+function computeDaysRemaining(expiresAt: string): number | null {
+  const expiryDate = new Date(expiresAt);
+  if (isNaN(expiryDate.getTime())) return null;
+  const now = new Date();
+  const diffMs = expiryDate.getTime() - now.getTime();
+  return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+}
 
 interface FlyerDetailModalProps {
   flyer: LayoutFlyer;
@@ -11,6 +19,11 @@ interface FlyerDetailModalProps {
 }
 
 export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
+  const daysRemaining = useMemo(() => {
+    if (!flyer.expires_at) return null;
+    return computeDaysRemaining(flyer.expires_at);
+  }, [flyer.expires_at]);
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -101,6 +114,21 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
             unoptimized
           />
         </motion.div>
+
+        {/* Expiry badge */}
+        {daysRemaining !== null && (
+          <div className="mt-3 flex justify-center">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cave-rock border border-cave-ash text-xs text-cave-fog font-[family-name:var(--font-space-mono)]">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              {daysRemaining === 0
+                ? "Expires today"
+                : `Expires in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}`}
+            </span>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );

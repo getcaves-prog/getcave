@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CavesApp — Product Roadmap</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Pinyon+Script&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #050505;
+      --bg-elevated: #0A0A0A;
+      --bg-card: #111111;
+      --bg-card-hover: #161616;
+      --neon-green: #39FF14;
+      --neon-green-dim: rgba(57, 255, 20, 0.15);
+      --neon-green-glow: rgba(57, 255, 20, 0.3);
+      --yellow: #FFD600;
+      --yellow-dim: rgba(255, 214, 0, 0.15);
+      --gray-badge: #555;
+      --gray-badge-dim: rgba(85, 85, 85, 0.25);
+      --text-primary: #FFFFFF;
+      --text-secondary: #AAAAAA;
+      --text-muted: #666666;
+      --border: #1A1A1A;
+      --border-accent: #222222;
+    }
+
+    html, body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      line-height: 1.5;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      width: 215.9mm;
+      height: 279.4mm;
+      padding: 0;
+      page-break-after: always;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-primary);
+    }
+
+    .page:last-child { page-break-after: avoid; }
+
+    /* Grain overlay */
+    .grain {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      opacity: 0.03;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 128px 128px;
+      z-index: 1;
+    }
+
+    .page-content {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      padding: 40px 48px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ======================== COVER PAGE ======================== */
+    .cover .page-content {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 60px;
+    }
+
+    .cover-logo {
+      font-family: 'Pinyon Script', cursive;
+      font-size: 96px;
+      color: var(--text-primary);
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      text-shadow: 0 0 60px var(--neon-green-glow), 0 0 120px rgba(57, 255, 20, 0.1);
+    }
+
+    .cover-bunny {
+      width: 48px;
+      height: 48px;
+      border: 2px solid var(--neon-green);
+      border-radius: 50%;
+      margin: 0 auto 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px var(--neon-green-dim), 0 0 40px rgba(57, 255, 20, 0.05);
+    }
+
+    .cover-bunny::after {
+      content: "🐇";
+      font-size: 22px;
+      filter: grayscale(1) brightness(2);
+    }
+
+    .cover-divider {
+      width: 80px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+      margin: 0 auto 36px;
+    }
+
+    .cover-subtitle {
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .cover-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .cover-date {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--neon-green);
+      letter-spacing: 2px;
+      margin-top: 20px;
+    }
+
+    .cover-footer {
+      position: absolute;
+      bottom: 48px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    /* ======================== COMMON ======================== */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .page-number {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--neon-green);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .page-footer {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
+    .page-footer .logo-small {
+      font-family: 'Pinyon Script', cursive;
+      font-size: 16px;
+      color: var(--text-muted);
+    }
+
+    /* ======================== TABLE PAGE ======================== */
+    .feature-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 4px;
+      flex: 1;
+    }
+
+    .feature-table thead th {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .feature-table thead th:nth-child(4),
+    .feature-table thead th:nth-child(5) {
+      text-align: center;
+    }
+
+    .feature-table tbody tr {
+      background: var(--bg-elevated);
+      transition: background 0.2s;
+    }
+
+    .feature-table tbody tr:nth-child(even) {
+      background: var(--bg-card);
+    }
+
+    .feature-table tbody td {
+      padding: 10px 12px;
+      font-size: 10.5px;
+      vertical-align: middle;
+      color: var(--text-secondary);
+    }
+
+    .feature-table tbody td:first-child {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      width: 30px;
+      text-align: center;
+      border-radius: 6px 0 0 6px;
+    }
+
+    .feature-table tbody td:nth-child(2) {
+      font-weight: 600;
+      color: var(--text-primary);
+      width: 150px;
+    }
+
+    .feature-table tbody td:nth-child(3) {
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    .feature-table tbody td:nth-child(4) {
+      font-family: 'Space Mono', monospace;
+      text-align: center;
+      width: 60px;
+      color: var(--text-primary);
+      font-size: 10px;
+    }
+
+    .feature-table tbody td:last-child {
+      width: 80px;
+      text-align: center;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .badge-high {
+      background: var(--neon-green-dim);
+      color: var(--neon-green);
+      border: 1px solid rgba(57, 255, 20, 0.25);
+    }
+
+    .badge-medium {
+      background: var(--yellow-dim);
+      color: var(--yellow);
+      border: 1px solid rgba(255, 214, 0, 0.25);
+    }
+
+    .badge-low {
+      background: var(--gray-badge-dim);
+      color: #999;
+      border: 1px solid rgba(85, 85, 85, 0.4);
+    }
+
+    /* ======================== TIMELINE PAGE ======================== */
+    .timeline-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .sprint-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-accent);
+      border-radius: 12px;
+      padding: 24px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sprint-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      border-radius: 12px 0 0 12px;
+    }
+
+    .sprint-1::before { background: var(--neon-green); box-shadow: 0 0 12px var(--neon-green-dim); }
+    .sprint-2::before { background: var(--yellow); box-shadow: 0 0 12px rgba(255, 214, 0, 0.2); }
+    .sprint-3::before { background: #888; }
+
+    .sprint-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .sprint-name {
+      font-family: 'Space Mono', monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .sprint-hours {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-accent);
+    }
+
+    .sprint-1 .sprint-hours { color: var(--neon-green); }
+    .sprint-2 .sprint-hours { color: var(--yellow); }
+    .sprint-3 .sprint-hours { color: #888; }
+
+    .sprint-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .sprint-feature-tag {
+      font-size: 9.5px;
+      padding: 4px 12px;
+      border-radius: 6px;
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .sprint-meta {
+      display: flex;
+      gap: 32px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sprint-meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sprint-meta-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .sprint-meta-value {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* Progress bar */
+    .sprint-progress {
+      margin-top: 12px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--bg-card);
+      overflow: hidden;
+    }
+
+    .sprint-progress-bar {
+      height: 100%;
+      border-radius: 2px;
+    }
+
+    .sprint-1 .sprint-progress-bar { background: var(--neon-green); width: 55%; }
+    .sprint-2 .sprint-progress-bar { background: var(--yellow); width: 34.5%; }
+    .sprint-3 .sprint-progress-bar { background: #888; width: 10.3%; }
+
+    /* Arrow connector between sprints */
+    .sprint-connector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 4px;
+    }
+
+    .sprint-connector-line {
+      width: 2px;
+      height: 20px;
+      background: var(--border-accent);
+    }
+
+    /* ======================== SUMMARY PAGE ======================== */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .metric-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-accent);
+      border-radius: 12px;
+      padding: 32px 28px;
+      text-align: center;
+    }
+
+    .metric-number {
+      font-family: 'Space Mono', monospace;
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--neon-green);
+      line-height: 1;
+      margin-bottom: 8px;
+      text-shadow: 0 0 30px var(--neon-green-dim);
+    }
+
+    .metric-card:nth-child(2) .metric-number { color: var(--text-primary); text-shadow: none; }
+    .metric-card:nth-child(3) .metric-number { color: var(--yellow); text-shadow: 0 0 30px rgba(255, 214, 0, 0.15); }
+    .metric-card:nth-child(4) .metric-number { color: var(--neon-green); }
+
+    .metric-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .metric-unit {
+      font-size: 24px;
+      color: var(--text-muted);
+    }
+
+    /* Summary breakdown */
+    .summary-breakdown {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-accent);
+      border-radius: 12px;
+      padding: 28px;
+    }
+
+    .breakdown-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .breakdown-row:last-child {
+      border-bottom: none;
+      padding-top: 14px;
+      margin-top: 4px;
+      border-top: 1px solid var(--border-accent);
+    }
+
+    .breakdown-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .breakdown-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text-primary);
+    }
+
+    .breakdown-total .breakdown-label {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .breakdown-total .breakdown-value {
+      color: var(--neon-green);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .bar-container {
+      flex: 1;
+      max-width: 120px;
+      height: 6px;
+      background: var(--bg-card);
+      border-radius: 3px;
+      margin: 0 16px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .summary-note {
+      margin-top: 24px;
+      padding: 20px 24px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-accent);
+      border-radius: 12px;
+      border-left: 3px solid var(--neon-green);
+    }
+
+    .summary-note p {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    .summary-note strong {
+      color: var(--neon-green);
+      font-weight: 600;
+    }
+
+    @media print {
+      .page { page-break-after: always; }
+      .page:last-child { page-break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== PAGE 1: COVER ==================== -->
+  <div class="page cover">
+    <div class="grain"></div>
+    <div class="page-content">
+      <div class="cover-bunny"></div>
+      <div class="cover-logo">Caves</div>
+      <div class="cover-divider"></div>
+      <div class="cover-subtitle">Product Roadmap</div>
+      <div class="cover-desc">Feature Enhancement Plan</div>
+      <div class="cover-date">March 2026</div>
+    </div>
+    <div class="cover-footer">Prepared by Craftia — AI Consultancy & Development</div>
+  </div>
+
+  <!-- ==================== PAGE 2: FEATURE OVERVIEW ==================== -->
+  <div class="page">
+    <div class="grain"></div>
+    <div class="page-content">
+      <div class="page-header">
+        <div>
+          <div class="section-label">Features</div>
+          <div class="page-title">Feature Overview</div>
+        </div>
+        <div class="page-number">02 / 04</div>
+      </div>
+
+      <table class="feature-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Feature</th>
+            <th>Description</th>
+            <th>Hours</th>
+            <th>Priority</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>01</td>
+            <td>Empty State</td>
+            <td>"S&eacute; el primero en postear aqu&iacute;" + direct upload button</td>
+            <td>0.3h</td>
+            <td><span class="badge badge-high">High</span></td>
+          </tr>
+          <tr>
+            <td>02</td>
+            <td>Logo PNG Enhancement</td>
+            <td>Bigger bunny, black background, all resolutions</td>
+            <td>0.15h</td>
+            <td><span class="badge badge-medium">Medium</span></td>
+          </tr>
+          <tr>
+            <td>03</td>
+            <td>State/Region Filter</td>
+            <td>Dropdown in header + PostGIS query by state/province</td>
+            <td>1.25h</td>
+            <td><span class="badge badge-high">High</span></td>
+          </tr>
+          <tr>
+            <td>04</td>
+            <td>Flyer Duration</td>
+            <td>Toggle 15/30 days on upload. Auto-expiration + "Expires in X days" badge</td>
+            <td>0.75h</td>
+            <td><span class="badge badge-high">High</span></td>
+          </tr>
+          <tr>
+            <td>05</td>
+            <td>User Profile</td>
+            <td>/profile page with avatar, name, bio, stats (flyers posted, total views)</td>
+            <td>1.25h</td>
+            <td><span class="badge badge-high">High</span></td>
+          </tr>
+          <tr>
+            <td>06</td>
+            <td>Personal Board</td>
+            <td>Grid of user's flyers. Edit info, view stats, delete</td>
+            <td>1.25h</td>
+            <td><span class="badge badge-high">High</span></td>
+          </tr>
+          <tr>
+            <td>07</td>
+            <td>Save Flyer (Favorites)</td>
+            <td>Bookmark button on each flyer. "Saved" section in profile</td>
+            <td>0.75h</td>
+            <td><span class="badge badge-medium">Medium</span></td>
+          </tr>
+          <tr>
+            <td>08</td>
+            <td>Creator Info on Flyer</td>
+            <td>Username badge of creator + link to their board</td>
+            <td>0.3h</td>
+            <td><span class="badge badge-medium">Medium</span></td>
+          </tr>
+          <tr>
+            <td>09</td>
+            <td>Share to Board</td>
+            <td>Share flyer to creator's public board</td>
+            <td>0.5h</td>
+            <td><span class="badge badge-low">Low</span></td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td>Manage Publication</td>
+            <td>Edit modal: title, description, dates. Pause/reactivate flyer</td>
+            <td>0.75h</td>
+            <td><span class="badge badge-medium">Medium</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="page-footer">
+        <span class="logo-small">Caves</span>
+        <span>Product Roadmap — March 2026</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 3: SPRINT TIMELINE ==================== -->
+  <div class="page">
+    <div class="grain"></div>
+    <div class="page-content">
+      <div class="page-header">
+        <div>
+          <div class="section-label">Timeline</div>
+          <div class="page-title">Sprint Plan</div>
+        </div>
+        <div class="page-number">03 / 04</div>
+      </div>
+
+      <div class="timeline-container">
+        <div class="sprint-card sprint-1">
+          <div class="sprint-header">
+            <div class="sprint-name">Sprint 1</div>
+            <div class="sprint-hours">4.0h</div>
+          </div>
+          <div class="sprint-features">
+            <span class="sprint-feature-tag">Empty State</span>
+            <span class="sprint-feature-tag">Flyer Duration</span>
+            <span class="sprint-feature-tag">User Profile</span>
+            <span class="sprint-feature-tag">Personal Board</span>
+          </div>
+          <div class="sprint-meta">
+            <div class="sprint-meta-item">
+              <span class="sprint-meta-label">Focus</span>
+              <span class="sprint-meta-value">Core user experience</span>
+            </div>
+            <div class="sprint-meta-item">
+              <span class="sprint-meta-label">Deliverable</span>
+              <span class="sprint-meta-value">Users can manage their content</span>
+            </div>
+          </div>
+          <div class="sprint-progress"><div class="sprint-progress-bar"></div></div>
+        </div>
+
+        <div class="sprint-connector"><div class="sprint-connector-line"></div></div>
+
+        <div class="sprint-card sprint-2">
+          <div class="sprint-header">
+            <div class="sprint-name">Sprint 2</div>
+            <div class="sprint-hours">2.5h</div>
+          </div>
+          <div class="sprint-features">
+            <span class="sprint-feature-tag">State/Region Filter</span>
+            <span class="sprint-feature-tag">Logo PNG Enhancement</span>
+            <span class="sprint-feature-tag">Save Flyer (Favorites)</span>
+            <span class="sprint-feature-tag">Creator Info on Flyer</span>
+          </div>
+          <div class="sprint-meta">
+            <div class="sprint-meta-item">
+              <span class="sprint-meta-label">Focus</span>
+              <span class="sprint-meta-value">Discovery & engagement</span>
+            </div>
+            <div class="sprint-meta-item">
+              <span class="sprint-meta-label">Deliverable</span>
+              <span class="sprint-meta-value">Users can find and save content</span>
+            </div>
+          </div>
+          <div class="sprint-progress"><div class="sprint-progress-bar"></div></div>
+        </div>
+
+        <div class="sprint-connector"><div class="sprint-connector-line"></div></div>
+
+        <div class="sprint-card sprint-3">
+          <div class="sprint-header">
+            <div class="sprint-name">Sprint 3</div>
+            <div class="sprint-hours">0.75h</div>
+          </div>
+          <div class="sprint-features">
+            <span class="sprint-feature-tag">Manage Publication</span>
+            <span class="sprint-feature-tag">Share to Board</span>
+          </div>
+          <div class="sprint-meta">
+            <div class="sprint-meta-item">
+              <span class="sprint-meta-label">Focus</span>
+              <span class="sprint-meta-value">Content management</span>
+            </div>
+            <div class="sprint-meta-item">
+              <span class="sprint-meta-label">Deliverable</span>
+              <span class="sprint-meta-value">Full content lifecycle</span>
+            </div>
+          </div>
+          <div class="sprint-progress"><div class="sprint-progress-bar"></div></div>
+        </div>
+      </div>
+
+      <div class="page-footer">
+        <span class="logo-small">Caves</span>
+        <span>Product Roadmap — March 2026</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 4: SUMMARY METRICS ==================== -->
+  <div class="page">
+    <div class="grain"></div>
+    <div class="page-content">
+      <div class="page-header">
+        <div>
+          <div class="section-label">Summary</div>
+          <div class="page-title">Project Metrics</div>
+        </div>
+        <div class="page-number">04 / 04</div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="metric-card">
+          <div class="metric-number">7.25<span class="metric-unit">h</span></div>
+          <div class="metric-label">Total Hours</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-number">10</div>
+          <div class="metric-label">Features</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-number">3</div>
+          <div class="metric-label">Sprints</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-number">4.8<span class="metric-unit">h</span></div>
+          <div class="metric-label">High Priority</div>
+        </div>
+      </div>
+
+      <div class="summary-breakdown">
+        <div class="breakdown-title">Hours by Sprint</div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">Sprint 1 — Core Experience</span>
+          <div class="bar-container"><div class="bar-fill" style="width: 100%; background: var(--neon-green);"></div></div>
+          <span class="breakdown-value">4.0h</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">Sprint 2 — Discovery & Engagement</span>
+          <div class="bar-container"><div class="bar-fill" style="width: 62.5%; background: var(--yellow);"></div></div>
+          <span class="breakdown-value">2.5h</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">Sprint 3 — Content Management</span>
+          <div class="bar-container"><div class="bar-fill" style="width: 18.75%; background: #888;"></div></div>
+          <span class="breakdown-value">0.75h</span>
+        </div>
+        <div class="breakdown-row breakdown-total">
+          <span class="breakdown-label">Total Estimated</span>
+          <div class="bar-container" style="visibility: hidden;"></div>
+          <span class="breakdown-value">7.25h</span>
+        </div>
+      </div>
+
+      <div class="summary-note">
+        <p>This roadmap covers <strong>10 features</strong> across <strong>3 sprints</strong>, totaling an estimated <strong>7.25 hours</strong> of development. High-priority features (4.8h) are front-loaded in Sprint 1 to deliver immediate user value. All estimates include implementation, testing, and deployment.</p>
+      </div>
+
+      <div class="page-footer">
+        <span class="logo-small">Caves</span>
+        <span>Prepared by Craftia — AI Consultancy & Development &bull; March 2026</span>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -20,6 +20,7 @@ export function useFlyers() {
   const [flyers, setFlyers] = useState<Flyer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [empty, setEmpty] = useState(false);
 
   const latitude = useLocationStore((s) => s.latitude);
   const longitude = useLocationStore((s) => s.longitude);
@@ -65,6 +66,7 @@ export function useFlyers() {
     async function fetchWithRetry() {
       setLoading(true);
       setError(null);
+      setEmpty(false);
 
       let lastError: unknown = null;
 
@@ -81,7 +83,7 @@ export function useFlyers() {
 
           if (!cancelled) {
             if (data.length === 0) {
-              setError("No flyers available at this time. Pull down to retry.");
+              setEmpty(true);
             } else {
               setFlyers(data);
             }
@@ -115,5 +117,5 @@ export function useFlyers() {
     };
   }, [latitude, longitude, locationLoading]);
 
-  return { flyers, loading, error };
+  return { flyers, loading, error, empty };
 }

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useActionModalStore } from "@/shared/stores/action-modal.store";
 
 const FlyerUploadModal = lazy(() =>
   import("@/features/flyers/components/flyer-upload-modal").then((m) => ({
@@ -23,6 +24,7 @@ interface ActionModalProps {
 }
 
 export function ActionModal({ isOpen, onClose }: ActionModalProps) {
+  const initialView = useActionModalStore((s) => s.initialView);
   const [view, setView] = useState<ActionView>("menu");
 
   const handleKeyDown = useCallback(
@@ -39,10 +41,14 @@ export function ActionModal({ isOpen, onClose }: ActionModalProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, handleKeyDown]);
 
-  // Reset view when modal closes
+  // Set initial view when modal opens, reset when it closes
   useEffect(() => {
-    if (!isOpen) setView("menu");
-  }, [isOpen]);
+    if (isOpen) {
+      setView(initialView);
+    } else {
+      setView("menu");
+    }
+  }, [isOpen, initialView]);
 
   const handleBack = useCallback(() => {
     setView("menu");

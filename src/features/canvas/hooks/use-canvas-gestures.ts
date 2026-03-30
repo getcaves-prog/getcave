@@ -69,12 +69,35 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
       },
       onWheel: ({ delta: [, dy], event }) => {
         event.preventDefault();
+        const { x, y, scale } = transformRef.current;
         const zoomFactor = 1 - dy * 0.0015;
-        const newScale = transformRef.current.scale * zoomFactor;
-        updateTransform({ scale: newScale });
+        const newScale = clampScale(scale * zoomFactor);
+        if (newScale === scale) return;
+
+        // Zoom toward cursor position
+        const cursorX = (event as WheelEvent).clientX;
+        const cursorY = (event as WheelEvent).clientY;
+        const ratio = 1 - newScale / scale;
+
+        updateTransform({
+          x: x + (cursorX - x) * ratio,
+          y: y + (cursorY - y) * ratio,
+          scale: newScale,
+        });
       },
-      onPinch: ({ offset: [scale] }) => {
-        updateTransform({ scale });
+      onPinch: ({ offset: [scale], origin: [ox, oy] }) => {
+        const prev = transformRef.current;
+        const newScale = clampScale(scale);
+        if (newScale === prev.scale) return;
+
+        // Zoom toward pinch midpoint
+        const ratio = 1 - newScale / prev.scale;
+
+        updateTransform({
+          x: prev.x + (ox - prev.x) * ratio,
+          y: prev.y + (oy - prev.y) * ratio,
+          scale: newScale,
+        });
       },
     },
     {

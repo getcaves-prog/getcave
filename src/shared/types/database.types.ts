@@ -157,12 +157,43 @@ export type Database = {
           },
         ]
       }
+      flyer_views: {
+        Row: {
+          flyer_id: string
+          id: string
+          viewed_at: string | null
+          viewer_id: string | null
+        }
+        Insert: {
+          flyer_id: string
+          id?: string
+          viewed_at?: string | null
+          viewer_id?: string | null
+        }
+        Update: {
+          flyer_id?: string
+          id?: string
+          viewed_at?: string | null
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flyer_views_flyer_id_fkey"
+            columns: ["flyer_id"]
+            isOneToOne: false
+            referencedRelation: "flyers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flyers: {
         Row: {
           address: string | null
           canvas_x: number
           canvas_y: number
           created_at: string
+          duration_days: number | null
+          expires_at: string | null
           height: number
           id: string
           image_url: string
@@ -170,6 +201,7 @@ export type Database = {
           rotation: number
           status: string | null
           title: string | null
+          user_id: string | null
           width: number
         }
         Insert: {
@@ -177,6 +209,8 @@ export type Database = {
           canvas_x?: number
           canvas_y?: number
           created_at?: string
+          duration_days?: number | null
+          expires_at?: string | null
           height?: number
           id?: string
           image_url: string
@@ -184,6 +218,7 @@ export type Database = {
           rotation?: number
           status?: string | null
           title?: string | null
+          user_id?: string | null
           width?: number
         }
         Update: {
@@ -191,6 +226,8 @@ export type Database = {
           canvas_x?: number
           canvas_y?: number
           created_at?: string
+          duration_days?: number | null
+          expires_at?: string | null
           height?: number
           id?: string
           image_url?: string
@@ -198,6 +235,7 @@ export type Database = {
           rotation?: number
           status?: string | null
           title?: string | null
+          user_id?: string | null
           width?: number
         }
         Relationships: []
@@ -209,6 +247,7 @@ export type Database = {
           city: string | null
           created_at: string
           id: string
+          phone: string | null
           role: string
           updated_at: string
           username: string
@@ -219,6 +258,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           id: string
+          phone?: string | null
           role?: string
           updated_at?: string
           username: string
@@ -229,11 +269,41 @@ export type Database = {
           city?: string | null
           created_at?: string
           id?: string
+          phone?: string | null
           role?: string
           updated_at?: string
           username?: string
         }
         Relationships: []
+      }
+      saved_flyers: {
+        Row: {
+          created_at: string | null
+          flyer_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          flyer_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          flyer_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_flyers_flyer_id_fkey"
+            columns: ["flyer_id"]
+            isOneToOne: false
+            referencedRelation: "flyers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -276,6 +346,7 @@ export type Database = {
           views_count: number
         }[]
       }
+      get_user_stats: { Args: { target_user_id: string }; Returns: Json }
       increment_view_count: { Args: { event_id: string }; Returns: undefined }
       nearby_flyers: {
         Args: { radius_km?: number; user_lat: number; user_lng: number }
@@ -284,6 +355,8 @@ export type Database = {
           canvas_x: number
           canvas_y: number
           created_at: string
+          duration_days: number | null
+          expires_at: string | null
           height: number
           id: string
           image_url: string
@@ -291,6 +364,7 @@ export type Database = {
           rotation: number
           status: string | null
           title: string | null
+          user_id: string | null
           width: number
         }[]
         SetofOptions: {

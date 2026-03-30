@@ -7,6 +7,8 @@ export async function getFlyers(): Promise<Flyer[]> {
   const { data, error } = await supabase
     .from("flyers")
     .select("*")
+    .eq("status", "approved")
+    .or("expires_at.is.null,expires_at.gt." + new Date().toISOString())
     .order("created_at", { ascending: false });
 
   if (error) {

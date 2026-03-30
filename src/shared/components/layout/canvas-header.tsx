@@ -3,11 +3,11 @@
 import { useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { createClient } from "@/shared/lib/supabase/client";
 import Link from "next/link";
 import { LocationSearch } from "@/shared/components/layout/location-search";
 import { ActionModal } from "@/shared/components/layout/action-modal";
 import { useLocationStore } from "@/shared/stores/location.store";
+import { useActionModalStore } from "@/shared/stores/action-modal.store";
 
 interface CanvasHeaderProps {
   hidelogo?: boolean;
@@ -16,9 +16,11 @@ interface CanvasHeaderProps {
 export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
   const { user } = useAuth();
   const locationName = useLocationStore((s) => s.locationName);
+  const actionModalOpen = useActionModalStore((s) => s.isOpen);
+  const openActionModal = useActionModalStore((s) => s.open);
+  const closeActionModal = useActionModalStore((s) => s.close);
   const [searchOpen, setSearchOpen] = useState(false);
   const [locked, setLocked] = useState(false);
-  const [actionModalOpen, setActionModalOpen] = useState(false);
   const [active, setActive] = useState(false);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -27,13 +29,7 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
       window.location.href = "/auth/signup";
       return;
     }
-    setActionModalOpen(true);
-  };
-
-  const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    window.location.href = "/auth/login";
+    openActionModal();
   };
 
   const openSearch = useCallback(() => {
@@ -72,24 +68,23 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
         WebkitBackdropFilter: "blur(12px)",
       }}
     >
-      {/* Left: Auth action */}
+      {/* Left: Profile / Auth action */}
       {user ? (
-        <button
-          onClick={handleSignOut}
+        <Link
+          href="/profile"
           className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
-          aria-label="Log out"
+          aria-label="My profile"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
           </svg>
-        </button>
+        </Link>
       ) : (
         <Link
           href="/auth/login"
           className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
-          aria-label="Sign up"
+          aria-label="Sign in"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
@@ -136,7 +131,7 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
 
       <ActionModal
         isOpen={actionModalOpen}
-        onClose={() => setActionModalOpen(false)}
+        onClose={closeActionModal}
       />
     </header>
 

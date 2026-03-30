@@ -110,6 +110,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
+  const [durationDays, setDurationDays] = useState(30);
   const [imageInfo, setImageInfo] = useState<string | null>(null);
   const [converting, setConverting] = useState(false);
 
@@ -290,12 +291,18 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
 
       const locationEwkt = `SRID=4326;POINT(${selectedCoords.lng} ${selectedCoords.lat})`;
 
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + durationDays);
+
       const { error: insertError } = await supabase.from("flyers").insert({
         image_url: publicUrl,
         title: title.trim() || null,
         address,
         location: locationEwkt,
         status: "pending",
+        user_id: user.id,
+        expires_at: expiresAt.toISOString(),
+        duration_days: durationDays,
       });
 
       if (insertError) {
@@ -311,7 +318,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
       );
       setSubmitting(false);
     }
-  }, [imageFile, address, selectedCoords, title, user, onClose]);
+  }, [imageFile, address, selectedCoords, title, user, onClose, durationDays]);
 
   // Cleanup preview URL on unmount
   useEffect(() => {
@@ -489,6 +496,29 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
           {selectedCoords.lat.toFixed(5)}, {selectedCoords.lng.toFixed(5)}
         </p>
       )}
+
+      {/* Duration picker */}
+      <div className="mb-4">
+        <p className="text-xs text-cave-fog mb-2 font-[family-name:var(--font-space-mono)]">
+          Duration
+        </p>
+        <div className="flex gap-2">
+          {([7, 15, 30] as const).map((days) => (
+            <button
+              key={days}
+              type="button"
+              onClick={() => setDurationDays(days)}
+              className={`flex-1 py-2 rounded-full text-sm font-[family-name:var(--font-space-mono)] transition-colors ${
+                durationDays === days
+                  ? "bg-cave-white text-cave-black"
+                  : "bg-cave-stone text-cave-fog border border-cave-ash hover:border-cave-fog"
+              }`}
+            >
+              {days} days
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Submit error */}
       {submitError && (
