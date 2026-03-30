@@ -5,7 +5,6 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { InfiniteCanvas } from "@/features/canvas/components/infinite-canvas";
 import { CanvasHeader } from "@/shared/components/layout/canvas-header";
-import { CategoryFilterBar } from "@/features/canvas/components/category-filter-bar";
 import { OnboardingOverlay } from "@/features/onboarding/components/onboarding-overlay";
 import { useGeolocation } from "@/shared/hooks/use-geolocation";
 import { useLocationStore } from "@/shared/stores/location.store";
@@ -109,7 +108,6 @@ export default function HomePage() {
       {/* Canvas + Header — always mounted, renders behind intro */}
       <div className="h-full w-full">
         <CanvasHeader hidelogo={!introComplete} />
-        <CategoryFilterBar />
         <InfiniteCanvas />
       </div>
 
