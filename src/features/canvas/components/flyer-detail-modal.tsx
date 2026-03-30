@@ -3,11 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { toggleSaveFlyer, isFlyerSaved } from "../services/favorites.service";
 import { getFlyerCreator } from "../services/canvas.service";
 import { trackFlyerView, getFlyerViewCount } from "../services/views.service";
+import { getFlyerCategories } from "../services/categories.service";
+import { ReportModal } from "./report-modal";
+import type { Category } from "../services/categories.service";
 import type { LayoutFlyer } from "../types/canvas.types";
 
 function computeDaysRemaining(expiresAt: string): number | null {
@@ -35,6 +38,9 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
   const [creator, setCreator] = useState<CreatorInfo | null>(null);
   const [viewCount, setViewCount] = useState<number>(0);
   const [shareToast, setShareToast] = useState(false);
+  const [reportToast, setReportToast] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [flyerCategories, setFlyerCategories] = useState<Category[]>([]);
   const viewTrackedRef = useRef(false);
 
   const daysRemaining = useMemo(() => {
@@ -82,6 +88,12 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
       }
     });
   }, [flyer.user_id]);
+
+  // Fetch flyer categories
+  useEffect(() => {
+    if (flyer.id.includes(",")) return;
+    getFlyerCategories(flyer.id).then(setFlyerCategories).catch(() => {});
+  }, [flyer.id]);
 
   const handleToggleSave = useCallback(async () => {
     if (!user || savingInProgress) return;
@@ -247,7 +259,7 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
 
         {/* Flyer image */}
         <motion.div
-          className="relative w-full overflow-hidden"
+          className={`relative w-full overflow-hidden ${flyer.is_promoted ? "ring-1 ring-amber-500/30" : ""}`}
           style={{ aspectRatio: "7 / 10" }}
           initial={{ filter: "brightness(0)" }}
           animate={{ filter: "brightness(1)" }}
@@ -263,6 +275,15 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
             loading="eager"
             unoptimized
           />
+          {/* Promoted badge */}
+          {flyer.is_promoted && (
+            <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 backdrop-blur-sm">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" className="text-amber-400">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              <span className="text-[10px] text-amber-300 font-[family-name:var(--font-space-mono)]">Promoted</span>
+            </div>
+          )}
         </motion.div>
 
         {/* Creator info */}
@@ -328,7 +349,22 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
           </div>
         ) : null}
 
-        {/* Expiry badge + View count row */}
+        {/* Category pills */}
+        {flyerCategories.length > 0 && (
+          <div className="mt-3 flex items-center justify-center gap-1.5 flex-wrap">
+            {flyerCategories.map((cat) => (
+              <span
+                key={cat.id}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-cave-rock border border-cave-ash text-xs text-cave-fog font-[family-name:var(--font-space-mono)]"
+              >
+                {cat.icon && <span>{cat.icon}</span>}
+                {cat.name}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Expiry badge + View count + Report row */}
         <div className="mt-3 flex items-center justify-center gap-3">
           {/* View count */}
           {!flyer.id.includes(",") && (
@@ -362,6 +398,21 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
                 : `Expires in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}`}
             </span>
           )}
+
+          {/* Report button */}
+          {user && !flyer.id.includes(",") && (
+            <button
+              onClick={() => setShowReport(true)}
+              className="inline-flex items-center gap-1 text-xs text-cave-smoke hover:text-cave-fog transition-colors font-[family-name:var(--font-space-mono)]"
+              aria-label="Report flyer"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                <line x1="4" y1="22" x2="4" y2="15" />
+              </svg>
+              Report
+            </button>
+          )}
         </div>
       </motion.div>
 
@@ -376,6 +427,33 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
           Link copied to clipboard
         </motion.div>
       )}
+
+      {/* Report toast */}
+      {reportToast && (
+        <motion.div
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full bg-cave-rock border border-cave-ash text-xs text-cave-white font-[family-name:var(--font-space-mono)]"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+        >
+          Report submitted. Thank you.
+        </motion.div>
+      )}
+
+      {/* Report modal */}
+      <AnimatePresence>
+        {showReport && (
+          <ReportModal
+            flyerId={flyer.id}
+            onClose={() => setShowReport(false)}
+            onReported={() => {
+              setShowReport(false);
+              setReportToast(true);
+              setTimeout(() => setReportToast(false), 2000);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

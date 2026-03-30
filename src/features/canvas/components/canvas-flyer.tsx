@@ -76,7 +76,7 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
 
   return (
     <div
-      className="absolute select-none pointer-events-none"
+      className={`absolute select-none pointer-events-none ${flyer.is_promoted ? "ring-1 ring-amber-500/30" : ""}`}
       style={{
         left: flyer.layout_x,
         top: flyer.layout_y,

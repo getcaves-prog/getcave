@@ -20,8 +20,34 @@ export async function getFlyerCreator(
   return data;
 }
 
-export async function getFlyers(): Promise<Flyer[]> {
+export async function getFlyers(categoryId?: string): Promise<Flyer[]> {
   const supabase = createClient();
+
+  if (categoryId) {
+    // Get flyer IDs that have this category
+    const { data: flyerCats } = await supabase
+      .from("flyer_categories")
+      .select("flyer_id")
+      .eq("category_id", categoryId);
+
+    if (!flyerCats || flyerCats.length === 0) return [];
+
+    const flyerIds = flyerCats.map((fc) => fc.flyer_id);
+
+    const { data, error } = await supabase
+      .from("flyers")
+      .select("*")
+      .eq("status", "approved")
+      .in("id", flyerIds)
+      .or("expires_at.is.null,expires_at.gt." + new Date().toISOString())
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch flyers: ${error.message}`);
+    }
+
+    return data;
+  }
 
   const { data, error } = await supabase
     .from("flyers")

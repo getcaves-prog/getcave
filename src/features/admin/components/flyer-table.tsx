@@ -6,6 +6,8 @@ import {
   updateFlyerStatus,
   deleteFlyer,
   deleteAllTestFlyers,
+  promoteFlyer,
+  unpromoteFlyer,
 } from "@/features/admin/services/admin.service";
 import { StatusDot } from "@/features/admin/components/status-dot";
 import { FlyerCreateForm } from "@/features/admin/components/flyer-create-form";
@@ -51,6 +53,19 @@ export function FlyerTable() {
       await fetchFlyers();
     } catch (err) {
       console.error("Failed to delete flyer:", err);
+    }
+  };
+
+  const handlePromoteToggle = async (flyer: Flyer) => {
+    try {
+      if (flyer.is_promoted) {
+        await unpromoteFlyer(flyer.id);
+      } else {
+        await promoteFlyer(flyer.id, 30);
+      }
+      await fetchFlyers();
+    } catch (err) {
+      console.error("Failed to toggle promotion:", err);
     }
   };
 
@@ -159,7 +174,7 @@ export function FlyerTable() {
                   </div>
                 </div>
               </div>
-              <div className="mt-3 flex gap-2">
+              <div className="mt-3 flex flex-wrap gap-2">
                 {flyer.status !== "approved" && (
                   <button
                     onClick={() =>
@@ -180,6 +195,16 @@ export function FlyerTable() {
                     Reject
                   </button>
                 )}
+                <button
+                  onClick={() => handlePromoteToggle(flyer)}
+                  className={`min-h-[44px] flex-1 rounded-full border px-3 py-2 font-[family-name:var(--font-space-mono)] text-xs transition-colors ${
+                    flyer.is_promoted
+                      ? "border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                      : "border-cave-ash text-cave-fog hover:bg-cave-rock"
+                  }`}
+                >
+                  {flyer.is_promoted ? "Unpromote" : "Promote"}
+                </button>
                 <button
                   onClick={() => handleDelete(flyer.id)}
                   className="min-h-[44px] flex-1 rounded-full border border-cave-ash px-3 py-2 font-[family-name:var(--font-space-mono)] text-xs text-cave-fog transition-colors hover:bg-cave-rock"
@@ -283,6 +308,16 @@ export function FlyerTable() {
                           Reject
                         </button>
                       )}
+                      <button
+                        onClick={() => handlePromoteToggle(flyer)}
+                        className={`rounded-full border px-3 py-1 font-[family-name:var(--font-space-mono)] text-xs transition-colors ${
+                          flyer.is_promoted
+                            ? "border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                            : "border-cave-ash text-cave-fog hover:bg-cave-rock"
+                        }`}
+                      >
+                        {flyer.is_promoted ? "Unpromote" : "Promote"}
+                      </button>
                       <button
                         onClick={() => handleDelete(flyer.id)}
                         className="rounded-full border border-cave-ash px-3 py-1 font-[family-name:var(--font-space-mono)] text-xs text-cave-fog transition-colors hover:bg-cave-rock"

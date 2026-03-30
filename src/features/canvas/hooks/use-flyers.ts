@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getFlyers, getNearbyFlyers } from "../services/canvas.service";
 import { useLocationStore } from "@/shared/stores/location.store";
 import { useCanvasReadyStore } from "../stores/canvas-ready.store";
+import { useCategoryFilterStore } from "../stores/category-filter.store";
 import type { Flyer } from "../types/canvas.types";
 
 const MIN_NEARBY_RESULTS = 10;
@@ -25,6 +26,7 @@ export function useFlyers() {
   const latitude = useLocationStore((s) => s.latitude);
   const longitude = useLocationStore((s) => s.longitude);
   const locationLoading = useLocationStore((s) => s.loading);
+  const selectedCategoryId = useCategoryFilterStore((s) => s.selectedCategoryId);
 
   useEffect(() => {
     // Wait for geolocation to resolve before fetching
@@ -37,6 +39,12 @@ export function useFlyers() {
 
     async function fetchFlyersOnce(): Promise<Flyer[]> {
       let data: Flyer[];
+
+      // If category filter is active, use getFlyers with category
+      if (selectedCategoryId) {
+        data = await getFlyers(selectedCategoryId);
+        return data;
+      }
 
       if (latitude !== null && longitude !== null) {
         // Try nearby with default radius first
@@ -115,7 +123,7 @@ export function useFlyers() {
     return () => {
       cancelled = true;
     };
-  }, [latitude, longitude, locationLoading]);
+  }, [latitude, longitude, locationLoading, selectedCategoryId]);
 
   return { flyers, loading, error, empty };
 }

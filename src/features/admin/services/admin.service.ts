@@ -203,3 +203,45 @@ export async function updateUserRole(userId: string, role: UserRole) {
 
   if (error) throw error;
 }
+
+export async function promoteFlyer(id: string, durationDays: number = 30) {
+  const supabase = createClient();
+
+  const promotedUntil = new Date();
+  promotedUntil.setDate(promotedUntil.getDate() + durationDays);
+
+  const { error } = await supabase
+    .from("flyers")
+    .update({
+      is_promoted: true,
+      promoted_until: promotedUntil.toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) throw error;
+}
+
+export async function unpromoteFlyer(id: string) {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("flyers")
+    .update({
+      is_promoted: false,
+      promoted_until: null,
+    })
+    .eq("id", id);
+
+  if (error) throw error;
+}
+
+export async function getReportCount(): Promise<number> {
+  const supabase = createClient();
+
+  const { count, error } = await supabase
+    .from("flyer_reports")
+    .select("*", { count: "exact", head: true });
+
+  if (error) return 0;
+  return count ?? 0;
+}

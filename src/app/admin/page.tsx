@@ -5,6 +5,7 @@ import {
   getStats,
   getRecentFlyers,
   getAnalytics,
+  getReportCount,
 } from "@/features/admin/services/admin.service";
 import { StatsCard } from "@/features/admin/components/stats-card";
 import { StatusDot } from "@/features/admin/components/status-dot";
@@ -25,6 +26,7 @@ export default function AdminDashboardPage() {
   });
   const [recentFlyers, setRecentFlyers] = useState<Flyer[]>([]);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [reportCount, setReportCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
@@ -55,8 +57,18 @@ export default function AdminDashboardPage() {
       }
     }
 
+    async function fetchReports() {
+      try {
+        const count = await getReportCount();
+        setReportCount(count);
+      } catch (err) {
+        console.error("Failed to fetch report count:", err);
+      }
+    }
+
     fetchData();
     fetchAnalytics();
+    fetchReports();
   }, []);
 
   return (
@@ -66,7 +78,7 @@ export default function AdminDashboardPage() {
       </h1>
 
       {/* Stats */}
-      <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         <StatsCard
           label="Total Flyers"
           value={stats.totalFlyers}
@@ -80,6 +92,11 @@ export default function AdminDashboardPage() {
         <StatsCard
           label="Total Users"
           value={stats.totalUsers}
+          loading={loading}
+        />
+        <StatsCard
+          label="Reports"
+          value={reportCount}
           loading={loading}
         />
       </div>

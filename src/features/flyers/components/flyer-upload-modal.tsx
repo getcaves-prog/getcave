@@ -10,6 +10,8 @@ import { useLocationStore } from "@/shared/stores/location.store";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
+import { getCategories, setFlyerCategories } from "@/features/canvas/services/categories.service";
+import type { Category } from "@/features/canvas/services/categories.service";
 import type { GeocodingResult } from "@/shared/lib/geocoding/types";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"];
@@ -113,6 +115,13 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
   const [durationDays, setDurationDays] = useState(30);
   const [imageInfo, setImageInfo] = useState<string | null>(null);
   const [converting, setConverting] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    getCategories().then(setCategories).catch(() => {});
+  }, []);
 
   const handleImageSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -243,6 +252,16 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
     );
   }, [latitude, longitude]);
 
+  const handleCategoryToggle = useCallback((categoryId: string) => {
+    setSelectedCategories((prev) => {
+      if (prev.includes(categoryId)) {
+        return prev.filter((id) => id !== categoryId);
+      }
+      if (prev.length >= 3) return prev; // Max 3 categories
+      return [...prev, categoryId];
+    });
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     setSubmitError(null);
 
@@ -294,7 +313,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + durationDays);
 
-      const { error: insertError } = await supabase.from("flyers").insert({
+      const { data: insertedFlyer, error: insertError } = await supabase.from("flyers").insert({
         image_url: publicUrl,
         title: title.trim() || null,
         address,
@@ -303,12 +322,21 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         user_id: user.id,
         expires_at: expiresAt.toISOString(),
         duration_days: durationDays,
-      });
+      }).select("id").single();
 
       if (insertError) {
         setSubmitError(`Failed to save flyer: ${insertError.message}`);
         setSubmitting(false);
         return;
+      }
+
+      // Save categories for the flyer
+      if (insertedFlyer && selectedCategories.length > 0) {
+        try {
+          await setFlyerCategories(insertedFlyer.id, selectedCategories);
+        } catch {
+          // Non-blocking — flyer still saved
+        }
       }
 
       onClose();
@@ -318,7 +346,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
       );
       setSubmitting(false);
     }
-  }, [imageFile, address, selectedCoords, title, user, onClose, durationDays]);
+  }, [imageFile, address, selectedCoords, title, user, onClose, durationDays, selectedCategories]);
 
   // Cleanup preview URL on unmount
   useEffect(() => {
@@ -430,6 +458,35 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
           onChange={(e) => setTitle(e.target.value)}
         />
       </div>
+
+      {/* Categories */}
+      {categories.length > 0 && (
+        <div className="mb-4">
+          <p className="text-xs text-cave-fog mb-2 font-[family-name:var(--font-space-mono)]">
+            Categories (max 3)
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => {
+              const isSelected = selectedCategories.includes(cat.id);
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => handleCategoryToggle(cat.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-[family-name:var(--font-space-mono)] transition-colors ${
+                    isSelected
+                      ? "bg-cave-white text-cave-black border border-cave-white"
+                      : "bg-cave-stone text-cave-fog border border-cave-ash hover:border-cave-fog"
+                  }`}
+                >
+                  {cat.icon && <span>{cat.icon}</span>}
+                  {cat.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Address */}
       <div className="relative mb-4">

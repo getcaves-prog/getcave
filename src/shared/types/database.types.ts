@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       categories: {
         Row: {
+          color: string | null
           created_at: string
           icon: string | null
           id: string
@@ -23,6 +24,7 @@ export type Database = {
           slug: string
         }
         Insert: {
+          color?: string | null
           created_at?: string
           icon?: string | null
           id?: string
@@ -30,6 +32,7 @@ export type Database = {
           slug: string
         }
         Update: {
+          color?: string | null
           created_at?: string
           icon?: string | null
           id?: string
@@ -157,6 +160,68 @@ export type Database = {
           },
         ]
       }
+      flyer_categories: {
+        Row: {
+          category_id: string
+          flyer_id: string
+        }
+        Insert: {
+          category_id: string
+          flyer_id: string
+        }
+        Update: {
+          category_id?: string
+          flyer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flyer_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flyer_categories_flyer_id_fkey"
+            columns: ["flyer_id"]
+            isOneToOne: false
+            referencedRelation: "flyers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flyer_reports: {
+        Row: {
+          created_at: string | null
+          flyer_id: string
+          id: string
+          reason: string
+          reporter_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          flyer_id: string
+          id?: string
+          reason: string
+          reporter_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          flyer_id?: string
+          id?: string
+          reason?: string
+          reporter_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flyer_reports_flyer_id_fkey"
+            columns: ["flyer_id"]
+            isOneToOne: false
+            referencedRelation: "flyers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flyer_views: {
         Row: {
           flyer_id: string
@@ -197,7 +262,9 @@ export type Database = {
           height: number
           id: string
           image_url: string
+          is_promoted: boolean | null
           location: unknown
+          promoted_until: string | null
           rotation: number
           status: string | null
           title: string | null
@@ -214,7 +281,9 @@ export type Database = {
           height?: number
           id?: string
           image_url: string
+          is_promoted?: boolean | null
           location?: unknown
+          promoted_until?: string | null
           rotation?: number
           status?: string | null
           title?: string | null
@@ -231,7 +300,9 @@ export type Database = {
           height?: number
           id?: string
           image_url?: string
+          is_promoted?: boolean | null
           location?: unknown
+          promoted_until?: string | null
           rotation?: number
           status?: string | null
           title?: string | null
@@ -363,7 +434,9 @@ export type Database = {
           height: number
           id: string
           image_url: string
+          is_promoted: boolean | null
           location: unknown
+          promoted_until: string | null
           rotation: number
           status: string | null
           title: string | null
