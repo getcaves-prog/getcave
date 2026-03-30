@@ -139,7 +139,7 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
     {locationName && (
       <button
         onClick={() => { openSearch(); handleSearchInteraction(); }}
-        className="fixed z-40 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-cave-black/60 backdrop-blur-md border border-cave-ash/30 cursor-pointer transition-all hover:bg-cave-black/80 hover:border-cave-ash/50 group"
+        className="fixed z-40 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-cave-black/90 backdrop-blur-md border border-cave-ash/40 cursor-pointer transition-all hover:bg-cave-black/95 hover:border-cave-ash/60 group"
         style={{
           top: "max(calc(env(safe-area-inset-top) + 52px), 56px)",
         }}
