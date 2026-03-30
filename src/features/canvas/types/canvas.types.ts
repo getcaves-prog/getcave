@@ -4,6 +4,8 @@ export type Flyer = Tables<"flyers">;
 
 /** A flyer with client-side computed grid position and size */
 export interface LayoutFlyer extends Flyer {
+  /** Grid position key for React rendering (e.g. "3,5") */
+  grid_id: string;
   /** Computed x position on canvas */
   layout_x: number;
   /** Computed y position on canvas */

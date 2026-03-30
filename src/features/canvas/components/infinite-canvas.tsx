@@ -64,7 +64,7 @@ function generateVisibleFlyers(
 
       result.push({
         ...flyer,
-        id: `${col},${row}`,
+        grid_id: `${col},${row}`,
         layout_x: col * cellW,
         layout_y: row * cellH,
         layout_width: flyerWidth,
@@ -207,7 +207,7 @@ export function InfiniteCanvas() {
 
       setSelectedFlyer({
         ...flyer,
-        id: `${col},${row}`,
+        grid_id: `${col},${row}`,
         layout_x: col * cellW,
         layout_y: row * cellH,
         layout_width: flyerWidth,
@@ -277,7 +277,7 @@ export function InfiniteCanvas() {
         }}
       >
         {visibleFlyers.map((flyer) => (
-          <CanvasFlyer key={flyer.id} flyer={flyer} onImageLoad={handleImageLoad} />
+          <CanvasFlyer key={flyer.grid_id} flyer={flyer} onImageLoad={handleImageLoad} />
         ))}
       </motion.div>
 

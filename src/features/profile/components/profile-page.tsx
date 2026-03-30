@@ -87,6 +87,9 @@ export function ProfilePage({ username }: ProfilePageProps) {
     if (isOwnProfile && activeTab === "my-flyers") {
       loadMyFlyers();
     }
+    if (isOwnProfile && activeTab === "saved") {
+      getSavedFlyers().then(setSavedFlyers);
+    }
   }, [isOwnProfile, activeTab, loadMyFlyers]);
 
   const handleSignOut = useCallback(async () => {
@@ -134,14 +137,14 @@ export function ProfilePage({ username }: ProfilePageProps) {
     { month: "short", year: "numeric" }
   );
 
-  const displayFlyers = activeTab === "my-flyers" ? myFlyers : publicFlyers;
+  const displayFlyers = activeTab === "saved" ? savedFlyers : activeTab === "my-flyers" ? myFlyers : publicFlyers;
 
   return (
     <div className="min-h-dvh bg-cave-black">
       {/* Grain overlay */}
       <div className="grain-overlay" />
 
-      {/* Header bar */}
+      {/* Header bar — full width */}
       <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-cave-black/80 backdrop-blur-md safe-area-top">
         <Link
           href="/"
@@ -163,7 +166,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
         </Link>
 
         <span className="font-[family-name:var(--font-space-mono)] text-sm text-cave-white">
-          @{profile.username}
+          Profile
         </span>
 
         {isOwnProfile ? (
@@ -190,6 +193,9 @@ export function ProfilePage({ username }: ProfilePageProps) {
           <div className="w-10" />
         )}
       </header>
+
+      {/* Content — centered, narrower */}
+      <div className="mx-auto w-[85%] max-w-[800px]">
 
       {/* Profile info */}
       <div className="flex flex-col items-center px-6 pt-4 pb-6">
@@ -223,10 +229,17 @@ export function ProfilePage({ username }: ProfilePageProps) {
           )}
         </div>
 
-        {/* Username */}
-        <h1 className="text-lg text-cave-white font-[family-name:var(--font-space-mono)] mb-1">
-          @{profile.username}
-        </h1>
+        {/* Username with decorative element */}
+        <div className="flex flex-col items-center mb-1">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-8 h-px bg-gradient-to-r from-transparent via-cave-ash to-transparent" />
+            <span className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)] uppercase tracking-widest">member</span>
+            <div className="w-8 h-px bg-gradient-to-r from-transparent via-cave-ash to-transparent" />
+          </div>
+          <h1 className="text-2xl text-cave-white font-[family-name:var(--font-space-mono)] font-bold tracking-tight">
+            @{profile.username}
+          </h1>
+        </div>
 
         {/* Bio */}
         {profile.bio && (
@@ -327,7 +340,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
                 : "border border-cave-ash text-cave-fog hover:text-cave-white"
             }`}
           >
-            Public
+            Shared
           </button>
           <button
             onClick={() => setActiveTab("my-flyers")}
@@ -339,18 +352,85 @@ export function ProfilePage({ username }: ProfilePageProps) {
           >
             My Flyers
           </button>
+          <button
+            onClick={() => setActiveTab("saved")}
+            className={`min-h-[44px] flex-1 rounded-full px-4 py-2 font-[family-name:var(--font-space-mono)] text-xs transition-colors ${
+              activeTab === "saved"
+                ? "bg-cave-white text-cave-black"
+                : "border border-cave-ash text-cave-fog hover:text-cave-white"
+            }`}
+          >
+            Saved
+          </button>
         </div>
       )}
 
       {/* Flyer grid / list */}
-      {activeTab === "flyers" ? (
+      {activeTab === "my-flyers" ? (
+        <div className="flex flex-col gap-3 px-4 pb-8">
+          {myFlyers.length === 0 ? (
+            <div className="py-12 text-center text-cave-fog text-sm font-[family-name:var(--font-space-mono)]">
+              No flyers yet
+            </div>
+          ) : (
+            myFlyers.map((flyer) => (
+              <MyFlyerCard
+                key={flyer.id}
+                flyer={flyer}
+                onChange={handleMyFlyerChange}
+              />
+            ))
+          )}
+        </div>
+      ) : activeTab === "saved" ? (
         <div className="grid grid-cols-3 gap-1 px-1 pb-8">
-          {displayFlyers.length === 0 ? (
+          {savedFlyers.length === 0 ? (
+            <div className="col-span-3 py-12 text-center text-cave-fog text-sm font-[family-name:var(--font-space-mono)]">
+              No saved flyers yet
+            </div>
+          ) : (
+            savedFlyers.map((flyer) => (
+              <div key={flyer.id} className="relative aspect-[7/10] overflow-hidden bg-cave-stone group">
+                <button
+                  onClick={() => setSelectedFlyer(flyer)}
+                  className="absolute inset-0 z-0"
+                >
+                  <Image
+                    src={flyer.image_url}
+                    alt={flyer.title ?? "Flyer"}
+                    fill
+                    sizes="33vw"
+                    className="object-cover"
+                    unoptimized
+                  />
+                </button>
+                {/* Unsave button */}
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const { toggleSaveFlyer } = await import("@/features/canvas/services/favorites.service");
+                    await toggleSaveFlyer(flyer.id);
+                    setSavedFlyers((prev) => prev.filter((f) => f.id !== flyer.id));
+                  }}
+                  className="absolute top-1.5 right-1.5 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-cave-black/70 text-cave-white md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                  aria-label="Remove from saved"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                  </svg>
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      ) : activeTab === "flyers" ? (
+        <div className="grid grid-cols-3 gap-1 px-1 pb-8">
+          {publicFlyers.length === 0 ? (
             <div className="col-span-3 py-12 text-center text-cave-fog text-sm font-[family-name:var(--font-space-mono)]">
               No flyers yet
             </div>
           ) : (
-            displayFlyers.map((flyer) => (
+            publicFlyers.map((flyer) => (
               <button
                 key={flyer.id}
                 onClick={() => setSelectedFlyer(flyer)}
@@ -368,23 +448,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
             ))
           )}
         </div>
-      ) : (
-        <div className="flex flex-col gap-3 px-4 pb-8">
-          {myFlyers.length === 0 ? (
-            <div className="py-12 text-center text-cave-fog text-sm font-[family-name:var(--font-space-mono)]">
-              No flyers yet
-            </div>
-          ) : (
-            myFlyers.map((flyer) => (
-              <MyFlyerCard
-                key={flyer.id}
-                flyer={flyer}
-                onChange={handleMyFlyerChange}
-              />
-            ))
-          )}
-        </div>
-      )}
+      ) : null}
 
       {/* Flyer detail modal */}
       <AnimatePresence>
@@ -485,6 +549,8 @@ export function ProfilePage({ username }: ProfilePageProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      </div>
 
       {/* Edit profile modal */}
       <AnimatePresence>

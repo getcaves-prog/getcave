@@ -139,7 +139,7 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
     {locationName && (
       <button
         onClick={() => { openSearch(); handleSearchInteraction(); }}
-        className="fixed z-40 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-cave-black/90 backdrop-blur-md border border-cave-ash/40 cursor-pointer transition-all hover:bg-cave-black/95 hover:border-cave-ash/60 group"
+        className="fixed z-40 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-cave-black/15 backdrop-blur-sm cursor-pointer transition-all hover:bg-cave-black/25 group"
         style={{
           top: "max(calc(env(safe-area-inset-top) + 52px), 56px)",
         }}
@@ -158,7 +158,7 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
           <circle cx="12" cy="10" r="3" />
         </svg>
-        <span className="text-xs text-cave-fog tracking-wide truncate max-w-[200px] font-[family-name:var(--font-space-mono)] group-hover:text-cave-white">
+        <span className="text-xs text-white tracking-wide truncate max-w-[200px] font-[family-name:var(--font-space-mono)]">
           {locationName}
         </span>
       </button>
