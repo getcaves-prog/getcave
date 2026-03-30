@@ -135,19 +135,18 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
       />
     </header>
 
-    {/* Location pill — below header */}
+    {/* Location pill — centered below logo */}
     {locationName && (
       <button
         onClick={() => { openSearch(); handleSearchInteraction(); }}
-        className="fixed z-40 flex items-center gap-1.5 px-3 py-1 cursor-pointer transition-colors hover:text-cave-white group"
+        className="fixed z-40 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1.5 cursor-pointer transition-colors hover:text-cave-white group"
         style={{
           top: "max(calc(env(safe-area-inset-top) + 52px), 56px)",
-          left: 12,
         }}
       >
         <svg
-          width="10"
-          height="10"
+          width="14"
+          height="14"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -159,7 +158,7 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
           <circle cx="12" cy="10" r="3" />
         </svg>
-        <span className="text-[10px] text-cave-fog tracking-wide truncate max-w-[140px] font-[family-name:var(--font-space-mono)] group-hover:text-cave-white">
+        <span className="text-xs text-cave-fog tracking-wide truncate max-w-[200px] font-[family-name:var(--font-space-mono)] group-hover:text-cave-white">
           {locationName}
         </span>
       </button>
