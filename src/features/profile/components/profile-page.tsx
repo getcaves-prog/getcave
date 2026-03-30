@@ -14,6 +14,7 @@ import {
 import { ProfileEditModal } from "@/features/profile/components/profile-edit-modal";
 import { MyFlyerCard } from "@/features/profile/components/my-flyer-card";
 import { getMyFlyers } from "@/features/profile/services/my-flyers.service";
+import { getSavedFlyers } from "@/features/canvas/services/favorites.service";
 import type { Tables } from "@/shared/types/database.types";
 
 type Profile = Pick<
@@ -29,7 +30,7 @@ interface UserStats {
   total_saves: number;
 }
 
-type Tab = "flyers" | "my-flyers";
+type Tab = "flyers" | "my-flyers" | "saved";
 
 interface ProfilePageProps {
   username: string;
@@ -40,6 +41,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [publicFlyers, setPublicFlyers] = useState<Flyer[]>([]);
   const [myFlyers, setMyFlyers] = useState<Flyer[]>([]);
+  const [savedFlyers, setSavedFlyers] = useState<Flyer[]>([]);
   const [stats, setStats] = useState<UserStats>({
     flyers_posted: 0,
     total_views: 0,

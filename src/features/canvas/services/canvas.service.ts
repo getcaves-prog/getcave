@@ -1,6 +1,25 @@
 import { createClient } from "@/shared/lib/supabase/client";
 import type { Flyer } from "../types/canvas.types";
 
+interface FlyerCreator {
+  username: string;
+  avatar_url: string | null;
+}
+
+export async function getFlyerCreator(
+  userId: string
+): Promise<FlyerCreator | null> {
+  const supabase = createClient();
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("username, avatar_url")
+    .eq("id", userId)
+    .single();
+
+  return data;
+}
+
 export async function getFlyers(): Promise<Flyer[]> {
   const supabase = createClient();
 

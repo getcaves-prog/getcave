@@ -1,8 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import { toggleSaveFlyer, isFlyerSaved } from "../services/favorites.service";
+import { getFlyerCreator } from "../services/canvas.service";
 import type { LayoutFlyer } from "../types/canvas.types";
 
 function computeDaysRemaining(expiresAt: string): number | null {
@@ -13,16 +17,66 @@ function computeDaysRemaining(expiresAt: string): number | null {
   return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 }
 
+interface CreatorInfo {
+  username: string;
+  avatar_url: string | null;
+}
+
 interface FlyerDetailModalProps {
   flyer: LayoutFlyer;
   onClose: () => void;
 }
 
 export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
+  const { user } = useAuth();
+  const [saved, setSaved] = useState(false);
+  const [savingInProgress, setSavingInProgress] = useState(false);
+  const [creator, setCreator] = useState<CreatorInfo | null>(null);
+
   const daysRemaining = useMemo(() => {
     if (!flyer.expires_at) return null;
     return computeDaysRemaining(flyer.expires_at);
   }, [flyer.expires_at]);
+
+  // Check if flyer is saved by current user
+  useEffect(() => {
+    if (!user || !flyer.id) return;
+
+    // The flyer.id from canvas grid is "col,row" format — we need the real DB id
+    // The real id is available on the source flyer object before layout mapping
+    // We use a heuristic: if id contains comma it's a grid id, skip save check
+    if (flyer.id.includes(",")) return;
+
+    isFlyerSaved(flyer.id).then(setSaved);
+  }, [user, flyer.id]);
+
+  // Fetch creator info
+  useEffect(() => {
+    if (!flyer.user_id) {
+      setCreator(null);
+      return;
+    }
+
+    getFlyerCreator(flyer.user_id).then((data) => {
+      if (data) {
+        setCreator({ username: data.username, avatar_url: data.avatar_url });
+      }
+    });
+  }, [flyer.user_id]);
+
+  const handleToggleSave = useCallback(async () => {
+    if (!user || savingInProgress) return;
+    // Skip save for grid-generated IDs
+    if (flyer.id.includes(",")) return;
+
+    setSavingInProgress(true);
+    try {
+      const newState = await toggleSaveFlyer(flyer.id);
+      setSaved(newState);
+    } finally {
+      setSavingInProgress(false);
+    }
+  }, [user, flyer.id, savingInProgress]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -73,6 +127,31 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
         }}
         style={{ willChange: "transform, opacity" }}
       >
+        {/* Save button — top left (only for authenticated users) */}
+        {user && !flyer.id.includes(",") && (
+          <button
+            onClick={handleToggleSave}
+            disabled={savingInProgress}
+            className="absolute -top-3 -left-3 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-cave-black/90 border border-cave-ash/40 text-cave-fog hover:text-cave-white hover:border-cave-white/50 transition-colors disabled:opacity-50"
+            aria-label={saved ? "Remove from saved" : "Save flyer"}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill={saved ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={saved ? "text-cave-white" : ""}
+            >
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+        )}
+
         {/* Close button */}
         <button
           onClick={onClose}
@@ -114,6 +193,69 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
             unoptimized
           />
         </motion.div>
+
+        {/* Creator info */}
+        {creator ? (
+          <Link
+            href={`/profile/${creator.username}`}
+            className="mt-3 flex items-center gap-2 group"
+          >
+            <div className="w-6 h-6 rounded-full overflow-hidden bg-cave-stone border border-cave-ash shrink-0">
+              {creator.avatar_url ? (
+                <Image
+                  src={creator.avatar_url}
+                  alt={creator.username}
+                  width={24}
+                  height={24}
+                  className="w-full h-full object-cover"
+                  unoptimized
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-cave-smoke"
+                  >
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            <span className="text-xs text-cave-fog group-hover:text-cave-white transition-colors font-[family-name:var(--font-space-mono)]">
+              @{creator.username}
+            </span>
+          </Link>
+        ) : !flyer.user_id ? (
+          <div className="mt-3 flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-cave-stone border border-cave-ash flex items-center justify-center shrink-0">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-cave-smoke"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+            <span className="text-xs text-cave-fog font-[family-name:var(--font-space-mono)]">
+              Anonymous
+            </span>
+          </div>
+        ) : null}
 
         {/* Expiry badge */}
         {daysRemaining !== null && (

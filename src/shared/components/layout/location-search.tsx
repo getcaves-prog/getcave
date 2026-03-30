@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { autocomplete } from "@/shared/lib/geocoding/geocoding.service";
 import { useLocationStore } from "@/shared/stores/location.store";
+import { MEXICAN_STATES } from "@/shared/lib/data/mexican-states";
 import type { GeocodingResult } from "@/shared/lib/geocoding/types";
 
 interface LocationSearchProps {
@@ -63,6 +64,15 @@ export function LocationSearch({ isOpen, onClose, onInteraction }: LocationSearc
     [setLocation, setLocationName, onClose]
   );
 
+  const handleStateSelect = useCallback(
+    (state: (typeof MEXICAN_STATES)[number]) => {
+      setLocation(state.lat, state.lng);
+      setLocationName(state.name);
+      onClose();
+    },
+    [setLocation, setLocationName, onClose]
+  );
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -94,6 +104,21 @@ export function LocationSearch({ isOpen, onClose, onInteraction }: LocationSearc
             onClick={onInteraction}
             onFocus={onInteraction}
           >
+            {/* State pills — horizontal scroll */}
+            <div className="mb-2 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-1.5 px-1 pb-1">
+                {MEXICAN_STATES.map((state) => (
+                  <button
+                    key={state.abbreviation}
+                    onClick={() => handleStateSelect(state)}
+                    className="shrink-0 bg-cave-rock border border-cave-ash rounded-full px-3 py-1 text-xs text-cave-fog hover:text-cave-white hover:border-cave-fog transition-colors font-[family-name:var(--font-space-mono)]"
+                  >
+                    {state.abbreviation}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Input */}
             <div className="flex items-center gap-2 rounded-t-xl border border-cave-ash bg-cave-rock px-3 h-11">
               <svg
