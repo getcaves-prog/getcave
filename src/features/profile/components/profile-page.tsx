@@ -302,7 +302,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
       )}
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 border-y border-cave-ash py-4 mx-4 mb-4">
+      <div className="grid grid-cols-2 border-y border-cave-ash py-4 mx-4 mb-4">
         <div className="flex flex-col items-center">
           <span className="text-lg text-cave-white font-[family-name:var(--font-space-mono)] font-bold">
             {stats.flyers_posted}
@@ -311,15 +311,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
             Flyers
           </span>
         </div>
-        <div className="flex flex-col items-center border-x border-cave-ash">
-          <span className="text-lg text-cave-white font-[family-name:var(--font-space-mono)] font-bold">
-            {stats.total_views}
-          </span>
-          <span className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
-            Views
-          </span>
-        </div>
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center border-l border-cave-ash">
           <span className="text-lg text-cave-white font-[family-name:var(--font-space-mono)] font-bold">
             {stats.total_saves}
           </span>
