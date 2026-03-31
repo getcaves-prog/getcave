@@ -85,5 +85,5 @@ export default async function FlyerPage({ params }: FlyerPageProps) {
   const result = await getFlyer(id);
   if (!result) notFound();
 
-  return <FlyerOverlayPage flyer={result.flyer as Record<string, unknown>} />;
+  return <FlyerOverlayPage flyer={result.flyer as Record<string, unknown>} creator={result.creator} />;
 }
