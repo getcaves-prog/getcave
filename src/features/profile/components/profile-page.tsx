@@ -48,7 +48,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
     total_saves: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<Tab>("flyers");
+  const [activeTab, setActiveTab] = useState<Tab>("my-flyers");
   const [editOpen, setEditOpen] = useState(false);
   const [selectedFlyer, setSelectedFlyer] = useState<Flyer | null>(null);
 
@@ -333,16 +333,6 @@ export function ProfilePage({ username }: ProfilePageProps) {
       {isOwnProfile && (
         <div className="flex gap-2 px-4 mb-4">
           <button
-            onClick={() => setActiveTab("flyers")}
-            className={`min-h-[44px] flex-1 rounded-full px-4 py-2 font-[family-name:var(--font-space-mono)] text-xs transition-colors ${
-              activeTab === "flyers"
-                ? "bg-cave-white text-cave-black"
-                : "border border-cave-ash text-cave-fog hover:text-cave-white"
-            }`}
-          >
-            Shared
-          </button>
-          <button
             onClick={() => setActiveTab("my-flyers")}
             className={`min-h-[44px] flex-1 rounded-full px-4 py-2 font-[family-name:var(--font-space-mono)] text-xs transition-colors ${
               activeTab === "my-flyers"
@@ -420,31 +410,6 @@ export function ProfilePage({ username }: ProfilePageProps) {
                   </svg>
                 </button>
               </div>
-            ))
-          )}
-        </div>
-      ) : activeTab === "flyers" ? (
-        <div className="grid grid-cols-3 gap-1 px-1 pb-8">
-          {publicFlyers.length === 0 ? (
-            <div className="col-span-3 py-12 text-center text-cave-fog text-sm font-[family-name:var(--font-space-mono)]">
-              No flyers yet
-            </div>
-          ) : (
-            publicFlyers.map((flyer) => (
-              <button
-                key={flyer.id}
-                onClick={() => setSelectedFlyer(flyer)}
-                className="relative aspect-[7/10] overflow-hidden bg-cave-stone"
-              >
-                <Image
-                  src={flyer.image_url}
-                  alt={flyer.title ?? "Flyer"}
-                  fill
-                  sizes="33vw"
-                  className="object-cover"
-                  unoptimized
-                />
-              </button>
             ))
           )}
         </div>
