@@ -169,40 +169,17 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
         }}
       />
 
-      {/* Right side floating buttons — save + report */}
-      <div className="absolute top-4 right-4 z-30 flex flex-col gap-2.5 safe-area-top">
-        {/* Save */}
-        {user && (
-          <button
-            onClick={handleToggleSave}
-            disabled={savingInProgress}
-            className={`w-11 h-11 flex items-center justify-center rounded-full transition-colors disabled:opacity-50 ${
-              saved
-                ? "bg-cave-white text-cave-black"
-                : "bg-cave-rock/80 text-cave-fog hover:text-cave-white"
-            }`}
-            aria-label={saved ? "Saved" : "Save"}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-            </svg>
-          </button>
-        )}
-
-        {/* Report */}
-        {user && (
-          <button
-            onClick={() => setShowReport(true)}
-            className="w-11 h-11 flex items-center justify-center rounded-full bg-cave-rock/80 text-cave-smoke hover:text-cave-fog transition-colors"
-            aria-label="Report"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-              <line x1="4" y1="22" x2="4" y2="15" />
-            </svg>
-          </button>
-        )}
-      </div>
+      {/* Close X — top right */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 z-30 w-10 h-10 flex items-center justify-center rounded-full bg-cave-rock/80 text-cave-fog hover:text-cave-white transition-colors safe-area-top"
+        aria-label="Close"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
 
       {/* Spotify-style card — centered */}
       <motion.div
@@ -215,17 +192,6 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
       >
         {/* The card */}
         <div className="relative w-full max-w-[380px] rounded-3xl bg-cave-stone/90 p-5 pb-6 shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
-          {/* Close X — top right of card */}
-          <button
-            onClick={onClose}
-            className="absolute -top-3 -right-3 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-cave-rock border border-cave-ash text-cave-fog hover:text-cave-white transition-colors"
-            aria-label="Close"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
           {/* Flyer image — inside card */}
           <div
             className={`relative w-full overflow-hidden rounded-2xl mb-4 ${flyer.is_promoted ? "ring-1 ring-amber-500/30" : ""}`}
@@ -345,15 +311,29 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
                 </span>
               </Link>
             ) : <div />}
-            {viewCount > 0 && (
-              <span className="text-[10px] text-cave-smoke flex items-center gap-1">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                {viewCount}
-              </span>
-            )}
+            <div className="flex items-center gap-3">
+              {viewCount > 0 && (
+                <span className="text-[10px] text-cave-smoke flex items-center gap-1">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  {viewCount}
+                </span>
+              )}
+              {user && (
+                <button
+                  onClick={handleToggleSave}
+                  disabled={savingInProgress}
+                  className="text-cave-smoke hover:text-cave-white transition-colors disabled:opacity-50"
+                  aria-label={saved ? "Saved" : "Save"}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={saved ? "text-cave-white" : ""}>
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
