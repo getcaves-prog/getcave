@@ -217,15 +217,15 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
             )}
           </div>
 
-          {/* Bottom: @username left, actions right */}
-          <div className="flex items-center justify-between mt-3 px-1">
+          {/* Bottom bar — dark bg for contrast */}
+          <div className="flex items-center justify-between mt-2 px-4 py-3 rounded-b-[16px] bg-cave-stone">
             {creator ? (
-              <Link href={`/profile/${creator.username}`} className="text-[11px] text-cave-fog hover:text-cave-white transition-colors font-[family-name:var(--font-space-mono)]">
+              <Link href={`/profile/${creator.username}`} className="text-xs text-cave-fog hover:text-cave-white transition-colors font-[family-name:var(--font-space-mono)]">
                 @{creator.username}
               </Link>
             ) : <div />}
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               {/* Save */}
               {user && (
                 <button onClick={handleToggleSave} disabled={savingInProgress} className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors disabled:opacity-50 ${saved ? "text-cave-white" : "text-cave-smoke hover:text-cave-white"}`} aria-label={saved ? "Saved" : "Save"}>
