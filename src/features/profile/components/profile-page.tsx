@@ -83,14 +83,13 @@ export function ProfilePage({ username }: ProfilePageProps) {
     loadProfile();
   }, [loadProfile]);
 
+  // Load both my flyers and saved on mount (for counts in stats)
   useEffect(() => {
-    if (isOwnProfile && activeTab === "my-flyers") {
+    if (isOwnProfile) {
       loadMyFlyers();
-    }
-    if (isOwnProfile && activeTab === "saved") {
       getSavedFlyers().then(setSavedFlyers);
     }
-  }, [isOwnProfile, activeTab, loadMyFlyers]);
+  }, [isOwnProfile, loadMyFlyers]);
 
   const handleSignOut = useCallback(async () => {
     const supabase = createClient();
@@ -301,51 +300,40 @@ export function ProfilePage({ username }: ProfilePageProps) {
         </div>
       )}
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 border-y border-cave-ash py-4 mx-4 mb-4">
-        <div className="flex flex-col items-center">
-          <span className="text-lg text-cave-white font-[family-name:var(--font-space-mono)] font-bold">
-            {stats.flyers_posted}
-          </span>
-          <span className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
-            Flyers
-          </span>
-        </div>
-        <div className="flex flex-col items-center border-l border-cave-ash">
-          <span className="text-lg text-cave-white font-[family-name:var(--font-space-mono)] font-bold">
-            {stats.total_saves}
-          </span>
-          <span className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
-            Saves
-          </span>
-        </div>
-      </div>
-
-      {/* Tabs — only show if own profile */}
+      {/* Stats as tabs — clickable to switch content */}
       {isOwnProfile && (
-        <div className="flex gap-2 px-4 mb-4">
+        <div className="grid grid-cols-2 border-y border-cave-ash mx-4 mb-4">
           <button
             onClick={() => setActiveTab("my-flyers")}
-            className={`min-h-[44px] flex-1 rounded-full px-4 py-2 font-[family-name:var(--font-space-mono)] text-xs transition-colors ${
-              activeTab === "my-flyers"
-                ? "bg-cave-white text-cave-black"
-                : "border border-cave-ash text-cave-fog hover:text-cave-white"
+            className={`flex flex-col items-center py-4 transition-colors ${
+              activeTab === "my-flyers" ? "text-cave-white" : "text-cave-smoke hover:text-cave-fog"
             }`}
           >
-            My Flyers
+            <span className="text-lg font-[family-name:var(--font-space-mono)] font-bold">
+              {myFlyers.length}
+            </span>
+            <span className="text-xs font-[family-name:var(--font-space-mono)]">
+              Flyers
+            </span>
+            {activeTab === "my-flyers" && <div className="w-8 h-[2px] bg-cave-white rounded-full mt-2" />}
           </button>
           <button
             onClick={() => setActiveTab("saved")}
-            className={`min-h-[44px] flex-1 rounded-full px-4 py-2 font-[family-name:var(--font-space-mono)] text-xs transition-colors ${
-              activeTab === "saved"
-                ? "bg-cave-white text-cave-black"
-                : "border border-cave-ash text-cave-fog hover:text-cave-white"
+            className={`flex flex-col items-center py-4 border-l border-cave-ash transition-colors ${
+              activeTab === "saved" ? "text-cave-white" : "text-cave-smoke hover:text-cave-fog"
             }`}
           >
-            Saved
+            <span className="text-lg font-[family-name:var(--font-space-mono)] font-bold">
+              {savedFlyers.length}
+            </span>
+            <span className="text-xs font-[family-name:var(--font-space-mono)]">
+              Saved
+            </span>
+            {activeTab === "saved" && <div className="w-8 h-[2px] bg-cave-white rounded-full mt-2" />}
           </button>
         </div>
       )}
+
 
       {/* Flyer grid / list */}
       {activeTab === "my-flyers" ? (
