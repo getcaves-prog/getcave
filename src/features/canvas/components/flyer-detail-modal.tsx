@@ -223,8 +223,6 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
             </h2>
           )}
 
-          {/* Share row — social icons + copy link */}
-          <div className="flex items-center gap-2 mb-3">
             {/* WhatsApp */}
             <a
               href={`https://wa.me/?text=${encodeURIComponent((flyer.title || "Check this out") + " — " + window.location.origin + "/flyer/" + flyer.id)}`}
@@ -280,13 +278,9 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
             </button>
           </div>
 
-          {/* Views + Save row — same size as share icons */}
+          {/* Share row — social icons + save + copy link */}
           <div className="flex items-center gap-2 mb-3">
-            {viewCount > 0 && (
-              <div className="w-9 h-9 flex items-center justify-center rounded-full bg-cave-rock text-cave-smoke text-[10px] font-[family-name:var(--font-space-mono)]">
-                {viewCount}
-              </div>
-            )}
+            {/* Save */}
             {user && (
               <button
                 onClick={handleToggleSave}
@@ -294,7 +288,7 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
                 className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors disabled:opacity-50 ${
                   saved
                     ? "bg-cave-white text-cave-black"
-                    : "bg-cave-rock text-cave-smoke hover:text-cave-white"
+                    : "bg-cave-rock hover:bg-cave-ash text-cave-smoke hover:text-cave-white"
                 }`}
                 aria-label={saved ? "Saved" : "Save"}
               >
@@ -303,9 +297,7 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
                 </svg>
               </button>
             )}
-          </div>
-
-          {/* Creator row */}
+            {/* WhatsApp */}
           {creator && (
             <Link
               href={`/profile/${creator.username}`}
