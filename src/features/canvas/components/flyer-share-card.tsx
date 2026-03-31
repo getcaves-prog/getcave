@@ -174,17 +174,12 @@ export function FlyerShareCard({
           </button>
         </div>
 
-        {/* Meta */}
-        <div className="flex items-center gap-2 px-2">
-          {viewCount > 0 && (
+        {/* Views */}
+        {viewCount > 0 && (
+          <div className="px-2">
             <span className="text-[10px] text-cave-smoke">{viewCount} views</span>
-          )}
-          {daysRemaining !== null && (
-            <span className="text-[10px] text-cave-smoke">
-              {daysRemaining === 0 ? "Expires today" : `${daysRemaining}d left`}
-            </span>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Categories below card */}

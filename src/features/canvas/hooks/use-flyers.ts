@@ -5,11 +5,13 @@ import { getFlyers, getNearbyFlyers } from "../services/canvas.service";
 import { useLocationStore } from "@/shared/stores/location.store";
 import { useCanvasReadyStore } from "../stores/canvas-ready.store";
 import { useCategoryFilterStore } from "../stores/category-filter.store";
-import type { Flyer } from "../types/canvas.types";
+import { useDisplayModeStore } from "../stores/display-mode.store";
+import type { Flyer, DisplayMode } from "../types/canvas.types";
 
-const MIN_NEARBY_RESULTS = 10;
-const EXPANDED_RADIUS_KM = 200;
-const DEFAULT_RADIUS_KM = 50;
+/** Minimum flyer count to use infinite canvas mode */
+const CANVAS_THRESHOLD = 20;
+
+const RADIUS_STEPS_KM = [50, 100, 200];
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 2_000;
 
@@ -17,11 +19,17 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function resolveDisplayMode(count: number): DisplayMode {
+  if (count === 0) return "empty";
+  if (count < CANVAS_THRESHOLD) return "grid";
+  return "canvas";
+}
+
 export function useFlyers() {
   const [flyers, setFlyers] = useState<Flyer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [empty, setEmpty] = useState(false);
+  const [mode, setMode] = useState<DisplayMode>("empty");
 
   const latitude = useLocationStore((s) => s.latitude);
   const longitude = useLocationStore((s) => s.longitude);
@@ -38,43 +46,35 @@ export function useFlyers() {
     useCanvasReadyStore.getState().reset();
 
     async function fetchFlyersOnce(): Promise<Flyer[]> {
-      let data: Flyer[];
-
       // If category filter is active, use getFlyers with category
       if (selectedCategoryId) {
-        data = await getFlyers(selectedCategoryId);
-        return data;
+        return getFlyers(selectedCategoryId);
       }
 
       if (latitude !== null && longitude !== null) {
-        // Try nearby with default radius first
-        data = await getNearbyFlyers(latitude, longitude, DEFAULT_RADIUS_KM);
+        // Try increasingly larger radii until we get enough results
+        for (const radius of RADIUS_STEPS_KM) {
+          const data = await getNearbyFlyers(latitude, longitude, radius);
 
-        // If too few results, expand radius to cover all of Nuevo Leon
-        if (data.length < MIN_NEARBY_RESULTS) {
-          data = await getNearbyFlyers(
-            latitude,
-            longitude,
-            EXPANDED_RADIUS_KM
-          );
+          // If we have enough for canvas, or this is the last radius step, return
+          if (data.length >= CANVAS_THRESHOLD || radius === RADIUS_STEPS_KM[RADIUS_STEPS_KM.length - 1]) {
+            // If the largest radius still yields 0, fallback to all flyers
+            if (data.length === 0 && radius === RADIUS_STEPS_KM[RADIUS_STEPS_KM.length - 1]) {
+              return getFlyers();
+            }
+            return data;
+          }
         }
-
-        // If still no results, fallback to all flyers
-        if (data.length === 0) {
-          data = await getFlyers();
-        }
-      } else {
-        // No location available — fetch all flyers
-        data = await getFlyers();
       }
 
-      return data;
+      // No location available — fetch all flyers
+      return getFlyers();
     }
 
     async function fetchWithRetry() {
       setLoading(true);
       setError(null);
-      setEmpty(false);
+      setMode("empty");
 
       let lastError: unknown = null;
 
@@ -90,11 +90,10 @@ export function useFlyers() {
           const data = await fetchFlyersOnce();
 
           if (!cancelled) {
-            if (data.length === 0) {
-              setEmpty(true);
-            } else {
-              setFlyers(data);
-            }
+            const resolved = resolveDisplayMode(data.length);
+            setFlyers(data);
+            setMode(resolved);
+            useDisplayModeStore.getState().setMode(resolved);
             useCanvasReadyStore.getState().setFlyersLoaded();
             return;
           }
@@ -125,5 +124,5 @@ export function useFlyers() {
     };
   }, [latitude, longitude, locationLoading, selectedCategoryId]);
 
-  return { flyers, loading, error, empty };
+  return { flyers, loading, error, mode };
 }

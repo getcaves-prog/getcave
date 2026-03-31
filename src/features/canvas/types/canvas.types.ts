@@ -2,6 +2,9 @@ import type { Tables } from "@/shared/types/database.types";
 
 export type Flyer = Tables<"flyers">;
 
+/** Determines how flyers are displayed based on result count */
+export type DisplayMode = "canvas" | "grid" | "empty";
+
 /** A flyer with client-side computed grid position and size */
 export interface LayoutFlyer extends Flyer {
   /** Grid position key for React rendering (e.g. "3,5") */

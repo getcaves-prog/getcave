@@ -8,6 +8,7 @@ import { CanvasHeader } from "@/shared/components/layout/canvas-header";
 import { useGeolocation } from "@/shared/hooks/use-geolocation";
 import { useLocationStore } from "@/shared/stores/location.store";
 import { useCanvasReadyStore } from "@/features/canvas/stores/canvas-ready.store";
+import { useDisplayModeStore } from "@/features/canvas/stores/display-mode.store";
 import { reverseGeocode } from "@/shared/lib/geocoding/geocoding.service";
 import { registerPushNotifications } from "@/shared/lib/notifications/push.service";
 
@@ -20,6 +21,7 @@ export default function HomePage() {
   const [targetY, setTargetY] = useState(0);
 
   const canvasReady = useCanvasReadyStore((s) => s.ready);
+  const displayMode = useDisplayModeStore((s) => s.mode);
   const timeoutFiredRef = useRef(false);
   const animationDoneRef = useRef(false);
   const maxWaitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -102,7 +104,14 @@ export default function HomePage() {
   }, [introComplete]);
 
   return (
-    <main className="h-dvh w-screen overflow-hidden bg-cave-black" style={{ position: "fixed", inset: 0 }}>
+    <main
+      className={`w-screen bg-cave-black ${
+        displayMode === "grid"
+          ? "min-h-dvh overflow-y-auto"
+          : "h-dvh overflow-hidden"
+      }`}
+      style={displayMode === "grid" ? undefined : { position: "fixed", inset: 0 }}
+    >
       {/* Canvas + Header — always mounted, renders behind intro */}
       <div className="h-full w-full">
         <CanvasHeader hidelogo={!introComplete} />

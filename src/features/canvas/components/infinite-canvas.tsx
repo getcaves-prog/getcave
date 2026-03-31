@@ -7,6 +7,7 @@ import { useCanvasGestures } from "../hooks/use-canvas-gestures";
 import { useCanvasReadyStore } from "../stores/canvas-ready.store";
 import { useActionModalStore } from "@/shared/stores/action-modal.store";
 import { CanvasFlyer } from "./canvas-flyer";
+import { FlyerGrid } from "./flyer-grid";
 import { FlyerDetailModal } from "./flyer-detail-modal";
 import {
   CANVAS_LIMITS,
@@ -78,7 +79,7 @@ function generateVisibleFlyers(
 }
 
 export function InfiniteCanvas() {
-  const { flyers, loading, error, empty } = useFlyers();
+  const { flyers, loading, error, mode } = useFlyers();
   const { springX, springY, springScale, isDragging, bind, jumpTo, transformRef } = useCanvasGestures();
   const incrementImagesLoaded = useCanvasReadyStore((s) => s.incrementImagesLoaded);
   const openActionModal = useActionModalStore((s) => s.open);
@@ -226,6 +227,53 @@ export function InfiniteCanvas() {
     );
   }
 
+  if (loading) {
+    return (
+      <div
+        className="w-screen flex items-center justify-center bg-cave-black"
+        style={{ height: "100dvh" }}
+      >
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-6 h-6 border-2 border-cave-white border-t-transparent rounded-full animate-spin" />
+          <p className="text-cave-fog text-sm font-mono">Loading flyers...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === "empty") {
+    return (
+      <div
+        className="w-screen flex flex-col items-center justify-center px-8 bg-cave-black"
+        style={{ height: "100dvh" }}
+      >
+        <div className="w-16 h-16 rounded-full bg-cave-rock flex items-center justify-center mb-4">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-cave-fog">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+        </div>
+        <h2 className="text-lg text-cave-white font-[family-name:var(--font-space-mono)] text-center mb-2">
+          No flyers nearby
+        </h2>
+        <p className="text-sm text-cave-fog text-center max-w-[280px] mb-6">
+          No events in your area yet. Be the first to share what&apos;s happening!
+        </p>
+        <button
+          onClick={handleUpload}
+          className="px-6 py-3 rounded-full bg-cave-white text-cave-black text-sm font-medium"
+        >
+          Upload a Flyer
+        </button>
+      </div>
+    );
+  }
+
+  if (mode === "grid") {
+    return <FlyerGrid flyers={flyers} />;
+  }
+
+  // mode === "canvas" — infinite tiling canvas
   return (
     <div
       {...bind()}
@@ -233,38 +281,6 @@ export function InfiniteCanvas() {
       className="w-screen overflow-hidden bg-cave-black touch-none select-none"
       style={{ height: "100dvh", overscrollBehavior: "none" }}
     >
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center z-10">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-6 h-6 border-2 border-cave-white border-t-transparent rounded-full animate-spin" />
-            <p className="text-cave-fog text-sm font-mono">Loading flyers...</p>
-          </div>
-        </div>
-      )}
-
-      {!loading && empty && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-8">
-          <div className="w-16 h-16 rounded-full bg-cave-rock flex items-center justify-center mb-4">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-cave-fog">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-          </div>
-          <h2 className="text-lg text-cave-white font-[family-name:var(--font-space-mono)] text-center mb-2">
-            No flyers nearby
-          </h2>
-          <p className="text-sm text-cave-fog text-center max-w-[280px] mb-6">
-            Be the first to post in your area, or try searching a different location.
-          </p>
-          <button
-            onClick={handleUpload}
-            className="px-6 py-3 rounded-full bg-cave-white text-cave-black text-sm font-medium"
-          >
-            Upload a Flyer
-          </button>
-        </div>
-      )}
-
       <motion.div
         className="relative origin-top-left"
         style={{
