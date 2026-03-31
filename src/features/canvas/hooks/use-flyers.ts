@@ -56,19 +56,16 @@ export function useFlyers() {
         for (const radius of RADIUS_STEPS_KM) {
           const data = await getNearbyFlyers(latitude, longitude, radius);
 
-          // If we have enough for canvas, or this is the last radius step, return
+          // If we have enough for canvas, or this is the last radius step, return whatever we have
           if (data.length >= CANVAS_THRESHOLD || radius === RADIUS_STEPS_KM[RADIUS_STEPS_KM.length - 1]) {
-            // If the largest radius still yields 0, fallback to all flyers
-            if (data.length === 0 && radius === RADIUS_STEPS_KM[RADIUS_STEPS_KM.length - 1]) {
-              return getFlyers();
-            }
-            return data;
+            return data; // Could be 0 — that's fine, shows empty state
           }
         }
+        return []; // No flyers nearby at any radius
       }
 
-      // No location available — fetch all flyers
-      return getFlyers();
+      // No location available — show empty state (don't fetch all flyers globally)
+      return [];
     }
 
     async function fetchWithRetry() {
