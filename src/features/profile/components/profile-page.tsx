@@ -84,12 +84,12 @@ export function ProfilePage({ username }: ProfilePageProps) {
   }, [loadProfile]);
 
   // Load both my flyers and saved on mount (for counts in stats)
+  const own = isOwnProfile;
   useEffect(() => {
-    if (isOwnProfile) {
-      loadMyFlyers();
-      getSavedFlyers().then(setSavedFlyers);
-    }
-  }, [isOwnProfile, loadMyFlyers]);
+    if (!own) return;
+    loadMyFlyers();
+    getSavedFlyers().then(setSavedFlyers);
+  }, [own, loadMyFlyers]);
 
   const handleSignOut = useCallback(async () => {
     const supabase = createClient();
