@@ -314,43 +314,47 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
             </button>
           </div>
 
-          {/* Creator — who uploaded this flyer */}
-          {creator && (
-            <Link
-              href={`/profile/${creator.username}`}
-              className="flex items-center gap-2 mb-2 group"
-            >
-              <div className="w-7 h-7 rounded-full overflow-hidden bg-cave-rock border border-cave-ash shrink-0">
-                {creator.avatar_url ? (
-                  <Image
-                    src={creator.avatar_url}
-                    alt={creator.username}
-                    width={28}
-                    height={28}
-                    className="w-full h-full object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cave-smoke">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-              <span className="text-sm text-cave-fog group-hover:text-cave-white transition-colors">
-                @{creator.username}
+          {/* Creator + Views row */}
+          <div className="flex items-center justify-between">
+            {creator ? (
+              <Link
+                href={`/profile/${creator.username}`}
+                className="flex items-center gap-2 group"
+              >
+                <div className="w-7 h-7 rounded-full overflow-hidden bg-cave-rock border border-cave-ash shrink-0">
+                  {creator.avatar_url ? (
+                    <Image
+                      src={creator.avatar_url}
+                      alt={creator.username}
+                      width={28}
+                      height={28}
+                      className="w-full h-full object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cave-smoke">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <span className="text-sm text-cave-fog group-hover:text-cave-white transition-colors">
+                  @{creator.username}
+                </span>
+              </Link>
+            ) : <div />}
+            {viewCount > 0 && (
+              <span className="text-[10px] text-cave-smoke flex items-center gap-1">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                {viewCount}
               </span>
-            </Link>
-          )}
-
-          {/* Views count */}
-          {viewCount > 0 && (
-            <span className="text-[10px] text-cave-smoke">
-              {viewCount} views
-            </span>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Category pills below card */}
