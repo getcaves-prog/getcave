@@ -400,7 +400,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
       <button
         type="button"
         onClick={() => fileInputRef.current?.click()}
-        className="relative w-full aspect-[7/10] rounded-xl border-2 border-dashed border-cave-ash hover:border-cave-fog bg-cave-stone flex flex-col items-center justify-center gap-3 overflow-hidden transition-colors mb-4"
+        className="relative w-full aspect-[4/5] rounded-xl border-2 border-dashed border-cave-fog/40 hover:border-cave-fog bg-cave-rock flex flex-col items-center justify-center gap-3 overflow-hidden transition-colors mb-4"
       >
         {imagePreview ? (
           <Image
@@ -479,7 +479,6 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
                       : "bg-cave-stone text-cave-fog border border-cave-ash hover:border-cave-fog"
                   }`}
                 >
-                  {cat.icon && <span>{cat.icon}</span>}
                   {cat.name}
                 </button>
               );
