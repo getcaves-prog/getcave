@@ -257,39 +257,6 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
             </h2>
           )}
 
-          {/* Creator row */}
-          {creator ? (
-            <Link
-              href={`/profile/${creator.username}`}
-              className="flex items-center gap-2 mb-3 group"
-            >
-              <div className="w-6 h-6 rounded-full overflow-hidden bg-cave-rock border border-cave-ash shrink-0">
-                {creator.avatar_url ? (
-                  <Image
-                    src={creator.avatar_url}
-                    alt={creator.username}
-                    width={24}
-                    height={24}
-                    className="w-full h-full object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cave-smoke">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-              <span className="text-sm text-cave-fog group-hover:text-cave-white transition-colors">
-                {creator.username}
-              </span>
-            </Link>
-          ) : (
-            <div className="mb-3" />
-          )}
-
           {/* Share row — social icons + copy link */}
           <div className="flex items-center gap-2 mb-3">
             {/* WhatsApp */}
@@ -347,19 +314,43 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
             </button>
           </div>
 
-          {/* Meta: views + expiry */}
-          <div className="flex items-center gap-2">
-            {viewCount > 0 && (
-              <span className="text-[10px] text-cave-smoke">
-                {viewCount} views
+          {/* Creator — who uploaded this flyer */}
+          {creator && (
+            <Link
+              href={`/profile/${creator.username}`}
+              className="flex items-center gap-2 mb-2 group"
+            >
+              <div className="w-7 h-7 rounded-full overflow-hidden bg-cave-rock border border-cave-ash shrink-0">
+                {creator.avatar_url ? (
+                  <Image
+                    src={creator.avatar_url}
+                    alt={creator.username}
+                    width={28}
+                    height={28}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cave-smoke">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              <span className="text-sm text-cave-fog group-hover:text-cave-white transition-colors">
+                @{creator.username}
               </span>
-            )}
-            {daysRemaining !== null && (
-              <span className="text-[10px] text-cave-smoke">
-                {daysRemaining === 0 ? "Expires today" : `${daysRemaining}d left`}
-              </span>
-            )}
-          </div>
+            </Link>
+          )}
+
+          {/* Views count */}
+          {viewCount > 0 && (
+            <span className="text-[10px] text-cave-smoke">
+              {viewCount} views
+            </span>
+          )}
         </div>
 
         {/* Category pills below card */}
