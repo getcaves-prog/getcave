@@ -50,13 +50,11 @@ export async function generateMetadata({ params }: FlyerPageProps): Promise<Meta
       siteName: "Caves",
       images: [
         {
-          url: flyer.image_url.includes("supabase.co")
-            ? `${flyer.image_url}?width=600&height=750&resize=cover&quality=80`
-            : flyer.image_url,
+          url: `/api/og/${id}`,
           width: 600,
-          height: 750,
+          height: 900,
           alt: title,
-          type: flyer.image_url.endsWith(".webp") ? "image/webp" : "image/jpeg",
+          type: "image/png",
         },
       ],
       type: "article",
@@ -68,9 +66,7 @@ export async function generateMetadata({ params }: FlyerPageProps): Promise<Meta
       description,
       images: [
         {
-          url: flyer.image_url.includes("supabase.co")
-            ? `${flyer.image_url}?width=600&height=750&resize=cover&quality=80`
-            : flyer.image_url,
+          url: `/api/og/${id}`,
           alt: title,
         },
       ],
