@@ -69,6 +69,16 @@ input, select, textarea {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Hide system UI overlap — extend app to edge */
+html, body {
+  background-color: #050505;
+}
+
+/* Ensure full-bleed on Capacitor */
+body {
+  min-height: 100dvh;
+}
+
 /* Full height accounting for mobile browser chrome */
 .h-screen-safe {
   height: 100dvh;
