@@ -553,27 +553,34 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         </p>
       )}
 
-      {/* Duration slider — vertical line with 3 stops */}
+      {/* Duration slider — horizontal line with 3 stops */}
       <div className="mb-4">
         <p className="text-xs text-cave-fog mb-3 font-[family-name:var(--font-space-mono)]">
           Duration
         </p>
-        <div className="flex items-center gap-4 px-2">
-          {/* Vertical slider track */}
-          <div className="relative h-[120px] w-8 flex flex-col items-center">
-            {/* Track line */}
-            <div className="absolute top-[10px] bottom-[10px] w-[2px] bg-cave-ash rounded-full" />
+        <div className="flex flex-col gap-2 px-2">
+          {/* Track */}
+          <div className="relative h-8 flex items-center">
+            {/* Background line */}
+            <div className="absolute left-[10px] right-[10px] h-[2px] bg-cave-ash rounded-full" />
+            {/* Active line */}
+            <div
+              className="absolute left-[10px] h-[2px] bg-cave-white rounded-full transition-all"
+              style={{
+                width: durationDays === 7 ? "0%" : durationDays === 15 ? "calc(50% - 10px)" : "calc(100% - 20px)",
+              }}
+            />
             {/* Stop points */}
             {([7, 15, 30] as const).map((days, i) => {
               const isActive = durationDays === days;
-              const topPercent = i === 0 ? 0 : i === 1 ? 50 : 100;
+              const leftPercent = i === 0 ? 0 : i === 1 ? 50 : 100;
               return (
                 <button
                   key={days}
                   type="button"
                   onClick={() => setDurationDays(days)}
-                  className="absolute left-1/2 -translate-x-1/2 z-10"
-                  style={{ top: `calc(${topPercent}% - 0px)` }}
+                  className="absolute top-1/2 -translate-y-1/2 z-10"
+                  style={{ left: `calc(${leftPercent}% - ${i === 2 ? 10 : i === 1 ? 10 : 0}px)` }}
                 >
                   <div className={`w-5 h-5 rounded-full border-2 transition-all ${
                     isActive
@@ -583,27 +590,19 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
                 </button>
               );
             })}
-            {/* Active line from top to selected */}
-            <div
-              className="absolute top-[10px] w-[2px] bg-cave-white rounded-full transition-all"
-              style={{
-                height: durationDays === 7 ? "0%" : durationDays === 15 ? "50%" : "100%",
-                maxHeight: "calc(100% - 20px)",
-              }}
-            />
           </div>
           {/* Labels */}
-          <div className="flex flex-col justify-between h-[120px] py-[2px]">
+          <div className="flex justify-between px-[2px]">
             {([7, 15, 30] as const).map((days) => (
               <button
                 key={days}
                 type="button"
                 onClick={() => setDurationDays(days)}
-                className={`text-xs font-[family-name:var(--font-space-mono)] transition-colors ${
+                className={`text-[10px] font-[family-name:var(--font-space-mono)] transition-colors ${
                   durationDays === days ? "text-cave-white" : "text-cave-smoke hover:text-cave-fog"
                 }`}
               >
-                {days} days
+                {days}d
               </button>
             ))}
           </div>
