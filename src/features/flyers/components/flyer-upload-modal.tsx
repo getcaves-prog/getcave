@@ -400,7 +400,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
       <button
         type="button"
         onClick={() => fileInputRef.current?.click()}
-        className="relative w-full aspect-[4/5] rounded-xl border-2 border-dashed border-cave-fog/40 hover:border-cave-fog bg-cave-rock flex flex-col items-center justify-center gap-3 overflow-hidden transition-colors mb-4"
+        className="relative w-full min-h-[200px] rounded-xl border-2 border-dashed border-cave-fog/40 hover:border-cave-fog bg-cave-rock flex flex-col items-center justify-center gap-3 overflow-hidden transition-colors mb-4"
       >
         {imagePreview ? (
           <Image
@@ -553,26 +553,60 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         </p>
       )}
 
-      {/* Duration picker */}
+      {/* Duration slider — vertical line with 3 stops */}
       <div className="mb-4">
-        <p className="text-xs text-cave-fog mb-2 font-[family-name:var(--font-space-mono)]">
+        <p className="text-xs text-cave-fog mb-3 font-[family-name:var(--font-space-mono)]">
           Duration
         </p>
-        <div className="flex gap-2">
-          {([7, 15, 30] as const).map((days) => (
-            <button
-              key={days}
-              type="button"
-              onClick={() => setDurationDays(days)}
-              className={`flex-1 py-2 rounded-full text-sm font-[family-name:var(--font-space-mono)] transition-colors ${
-                durationDays === days
-                  ? "bg-cave-white text-cave-black"
-                  : "bg-cave-stone text-cave-fog border border-cave-ash hover:border-cave-fog"
-              }`}
-            >
-              {days} days
-            </button>
-          ))}
+        <div className="flex items-center gap-4 px-2">
+          {/* Vertical slider track */}
+          <div className="relative h-[120px] w-8 flex flex-col items-center">
+            {/* Track line */}
+            <div className="absolute top-[10px] bottom-[10px] w-[2px] bg-cave-ash rounded-full" />
+            {/* Stop points */}
+            {([7, 15, 30] as const).map((days, i) => {
+              const isActive = durationDays === days;
+              const topPercent = i === 0 ? 0 : i === 1 ? 50 : 100;
+              return (
+                <button
+                  key={days}
+                  type="button"
+                  onClick={() => setDurationDays(days)}
+                  className="absolute left-1/2 -translate-x-1/2 z-10"
+                  style={{ top: `calc(${topPercent}% - 0px)` }}
+                >
+                  <div className={`w-5 h-5 rounded-full border-2 transition-all ${
+                    isActive
+                      ? "bg-cave-white border-cave-white scale-110"
+                      : "bg-cave-rock border-cave-fog/50 hover:border-cave-white"
+                  }`} />
+                </button>
+              );
+            })}
+            {/* Active line from top to selected */}
+            <div
+              className="absolute top-[10px] w-[2px] bg-cave-white rounded-full transition-all"
+              style={{
+                height: durationDays === 7 ? "0%" : durationDays === 15 ? "50%" : "100%",
+                maxHeight: "calc(100% - 20px)",
+              }}
+            />
+          </div>
+          {/* Labels */}
+          <div className="flex flex-col justify-between h-[120px] py-[2px]">
+            {([7, 15, 30] as const).map((days) => (
+              <button
+                key={days}
+                type="button"
+                onClick={() => setDurationDays(days)}
+                className={`text-xs font-[family-name:var(--font-space-mono)] transition-colors ${
+                  durationDays === days ? "text-cave-white" : "text-cave-smoke hover:text-cave-fog"
+                }`}
+              >
+                {days} days
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
