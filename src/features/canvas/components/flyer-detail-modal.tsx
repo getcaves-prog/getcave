@@ -280,61 +280,61 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
             </button>
           </div>
 
-          {/* Creator + Views row */}
-          <div className="flex items-center justify-between">
-            {creator ? (
-              <Link
-                href={`/profile/${creator.username}`}
-                className="flex items-center gap-2 group"
+          {/* Views + Save row — same size as share icons */}
+          <div className="flex items-center gap-2 mb-3">
+            {viewCount > 0 && (
+              <div className="w-9 h-9 flex items-center justify-center rounded-full bg-cave-rock text-cave-smoke text-[10px] font-[family-name:var(--font-space-mono)]">
+                {viewCount}
+              </div>
+            )}
+            {user && (
+              <button
+                onClick={handleToggleSave}
+                disabled={savingInProgress}
+                className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors disabled:opacity-50 ${
+                  saved
+                    ? "bg-cave-white text-cave-black"
+                    : "bg-cave-rock text-cave-smoke hover:text-cave-white"
+                }`}
+                aria-label={saved ? "Saved" : "Save"}
               >
-                <div className="w-7 h-7 rounded-full overflow-hidden bg-cave-rock border border-cave-ash shrink-0">
-                  {creator.avatar_url ? (
-                    <Image
-                      src={creator.avatar_url}
-                      alt={creator.username}
-                      width={28}
-                      height={28}
-                      className="w-full h-full object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cave-smoke">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm text-cave-fog group-hover:text-cave-white transition-colors">
-                  @{creator.username}
-                </span>
-              </Link>
-            ) : <div />}
-            <div className="flex items-center gap-3">
-              {viewCount > 0 && (
-                <span className="text-[10px] text-cave-smoke flex items-center gap-1">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                  {viewCount}
-                </span>
-              )}
-              {user && (
-                <button
-                  onClick={handleToggleSave}
-                  disabled={savingInProgress}
-                  className="text-cave-smoke hover:text-cave-white transition-colors disabled:opacity-50"
-                  aria-label={saved ? "Saved" : "Save"}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={saved ? "text-cave-white" : ""}>
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                  </svg>
-                </button>
-              )}
-            </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                </svg>
+              </button>
+            )}
           </div>
+
+          {/* Creator row */}
+          {creator && (
+            <Link
+              href={`/profile/${creator.username}`}
+              className="flex items-center gap-2 group"
+            >
+              <div className="w-7 h-7 rounded-full overflow-hidden bg-cave-rock border border-cave-ash shrink-0">
+                {creator.avatar_url ? (
+                  <Image
+                    src={creator.avatar_url}
+                    alt={creator.username}
+                    width={28}
+                    height={28}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cave-smoke">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              <span className="text-sm text-cave-fog group-hover:text-cave-white transition-colors">
+                @{creator.username}
+              </span>
+            </Link>
+          )}
         </div>
 
         {/* Category pills below card */}
