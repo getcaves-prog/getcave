@@ -1,29 +1,31 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { redirect } from "next/navigation";
 import { signIn, signUp, signOut } from "./auth.service";
 
-const mockInsert = vi.fn();
-const mockSignInWithPassword = vi.fn();
-const mockSignUp = vi.fn();
-const mockSignOut = vi.fn();
+const {
+  mockCreateClient,
+  mockSignInWithPassword,
+  mockSignUp,
+  mockSignOut,
+} = vi.hoisted(() => ({
+  mockCreateClient: vi.fn(),
+  mockSignInWithPassword: vi.fn(),
+  mockSignUp: vi.fn(),
+  mockSignOut: vi.fn(),
+}));
 
-vi.mock("@/shared/lib/supabase/server", () => ({
-  createClient: vi.fn(() =>
-    Promise.resolve({
-      auth: {
-        signInWithPassword: mockSignInWithPassword,
-        signUp: mockSignUp,
-        signOut: mockSignOut,
-      },
-      from: () => ({
-        insert: mockInsert,
-      }),
-    })
-  ),
+vi.mock("@/shared/lib/supabase/client", () => ({
+  createClient: mockCreateClient,
 }));
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockCreateClient.mockReturnValue({
+    auth: {
+      signInWithPassword: mockSignInWithPassword,
+      signUp: mockSignUp,
+      signOut: mockSignOut,
+    },
+  });
 });
 
 describe("signIn", () => {
@@ -38,12 +40,12 @@ describe("signIn", () => {
     });
   });
 
-  it("should redirect to / on successful login", async () => {
+  it("should return no error on successful login", async () => {
     mockSignInWithPassword.mockResolvedValue({ error: null });
 
-    await signIn({ email: "test@example.com", password: "password123" });
+    const result = await signIn({ email: "test@example.com", password: "password123" });
 
-    expect(redirect).toHaveBeenCalledWith("/");
+    expect(result).toEqual({ error: null });
   });
 
   it("should return error message on auth failure", async () => {
@@ -57,17 +59,15 @@ describe("signIn", () => {
     });
 
     expect(result).toEqual({ error: "Invalid login credentials" });
-    expect(redirect).not.toHaveBeenCalled();
   });
 });
 
 describe("signUp", () => {
-  it("should call supabase signUp with email and password", async () => {
+  it("should call supabase signUp with metadata", async () => {
     mockSignUp.mockResolvedValue({
       data: { user: { id: "user-123" } },
       error: null,
     });
-    mockInsert.mockResolvedValue({ error: null });
 
     await signUp({
       email: "new@example.com",
@@ -78,15 +78,19 @@ describe("signUp", () => {
     expect(mockSignUp).toHaveBeenCalledWith({
       email: "new@example.com",
       password: "password123",
+      options: {
+        data: {
+          username: "newuser",
+        },
+      },
     });
   });
 
-  it("should create profile after successful signup", async () => {
+  it("should return success on successful signup", async () => {
     mockSignUp.mockResolvedValue({
       data: { user: { id: "user-123" } },
       error: null,
     });
-    mockInsert.mockResolvedValue({ error: null });
 
     const result = await signUp({
       email: "new@example.com",
@@ -94,11 +98,7 @@ describe("signUp", () => {
       username: "newuser",
     });
 
-    expect(mockInsert).toHaveBeenCalledWith({
-      id: "user-123",
-      username: "newuser",
-    });
-    expect(result).toEqual({ error: null, requiresConfirmation: true });
+    expect(result).toEqual({ error: null });
   });
 
   it("should return error on signup failure", async () => {
@@ -114,51 +114,15 @@ describe("signUp", () => {
     });
 
     expect(result).toEqual({ error: "Email already registered" });
-    expect(mockInsert).not.toHaveBeenCalled();
-  });
-
-  it("should return error on profile creation failure", async () => {
-    mockSignUp.mockResolvedValue({
-      data: { user: { id: "user-123" } },
-      error: null,
-    });
-    mockInsert.mockResolvedValue({
-      error: { message: "Username already taken" },
-    });
-
-    const result = await signUp({
-      email: "new@example.com",
-      password: "password123",
-      username: "taken",
-    });
-
-    expect(result).toEqual({ error: "Username already taken" });
-  });
-
-  it("should skip profile creation when user is null in response", async () => {
-    mockSignUp.mockResolvedValue({
-      data: { user: null },
-      error: null,
-    });
-
-    const result = await signUp({
-      email: "new@example.com",
-      password: "password123",
-      username: "newuser",
-    });
-
-    expect(mockInsert).not.toHaveBeenCalled();
-    expect(result).toEqual({ error: null, requiresConfirmation: true });
   });
 });
 
 describe("signOut", () => {
-  it("should call supabase signOut and redirect", async () => {
+  it("should call supabase signOut", async () => {
     mockSignOut.mockResolvedValue({ error: null });
 
     await signOut();
 
     expect(mockSignOut).toHaveBeenCalled();
-    expect(redirect).toHaveBeenCalledWith("/");
   });
 });

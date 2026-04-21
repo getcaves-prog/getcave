@@ -22,27 +22,21 @@ export async function signIn(credentials: LoginCredentials) {
 export async function signUp(credentials: SignupCredentials) {
   const supabase = createClient();
 
-  const { data, error } = await supabase.auth.signUp({
+  const { error } = await supabase.auth.signUp({
     email: credentials.email,
     password: credentials.password,
+    options: {
+      data: {
+        username: credentials.username,
+      },
+    },
   });
 
   if (error) {
     return { error: error.message };
   }
 
-  if (data.user) {
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: data.user.id,
-      username: credentials.username,
-    });
-
-    if (profileError) {
-      return { error: profileError.message };
-    }
-  }
-
-  return { error: null, requiresConfirmation: true };
+  return { error: null };
 }
 
 export async function signOut() {

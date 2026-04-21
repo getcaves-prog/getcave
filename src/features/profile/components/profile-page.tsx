@@ -522,6 +522,15 @@ export function ProfilePage({ username }: ProfilePageProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <footer className="border-t border-cave-ash/60 px-6 py-5 text-center">
+        <Link
+          href="/terms"
+          className="text-xs tracking-[0.3em] text-cave-smoke uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+        >
+          Terms & Conditions
+        </Link>
+      </footer>
     </div>
   );
 }
