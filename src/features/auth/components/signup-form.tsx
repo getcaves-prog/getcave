@@ -5,13 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { createClient } from "@/shared/lib/supabase/client";
+import { signUp } from "@/features/auth/services/auth.service";
 
 export function SignupForm() {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +27,11 @@ export function SignupForm() {
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (!username.trim()) {
+      setError("Username is required.");
       return;
     }
 
@@ -40,18 +48,18 @@ export function SignupForm() {
     setLoading(true);
 
     try {
-      const supabase = createClient();
-      const { error: authError } = await supabase.auth.signUp({
+      const { error: signUpError } = await signUp({
         email,
         password,
+        username,
       });
 
-      if (authError) {
-        setError(authError.message);
+      if (signUpError) {
+        setError(signUpError);
         return;
       }
 
-      window.location.href = "/";
+      setSuccess(true);
     } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
@@ -69,6 +77,33 @@ export function SignupForm() {
       },
     });
   };
+
+  if (success) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-cave-black px-6">
+        <Image
+          src="/Logo.png"
+          alt="Caves"
+          width={200}
+          height={72}
+          priority
+          className="mb-10 h-auto w-[200px]"
+        />
+        <p className="max-w-sm text-center text-base text-cave-white font-[family-name:var(--font-inter)]">
+          Check your email to confirm your account.
+        </p>
+        <p className="mt-2 max-w-sm text-center text-sm text-cave-fog font-[family-name:var(--font-inter)]">
+          We sent a confirmation link to <strong className="text-cave-white">{email}</strong>.
+        </p>
+        <Link
+          href="/auth/login"
+          className="mt-8 text-sm tracking-widest text-cave-white underline underline-offset-4 uppercase transition-colors hover:text-cave-light font-[family-name:var(--font-space-mono)]"
+        >
+          Go to login
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-dvh flex-col items-center bg-cave-black px-6">
@@ -93,6 +128,14 @@ export function SignupForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
+          className="h-12 w-full rounded-xl border border-cave-ash bg-cave-rock px-4 text-base text-cave-white placeholder:text-cave-fog focus:border-cave-white focus:outline-none font-[family-name:var(--font-inter)]"
+        />
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          autoComplete="username"
           className="h-12 w-full rounded-xl border border-cave-ash bg-cave-rock px-4 text-base text-cave-white placeholder:text-cave-fog focus:border-cave-white focus:outline-none font-[family-name:var(--font-inter)]"
         />
         <input

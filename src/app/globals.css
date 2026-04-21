@@ -74,8 +74,13 @@ html, body {
   background-color: #050505;
 }
 
-/* Ensure full-bleed on Capacitor */
+/* Ensure full viewport height from root — prevents mobile layout thrashing */
+html {
+  height: 100dvh;
+}
+
 body {
+  height: 100dvh;
   min-height: 100dvh;
 }
 

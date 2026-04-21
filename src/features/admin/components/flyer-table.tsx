@@ -4,11 +4,13 @@ import { useState, useEffect, useCallback } from "react";
 import {
   getFlyers,
   updateFlyerStatus,
-  deleteFlyer,
-  deleteAllTestFlyers,
   promoteFlyer,
   unpromoteFlyer,
 } from "@/features/admin/services/admin.service";
+import {
+  deleteFlyerAction,
+  deleteAllTestFlyersAction,
+} from "@/features/admin/services/admin.actions";
 import { StatusDot } from "@/features/admin/components/status-dot";
 import { FlyerCreateForm } from "@/features/admin/components/flyer-create-form";
 import type { Flyer, FlyerStatus } from "@/features/admin/types/admin.types";
@@ -49,7 +51,7 @@ export function FlyerTable() {
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this flyer? This action cannot be undone.")) return;
     try {
-      await deleteFlyer(id);
+      await deleteFlyerAction(id);
       await fetchFlyers();
     } catch (err) {
       console.error("Failed to delete flyer:", err);
@@ -86,7 +88,7 @@ export function FlyerTable() {
               )
                 return;
               try {
-                await deleteAllTestFlyers();
+                await deleteAllTestFlyersAction();
                 await fetchFlyers();
               } catch (err) {
                 console.error("Failed to delete test flyers:", err);
