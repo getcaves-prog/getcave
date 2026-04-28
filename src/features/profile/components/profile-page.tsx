@@ -558,13 +558,32 @@ export function ProfilePage({ username }: ProfilePageProps) {
         )}
       </AnimatePresence>
 
-      <footer className="border-t border-cave-ash/60 px-6 py-5 text-center">
-        <Link
-          href="/terms"
-          className="text-xs tracking-[0.3em] text-cave-smoke uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
-        >
-          Terms & Conditions
-        </Link>
+      <footer className="border-t border-cave-ash/60 px-6 py-5 flex flex-col items-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          <Link
+            href="/terms"
+            className="text-xs tracking-[0.2em] text-cave-smoke uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+          >
+            Términos
+          </Link>
+          <span className="text-cave-ash text-xs">·</span>
+          <Link
+            href="/organizer"
+            className="text-xs tracking-[0.2em] text-cave-smoke uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+          >
+            Organizadores
+          </Link>
+          <span className="text-cave-ash text-xs">·</span>
+          <Link
+            href="/content-policy"
+            className="text-xs tracking-[0.2em] text-cave-smoke uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+          >
+            Contenido
+          </Link>
+        </div>
+        <p className="text-[10px] text-cave-ash font-[family-name:var(--font-space-mono)]">
+          © {new Date().getFullYear()} Caves App. Todos los derechos reservados.
+        </p>
       </footer>
     </div>
   );
