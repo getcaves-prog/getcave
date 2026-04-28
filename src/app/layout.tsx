@@ -22,11 +22,59 @@ const pinyonScript = Pinyon_Script({
 
 export const metadata: Metadata = {
   title: {
-    default: "Caves",
+    default: "Caves — Descubrí eventos cerca tuyo",
     template: "%s | Caves",
   },
-  description: "Discover what's happening around you",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://joincaves.com"),
+  description:
+    "Caves es la plataforma para descubrir eventos, planes y actividades cerca tuyo. Encontrá fiestas, shows, ferias y más en tu ciudad.",
+  metadataBase: new URL("https://www.getcaves.com"),
+  keywords: [
+    "eventos",
+    "planes",
+    "actividades",
+    "fiestas",
+    "shows",
+    "descubrir eventos",
+    "agenda cultural",
+    "que hacer",
+    "caves",
+  ],
+  authors: [{ name: "Caves", url: "https://www.getcaves.com" }],
+  creator: "Caves",
+  openGraph: {
+    type: "website",
+    locale: "es_AR",
+    url: "https://www.getcaves.com",
+    siteName: "Caves",
+    title: "Caves — Descubrí eventos cerca tuyo",
+    description:
+      "Descubrí eventos, planes y actividades cerca tuyo. Fiestas, shows, ferias y más en tu ciudad.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Caves — Descubrí eventos cerca tuyo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Caves — Descubrí eventos cerca tuyo",
+    description:
+      "Descubrí eventos, planes y actividades cerca tuyo.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

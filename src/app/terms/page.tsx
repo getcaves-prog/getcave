@@ -157,13 +157,27 @@ export default function TermsPage() {
         {/* Divider */}
         <div className="h-px bg-cave-ash/40" />
 
-        {/* Back link */}
-        <Link
-          href="/"
-          className="text-xs tracking-widest text-cave-fog underline underline-offset-4 uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
-        >
-          ← Volver a la app
-        </Link>
+        {/* Links */}
+        <div className="flex flex-col gap-3">
+          <Link
+            href="/organizer"
+            className="text-xs tracking-widest text-cave-fog underline underline-offset-4 uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+          >
+            Declaración del organizador →
+          </Link>
+          <Link
+            href="/content-policy"
+            className="text-xs tracking-widest text-cave-fog underline underline-offset-4 uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+          >
+            Política de contenido →
+          </Link>
+          <Link
+            href="/"
+            className="text-xs tracking-widest text-cave-fog underline underline-offset-4 uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+          >
+            ← Volver a la app
+          </Link>
+        </div>
       </div>
     </main>
   );
