@@ -17,9 +17,15 @@
 /.next/
 /out/
 
-# capacitor native platforms
-/android/
+# capacitor native platforms — committed so CI/CD can build without re-adding platform
+# /android/
 /ios/
+
+# android signing keys — NEVER commit these
+*.keystore
+*.jks
+android/app/release/
+android/keystore.properties
 
 # production
 /build
@@ -43,3 +49,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.env*.local

@@ -22,7 +22,6 @@ import type {
 } from "../types/canvas.types";
 
 const VIEWPORT_PADDING = 1200;
-const DOUBLE_TAP_DELAY = 300;
 
 function getGridConfig(): GridConfig {
   if (typeof window === "undefined") return GRID_CONFIG.desktop;
@@ -80,7 +79,7 @@ function generateVisibleFlyers(
 
 export function InfiniteCanvas() {
   const { flyers, loading, error, mode } = useFlyers();
-  const { springX, springY, springScale, isDragging, bind, jumpTo, transformRef } = useCanvasGestures();
+  const { springX, springY, springScale, isDragging, dragOccurredRef, bind, jumpTo, transformRef } = useCanvasGestures();
   const incrementImagesLoaded = useCanvasReadyStore((s) => s.incrementImagesLoaded);
   const openActionModal = useActionModalStore((s) => s.open);
 
@@ -94,7 +93,6 @@ export function InfiniteCanvas() {
 
   const [gridConfig, setGridConfig] = useState<GridConfig>(getGridConfig);
   const [selectedFlyer, setSelectedFlyer] = useState<LayoutFlyer | null>(null);
-  const lastTapRef = useRef(0);
   const initializedRef = useRef(false);
 
   const [viewport, setViewport] = useState<Viewport>({
@@ -177,14 +175,8 @@ export function InfiniteCanvas() {
 
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
-      if (isDragging) return;
-
-      const now = Date.now();
-      if (now - lastTapRef.current > DOUBLE_TAP_DELAY) {
-        lastTapRef.current = now;
-        return;
-      }
-      lastTapRef.current = 0;
+      // Ignore if the gesture was a drag (pan), not a tap
+      if (isDragging || dragOccurredRef.current) return;
 
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       const clientX = "touches" in e ? e.changedTouches[0].clientX : e.clientX;
@@ -194,7 +186,6 @@ export function InfiniteCanvas() {
       const canvasX = (clientX - rect.left - tx) / scale;
       const canvasY = (clientY - rect.top - ty) / scale;
 
-      // Find tapped flyer from visible set
       const { flyerWidth, flyerHeight, gap } = gridConfig;
       const cellW = flyerWidth + gap;
       const cellH = flyerHeight + gap;
@@ -216,7 +207,7 @@ export function InfiniteCanvas() {
         layout_rotation: 0,
       });
     },
-    [isDragging, flyers, gridConfig, transformRef]
+    [isDragging, dragOccurredRef, flyers, gridConfig, transformRef]
   );
 
   if (error) {

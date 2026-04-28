@@ -74,12 +74,15 @@ html, body {
   background-color: #050505;
 }
 
-/* Ensure full viewport height from root — prevents mobile layout thrashing */
+/* iOS Safari viewport fix — dvh alone miscalculates on initial paint when
+   browser chrome is visible. -webkit-fill-available fills correctly. */
 html {
-  min-height: 100dvh;
+  height: 100%;
 }
 
 body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
   min-height: 100dvh;
 }
 

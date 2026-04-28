@@ -12,6 +12,9 @@ function clampScale(scale: number): number {
 
 export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
   const [isDragging, setIsDragging] = useState(false);
+  // True while a drag with meaningful movement is in progress or just ended.
+  // Checked by click handlers to distinguish tap from pan.
+  const dragOccurredRef = useRef(false);
 
   const transformRef = useRef<CanvasTransform>({
     x: initialTransform?.x ?? 0,
@@ -58,9 +61,16 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
 
   const bind = useGesture(
     {
-      onDrag: ({ delta: [dx, dy], pinching, first, last }) => {
+      onDrag: ({ delta: [dx, dy], pinching, first, last, movement: [mx, my] }) => {
         if (pinching) return;
-        if (first) setIsDragging(true);
+        if (first) {
+          dragOccurredRef.current = false;
+          setIsDragging(true);
+        }
+        // Mark as a real drag once movement exceeds 6px in any direction
+        if (Math.abs(mx) > 6 || Math.abs(my) > 6) {
+          dragOccurredRef.current = true;
+        }
         if (last) setIsDragging(false);
         updateTransform({
           x: transformRef.current.x + dx,
@@ -102,8 +112,11 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
     },
     {
       drag: {
-        // No filterTaps — drag starts immediately on touch for fluid mobile UX
-        threshold: 3, // 3px movement before drag activates (prevents accidental drags)
+        // delay: hold 150ms before drag activates — quick taps fire as clicks
+        // filterTaps: ensures drag callback doesn't fire for taps on desktop
+        delay: 150,
+        threshold: 3,
+        filterTaps: true,
       },
       wheel: {
         eventOptions: { passive: false },
@@ -120,6 +133,7 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
     springScale,
     transformRef,
     isDragging,
+    dragOccurredRef,
     bind,
     jumpTo,
   };

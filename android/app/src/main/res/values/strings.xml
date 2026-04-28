@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Caves</string>
+    <string name="title_activity_main">Caves</string>
+    <string name="package_name">com.getcaves.app</string>
+    <string name="custom_url_scheme">com.getcaves.app</string>
+</resources>
