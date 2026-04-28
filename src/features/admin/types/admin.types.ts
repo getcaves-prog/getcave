@@ -1,7 +1,9 @@
 import type { Tables } from "@/shared/types/database.types";
 
 export type Flyer = Tables<"flyers">;
-export type Profile = Tables<"profiles">;
+export type Profile = Tables<"profiles"> & {
+  terms_acceptances: Array<{ accepted_at: string; terms_version: string }>;
+};
 
 /** @deprecated Use Flyer instead */
 export type Event = Flyer;

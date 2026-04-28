@@ -28,6 +28,7 @@ export async function signUp(credentials: SignupCredentials) {
     options: {
       data: {
         username: credentials.username,
+        terms_version: "1.0",
       },
     },
   });

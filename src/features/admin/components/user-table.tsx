@@ -98,6 +98,15 @@ export function UserTable() {
                   <p className="mt-0.5 font-[family-name:var(--font-space-mono)] text-xs text-cave-smoke">
                     {new Date(user.created_at).toLocaleDateString()}
                   </p>
+                  {user.terms_acceptances?.[0] ? (
+                    <p className="mt-0.5 font-[family-name:var(--font-space-mono)] text-xs text-green-400">
+                      ✓ Terms v{user.terms_acceptances[0].terms_version} · {new Date(user.terms_acceptances[0].accepted_at).toLocaleDateString()}
+                    </p>
+                  ) : (
+                    <p className="mt-0.5 font-[family-name:var(--font-space-mono)] text-xs text-cave-ash">
+                      No terms record
+                    </p>
+                  )}
                 </div>
               </div>
               <select
@@ -136,13 +145,16 @@ export function UserTable() {
               <th className="px-4 py-3 text-left font-[family-name:var(--font-space-mono)] text-xs tracking-wider text-cave-fog uppercase">
                 Created
               </th>
+              <th className="px-4 py-3 text-left font-[family-name:var(--font-space-mono)] text-xs tracking-wider text-cave-fog uppercase">
+                Terms
+              </th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
                 <td
-                  colSpan={4}
+                  colSpan={5}
                   className="px-4 py-8 text-center text-cave-fog"
                 >
                   Loading...
@@ -151,7 +163,7 @@ export function UserTable() {
             ) : users.length === 0 ? (
               <tr>
                 <td
-                  colSpan={4}
+                  colSpan={5}
                   className="px-4 py-8 text-center text-cave-fog"
                 >
                   No users found
@@ -202,6 +214,18 @@ export function UserTable() {
                   </td>
                   <td className="px-4 py-3 font-[family-name:var(--font-space-mono)] text-xs text-cave-fog">
                     {new Date(user.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3 font-[family-name:var(--font-space-mono)] text-xs">
+                    {user.terms_acceptances?.[0] ? (
+                      <span className="text-green-400">
+                        ✓ v{user.terms_acceptances[0].terms_version}<br />
+                        <span className="text-cave-smoke">
+                          {new Date(user.terms_acceptances[0].accepted_at).toLocaleDateString()}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-cave-ash">—</span>
+                    )}
                   </td>
                 </tr>
               ))
