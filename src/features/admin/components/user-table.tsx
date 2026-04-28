@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  getUsers,
-  updateUserRole,
-} from "@/features/admin/services/admin.service";
+import { getUsers } from "@/features/admin/services/admin.service";
+import { updateUserRoleAction } from "@/features/admin/services/admin.actions";
 import type { Profile, UserRole } from "@/features/admin/types/admin.types";
 
 const ROLES: UserRole[] = ["admin", "user", "lector"];
@@ -12,6 +10,8 @@ const ROLES: UserRole[] = ["admin", "user", "lector"];
 export function UserTable() {
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [roleError, setRoleError] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -30,11 +30,16 @@ export function UserTable() {
   }, []);
 
   const handleRoleChange = async (userId: string, role: UserRole) => {
+    setUpdatingId(userId);
+    setRoleError(null);
     try {
-      await updateUserRole(userId, role);
+      await updateUserRoleAction(userId, role);
       await fetchUsers();
     } catch (err) {
-      console.error("Failed to update role:", err);
+      const message = err instanceof Error ? err.message : "Failed to update role";
+      setRoleError(message);
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -43,6 +48,12 @@ export function UserTable() {
       <h2 className="mb-6 font-[family-name:var(--font-space-mono)] text-lg text-cave-white">
         User Management
       </h2>
+
+      {roleError && (
+        <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 font-[family-name:var(--font-space-mono)] text-sm text-red-400">
+          Error: {roleError}
+        </div>
+      )}
 
       {/* Mobile cards */}
       <div className="space-y-3 md:hidden">
@@ -91,17 +102,15 @@ export function UserTable() {
               </div>
               <select
                 value={user.role}
+                disabled={updatingId === user.id}
                 onChange={(e) =>
-                  handleRoleChange(
-                    user.id,
-                    e.target.value as UserRole
-                  )
+                  handleRoleChange(user.id, e.target.value as UserRole)
                 }
-                className="mt-3 min-h-[44px] w-full rounded-lg border border-cave-ash bg-cave-rock px-3 py-2 font-[family-name:var(--font-space-mono)] text-xs text-cave-white outline-none focus:border-cave-fog"
+                className="mt-3 min-h-[44px] w-full rounded-lg border border-cave-ash bg-cave-rock px-3 py-2 font-[family-name:var(--font-space-mono)] text-xs text-cave-white outline-none focus:border-cave-fog disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {ROLES.map((role) => (
                   <option key={role} value={role}>
-                    {role}
+                    {updatingId === user.id && role === user.role ? "Saving…" : role}
                   </option>
                 ))}
               </select>
@@ -178,17 +187,15 @@ export function UserTable() {
                   <td className="px-4 py-3">
                     <select
                       value={user.role}
+                      disabled={updatingId === user.id}
                       onChange={(e) =>
-                        handleRoleChange(
-                          user.id,
-                          e.target.value as UserRole
-                        )
+                        handleRoleChange(user.id, e.target.value as UserRole)
                       }
-                      className="rounded-lg border border-cave-ash bg-cave-rock px-2 py-1 font-[family-name:var(--font-space-mono)] text-xs text-cave-white outline-none focus:border-cave-fog"
+                      className="rounded-lg border border-cave-ash bg-cave-rock px-2 py-1 font-[family-name:var(--font-space-mono)] text-xs text-cave-white outline-none focus:border-cave-fog disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {ROLES.map((role) => (
                         <option key={role} value={role}>
-                          {role}
+                          {updatingId === user.id && role === user.role ? "Saving…" : role}
                         </option>
                       ))}
                     </select>
