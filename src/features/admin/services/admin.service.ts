@@ -186,11 +186,11 @@ export async function getUsers() {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("*")
+    .select("*, terms_acceptances(accepted_at, terms_version)")
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data;
+  return (data ?? []) as import("@/features/admin/types/admin.types").Profile[];
 }
 
 export async function updateUserRole(userId: string, role: UserRole) {

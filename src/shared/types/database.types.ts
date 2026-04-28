@@ -350,6 +350,35 @@ export type Database = {
         }
         Relationships: []
       }
+      terms_acceptances: {
+        Row: {
+          id: string
+          user_id: string
+          accepted_at: string
+          terms_version: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          accepted_at?: string
+          terms_version?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          accepted_at?: string
+          terms_version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "terms_acceptances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_flyers: {
         Row: {
           created_at: string | null
