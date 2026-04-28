@@ -1,39 +1,29 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/features/auth/hooks/use-auth";
+import { redirect } from "next/navigation";
+import { createClient } from "@/shared/lib/supabase/server";
 import { AdminSidebar } from "@/features/admin/components/admin-sidebar";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  useEffect(() => {
-    if (loading) return;
+  if (!user) {
+    redirect("/");
+  }
 
-    if (!user) {
-      router.replace("/");
-      return;
-    }
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
 
-    // For now, just check auth. When roles are set up, check role='admin'
-    setReady(true);
-  }, [user, loading, router]);
-
-  if (loading || !ready) {
-    return (
-      <div className="flex h-dvh items-center justify-center bg-cave-black">
-        <p className="font-[family-name:var(--font-space-mono)] text-sm text-cave-fog animate-pulse">
-          Loading...
-        </p>
-      </div>
-    );
+  if (profile?.role !== "admin") {
+    redirect("/");
   }
 
   return (

@@ -9,7 +9,7 @@ import { useDisplayModeStore } from "../stores/display-mode.store";
 import type { Flyer, DisplayMode } from "../types/canvas.types";
 
 /** Minimum flyer count to use infinite canvas mode */
-const CANVAS_THRESHOLD = 20;
+const CANVAS_THRESHOLD = 8;
 
 const RADIUS_STEPS_KM = [50, 100, 200];
 const MAX_RETRIES = 2;

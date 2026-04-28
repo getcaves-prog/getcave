@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/shared/lib/supabase/admin";
 import { createClient } from "@/shared/lib/supabase/server";
+import type { UserRole } from "@/features/admin/types/admin.types";
 
 async function assertAdmin() {
   const supabase = await createClient();
@@ -50,6 +51,18 @@ export async function deleteAllTestFlyersAction() {
     .from("flyers")
     .delete()
     .like("image_url", "%picsum.photos%");
+
+  if (error) throw new Error(error.message);
+}
+
+export async function updateUserRoleAction(userId: string, role: UserRole) {
+  await assertAdmin();
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ role })
+    .eq("id", userId);
 
   if (error) throw new Error(error.message);
 }
