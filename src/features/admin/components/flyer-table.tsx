@@ -22,6 +22,8 @@ export function FlyerTable() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [showCreate, setShowCreate] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const fetchFlyers = useCallback(async () => {
     setLoading(true);
@@ -50,11 +52,16 @@ export function FlyerTable() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this flyer? This action cannot be undone.")) return;
+    setDeletingId(id);
+    setDeleteError(null);
     try {
       await deleteFlyerAction(id);
       await fetchFlyers();
     } catch (err) {
-      console.error("Failed to delete flyer:", err);
+      const message = err instanceof Error ? err.message : "Failed to delete flyer";
+      setDeleteError(message);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -73,6 +80,11 @@ export function FlyerTable() {
 
   return (
     <div>
+      {deleteError && (
+        <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 font-[family-name:var(--font-space-mono)] text-sm text-red-400">
+          Error: {deleteError}
+        </div>
+      )}
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="font-[family-name:var(--font-space-mono)] text-lg text-cave-white">
@@ -209,9 +221,10 @@ export function FlyerTable() {
                 </button>
                 <button
                   onClick={() => handleDelete(flyer.id)}
-                  className="min-h-[44px] flex-1 rounded-full border border-cave-ash px-3 py-2 font-[family-name:var(--font-space-mono)] text-xs text-cave-fog transition-colors hover:bg-cave-rock"
+                  disabled={deletingId === flyer.id}
+                  className="min-h-[44px] flex-1 rounded-full border border-cave-ash px-3 py-2 font-[family-name:var(--font-space-mono)] text-xs text-cave-fog transition-colors hover:bg-cave-rock disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Delete
+                  {deletingId === flyer.id ? "Deleting..." : "Delete"}
                 </button>
               </div>
             </div>
@@ -322,9 +335,10 @@ export function FlyerTable() {
                       </button>
                       <button
                         onClick={() => handleDelete(flyer.id)}
-                        className="rounded-full border border-cave-ash px-3 py-1 font-[family-name:var(--font-space-mono)] text-xs text-cave-fog transition-colors hover:bg-cave-rock"
+                        disabled={deletingId === flyer.id}
+                        className="rounded-full border border-cave-ash px-3 py-1 font-[family-name:var(--font-space-mono)] text-xs text-cave-fog transition-colors hover:bg-cave-rock disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        Delete
+                        {deletingId === flyer.id ? "Deleting..." : "Delete"}
                       </button>
                     </div>
                   </td>
