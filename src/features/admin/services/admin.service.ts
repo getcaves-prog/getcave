@@ -190,7 +190,7 @@ export async function getUsers() {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return (data ?? []) as import("@/features/admin/types/admin.types").Profile[];
+  return (data ?? []) as unknown as import("@/features/admin/types/admin.types").Profile[];
 }
 
 export async function updateUserRole(userId: string, role: UserRole) {
