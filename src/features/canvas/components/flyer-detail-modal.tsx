@@ -185,6 +185,7 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
       {/* Spotify-style card — centered */}
       <motion.div
         className="relative z-10 flex flex-col items-center justify-center flex-1 px-8"
+        onClick={onClose}
         initial={{ scale: 0.92, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.92, opacity: 0 }}
@@ -192,7 +193,7 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
         style={{ willChange: "transform, opacity" }}
       >
         {/* The card */}
-        <div className="relative w-full max-w-[400px]">
+        <div className="relative w-full max-w-[400px]" onClick={(e) => e.stopPropagation()}>
           {/* Flyer image */}
           <div
             className={`relative w-full overflow-hidden rounded-[16px] ${flyer.is_promoted ? "ring-1 ring-amber-500/30" : ""}`}
@@ -242,7 +243,7 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
 
         {/* Category pills below card */}
         {flyerCategories.length > 0 && (
-          <div className="flex items-center gap-1.5 flex-wrap mt-3 justify-center">
+          <div className="flex items-center gap-1.5 flex-wrap mt-3 justify-center" onClick={(e) => e.stopPropagation()}>
             {flyerCategories.map((cat) => (
               <span
                 key={cat.id}
