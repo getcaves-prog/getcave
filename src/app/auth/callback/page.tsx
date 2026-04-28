@@ -10,7 +10,7 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     const code = searchParams.get("code");
-    const next = searchParams.get("next") ?? "/";
+    const next = searchParams.get("next") ?? searchParams.get("redirectTo") ?? "/";
 
     if (!code) {
       router.replace("/auth/login?error=auth_failed");
