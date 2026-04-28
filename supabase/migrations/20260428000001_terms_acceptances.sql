@@ -21,6 +21,10 @@ CREATE POLICY "Admins read all terms acceptances" ON public.terms_acceptances
     )
   );
 
+-- Allows existing users to self-record their acceptance via the consent modal
+CREATE POLICY "Users insert own terms acceptance" ON public.terms_acceptances
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
 -- Update handle_new_user to also record terms acceptance at signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger

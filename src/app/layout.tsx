@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Mono, Pinyon_Script } from "next/font/google";
+import { TermsConsentGate } from "@/features/auth/components/terms-consent-gate";
 import "./globals.css";
 
 const inter = Inter({
@@ -55,6 +56,7 @@ export default function RootLayout({
     <html lang="es" className={`${inter.variable} ${spaceMono.variable} ${pinyonScript.variable} min-h-dvh`}>
       <body className="min-h-dvh bg-cave-black text-white font-[family-name:var(--font-inter)] antialiased overscroll-none">
         {children}
+        <TermsConsentGate />
       </body>
     </html>
   );
