@@ -1,15 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  getFlyers,
-  updateFlyerStatus,
-  promoteFlyer,
-  unpromoteFlyer,
-} from "@/features/admin/services/admin.service";
+import { getFlyers } from "@/features/admin/services/admin.service";
 import {
   deleteFlyerAction,
   deleteAllTestFlyersAction,
+  updateFlyerStatusAction,
+  promoteFlyerAction,
+  unpromoteFlyerAction,
 } from "@/features/admin/services/admin.actions";
 import { StatusDot } from "@/features/admin/components/status-dot";
 import { FlyerCreateForm } from "@/features/admin/components/flyer-create-form";
@@ -43,7 +41,7 @@ export function FlyerTable() {
 
   const handleStatusChange = async (id: string, status: FlyerStatus) => {
     try {
-      await updateFlyerStatus(id, status);
+      await updateFlyerStatusAction(id, status);
       await fetchFlyers();
     } catch (err) {
       console.error("Failed to update status:", err);
@@ -68,9 +66,9 @@ export function FlyerTable() {
   const handlePromoteToggle = async (flyer: Flyer) => {
     try {
       if (flyer.is_promoted) {
-        await unpromoteFlyer(flyer.id);
+        await unpromoteFlyerAction(flyer.id);
       } else {
-        await promoteFlyer(flyer.id, 30);
+        await promoteFlyerAction(flyer.id, 30);
       }
       await fetchFlyers();
     } catch (err) {

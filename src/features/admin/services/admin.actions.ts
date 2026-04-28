@@ -55,6 +55,39 @@ export async function deleteAllTestFlyersAction() {
   if (error) throw new Error(error.message);
 }
 
+export async function updateFlyerStatusAction(id: string, status: "pending" | "approved" | "rejected") {
+  await assertAdmin();
+  const supabase = createAdminClient();
+
+  const { error } = await supabase.from("flyers").update({ status }).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function promoteFlyerAction(id: string, durationDays: number = 30) {
+  await assertAdmin();
+  const supabase = createAdminClient();
+
+  const promotedUntil = new Date();
+  promotedUntil.setDate(promotedUntil.getDate() + durationDays);
+
+  const { error } = await supabase
+    .from("flyers")
+    .update({ is_promoted: true, promoted_until: promotedUntil.toISOString() })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function unpromoteFlyerAction(id: string) {
+  await assertAdmin();
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("flyers")
+    .update({ is_promoted: false, promoted_until: null })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 export async function updateUserRoleAction(userId: string, role: UserRole) {
   await assertAdmin();
   const supabase = createAdminClient();
