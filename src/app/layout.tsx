@@ -52,8 +52,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className={`${inter.variable} ${spaceMono.variable} ${pinyonScript.variable} h-dvh`}>
-      <body className="h-dvh bg-cave-black text-white font-[family-name:var(--font-inter)] antialiased overscroll-none">
+    <html lang="es" className={`${inter.variable} ${spaceMono.variable} ${pinyonScript.variable} min-h-dvh`}>
+      <body className="min-h-dvh bg-cave-black text-white font-[family-name:var(--font-inter)] antialiased overscroll-none">
         {children}
       </body>
     </html>
