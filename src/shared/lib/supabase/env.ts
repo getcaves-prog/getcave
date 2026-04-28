@@ -3,17 +3,9 @@ export function getSupabaseUrl() {
 }
 
 export function getSupabaseAnonKey() {
-  return (
-    process.env.NEXT_PUBLIC_CAVESAPP_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.NEXT_PUBLIC_CAVESAPP_SUPABASE_ANON_KEY ??
-    ""
-  );
+  return process.env.NEXT_PUBLIC_CAVESAPP_SUPABASE_PUBLISHABLE_KEY ?? "";
 }
 
 export function getSupabaseServiceRoleKey() {
-  return (
-    process.env.CAVESAPP_SUPABASE_SERVICE_ROLE_KEY ??
-    process.env.SUPABASE_SERVICE_ROLE_KEY ??
-    ""
-  );
+  return process.env.CAVESAPP_SUPABASE_SERVICE_ROLE_KEY ?? "";
 }
