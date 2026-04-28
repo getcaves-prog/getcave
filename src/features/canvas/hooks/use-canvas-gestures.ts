@@ -63,15 +63,16 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
     {
       onDrag: ({ delta: [dx, dy], pinching, first, last, movement: [mx, my] }) => {
         if (pinching) return;
-        if (first) {
-          dragOccurredRef.current = false;
-          setIsDragging(true);
-        }
-        // Mark as a real drag once movement exceeds 6px in any direction
+        if (first) setIsDragging(true);
         if (Math.abs(mx) > 6 || Math.abs(my) > 6) {
           dragOccurredRef.current = true;
         }
-        if (last) setIsDragging(false);
+        if (last) {
+          setIsDragging(false);
+          // Reset after the click event from this pointer-up has been processed.
+          // 100ms window: blocks accidental tap-after-drag, then clears for next gesture.
+          setTimeout(() => { dragOccurredRef.current = false; }, 100);
+        }
         updateTransform({
           x: transformRef.current.x + dx,
           y: transformRef.current.y + dy,
@@ -112,11 +113,8 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
     },
     {
       drag: {
-        // delay: hold 150ms before drag activates — quick taps fire as clicks
-        // filterTaps: ensures drag callback doesn't fire for taps on desktop
-        delay: 150,
-        threshold: 3,
         filterTaps: true,
+        threshold: 3,
       },
       wheel: {
         eventOptions: { passive: false },
