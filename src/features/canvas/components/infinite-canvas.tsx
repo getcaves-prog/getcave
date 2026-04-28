@@ -175,6 +175,8 @@ export function InfiniteCanvas() {
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
+      if (selectedFlyer) return;
+
       const { x: tx, y: ty, scale } = transformRef.current;
       const canvasX = (e.clientX - tx) / scale;
       const canvasY = (e.clientY - ty) / scale;
@@ -200,7 +202,7 @@ export function InfiniteCanvas() {
         layout_rotation: 0,
       });
     },
-    [flyers, gridConfig, transformRef]
+    [selectedFlyer, flyers, gridConfig, transformRef]
   );
 
   if (error) {
