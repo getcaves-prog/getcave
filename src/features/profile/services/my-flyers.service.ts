@@ -41,11 +41,21 @@ export async function updateMyFlyer(
 
   if (updates.title !== undefined) updateData.title = updates.title;
   if (updates.address !== undefined) updateData.address = updates.address;
+
   if (updates.duration_days) {
-    updateData.duration_days = updates.duration_days;
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + updates.duration_days);
-    updateData.expires_at = expiresAt.toISOString();
+    // Extend from the current expiry date (or now if already expired)
+    const { data: flyer } = await supabase
+      .from("flyers")
+      .select("expires_at")
+      .eq("id", flyerId)
+      .single();
+
+    const base = flyer?.expires_at && new Date(flyer.expires_at) > new Date()
+      ? new Date(flyer.expires_at)
+      : new Date();
+
+    base.setDate(base.getDate() + updates.duration_days);
+    updateData.expires_at = base.toISOString();
   }
 
   const { error } = await supabase
