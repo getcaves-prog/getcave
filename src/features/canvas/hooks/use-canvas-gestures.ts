@@ -10,7 +10,9 @@ function clampScale(scale: number): number {
   return Math.min(CANVAS_LIMITS.MAX_SCALE, Math.max(CANVAS_LIMITS.MIN_SCALE, scale));
 }
 
-export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
+export function useCanvasGestures(
+  initialTransform?: Partial<CanvasTransform>,
+) {
   const [isDragging, setIsDragging] = useState(false);
 
   const transformRef = useRef<CanvasTransform>({
@@ -102,8 +104,8 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
     },
     {
       drag: {
-        // No filterTaps — drag starts immediately on touch for fluid mobile UX
-        threshold: 3, // 3px movement before drag activates (prevents accidental drags)
+        filterTaps: true,
+        threshold: 3,
       },
       wheel: {
         eventOptions: { passive: false },

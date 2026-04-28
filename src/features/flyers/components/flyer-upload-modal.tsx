@@ -17,6 +17,7 @@ import type { GeocodingResult } from "@/shared/lib/geocoding/types";
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_DIMENSION = 4096;
+const MAX_EXTRA_IMAGES = 5;
 
 const flyerSchema = z.object({
   image: z.instanceof(File, { message: "Image is required" }),
@@ -52,7 +53,6 @@ function validateImageDimensions(file: File): Promise<string | null> {
 }
 
 async function convertToWebp(file: File, quality = 0.85): Promise<File> {
-  // If already webp, return as-is
   if (file.type === "image/webp") return file;
 
   return new Promise((resolve, reject) => {
@@ -86,6 +86,11 @@ async function convertToWebp(file: File, quality = 0.85): Promise<File> {
   });
 }
 
+interface ExtraImageEntry {
+  file: File;
+  preview: string;
+}
+
 interface FlyerUploadModalProps {
   onBack: () => void;
   onClose: () => void;
@@ -99,10 +104,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [address, setAddress] = useState("");
-  const [selectedCoords, setSelectedCoords] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
+  const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [suggestions, setSuggestions] = useState<GeocodingResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -110,6 +112,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const extraInputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const [durationDays, setDurationDays] = useState(30);
@@ -118,7 +121,12 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
-  // Fetch categories on mount
+  // Optional event details
+  const [showDetails, setShowDetails] = useState(false);
+  const [description, setDescription] = useState("");
+  const [socialCopy, setSocialCopy] = useState("");
+  const [extraImages, setExtraImages] = useState<ExtraImageEntry[]>([]);
+
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {});
   }, []);
@@ -128,21 +136,18 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      // Validate type and size
       const typeError = validateImageFile(file);
       if (typeError) {
         setErrors((prev) => ({ ...prev, image: typeError }));
         return;
       }
 
-      // Validate dimensions
       const dimError = await validateImageDimensions(file);
       if (dimError) {
         setErrors((prev) => ({ ...prev, image: dimError }));
         return;
       }
 
-      // Convert to WebP
       setConverting(true);
       setErrors((prev) => ({ ...prev, image: "" }));
 
@@ -156,19 +161,13 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         setImageInfo(info + savings);
 
         const reader = new FileReader();
-        reader.onload = (ev) => {
-          setImagePreview(ev.target?.result as string);
-        };
+        reader.onload = (ev) => setImagePreview(ev.target?.result as string);
         reader.readAsDataURL(webpFile);
       } catch {
-        // Fallback to original file
         setImageFile(file);
         setImageInfo(`${file.name} · ${(file.size / 1024).toFixed(0)}KB`);
-
         const reader = new FileReader();
-        reader.onload = (ev) => {
-          setImagePreview(ev.target?.result as string);
-        };
+        reader.onload = (ev) => setImagePreview(ev.target?.result as string);
         reader.readAsDataURL(file);
       } finally {
         setConverting(false);
@@ -176,6 +175,49 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
     },
     []
   );
+
+  const handleExtraImagesSelect = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(e.target.files ?? []);
+      if (!files.length) return;
+
+      const remaining = MAX_EXTRA_IMAGES - extraImages.length;
+      const toProcess = files.slice(0, remaining);
+
+      const newEntries: ExtraImageEntry[] = [];
+
+      for (const file of toProcess) {
+        const typeError = validateImageFile(file);
+        if (typeError) continue;
+
+        try {
+          const webpFile = await convertToWebp(file, 0.8);
+          const preview = await new Promise<string>((res) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => res(ev.target?.result as string);
+            reader.readAsDataURL(webpFile);
+          });
+          newEntries.push({ file: webpFile, preview });
+        } catch {
+          // Skip failed conversions
+        }
+      }
+
+      setExtraImages((prev) => [...prev, ...newEntries]);
+      // Reset input so same files can be re-selected
+      e.target.value = "";
+    },
+    [extraImages.length]
+  );
+
+  const removeExtraImage = useCallback((index: number) => {
+    setExtraImages((prev) => {
+      const next = [...prev];
+      URL.revokeObjectURL(next[index].preview);
+      next.splice(index, 1);
+      return next;
+    });
+  }, []);
 
   const handleAddressChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,20 +252,16 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
   const [locatingMe, setLocatingMe] = useState(false);
 
   const handleUseMyLocation = useCallback(async () => {
-    // If we already have coords in store, use them
     if (latitude && longitude) {
       setLocatingMe(true);
       setSelectedCoords({ lat: latitude, lng: longitude });
-      const { reverseGeocode } = await import(
-        "@/shared/lib/geocoding/geocoding.service"
-      );
+      const { reverseGeocode } = await import("@/shared/lib/geocoding/geocoding.service");
       const result = await reverseGeocode({ lat: latitude, lng: longitude });
       if (result) setAddress(result.address);
       setLocatingMe(false);
       return;
     }
 
-    // Otherwise request browser geolocation directly
     if (!navigator.geolocation) {
       setErrors((prev) => ({ ...prev, address: "Geolocation not supported" }));
       return;
@@ -237,9 +275,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         setSelectedCoords({ lat, lng });
         useLocationStore.getState().setLocation(lat, lng);
 
-        const { reverseGeocode } = await import(
-          "@/shared/lib/geocoding/geocoding.service"
-        );
+        const { reverseGeocode } = await import("@/shared/lib/geocoding/geocoding.service");
         const result = await reverseGeocode({ lat, lng });
         if (result) setAddress(result.address);
         setLocatingMe(false);
@@ -254,10 +290,8 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
 
   const handleCategoryToggle = useCallback((categoryId: string) => {
     setSelectedCategories((prev) => {
-      if (prev.includes(categoryId)) {
-        return prev.filter((id) => id !== categoryId);
-      }
-      if (prev.length >= 3) return prev; // Max 3 categories
+      if (prev.includes(categoryId)) return prev.filter((id) => id !== categoryId);
+      if (prev.length >= 3) return prev;
       return [...prev, categoryId];
     });
   }, []);
@@ -265,10 +299,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
   const handleSubmit = useCallback(async () => {
     setSubmitError(null);
 
-    const validation = flyerSchema.safeParse({
-      image: imageFile,
-      address,
-    });
+    const validation = flyerSchema.safeParse({ image: imageFile, address });
 
     if (!validation.success) {
       const fieldErrors: Record<string, string> = {};
@@ -304,12 +335,9 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         return;
       }
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("flyers").getPublicUrl(fileName);
+      const { data: { publicUrl } } = supabase.storage.from("flyers").getPublicUrl(fileName);
 
       const locationEwkt = `SRID=4326;POINT(${selectedCoords.lng} ${selectedCoords.lat})`;
-
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + durationDays);
 
@@ -322,6 +350,8 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         user_id: user.id,
         expires_at: expiresAt.toISOString(),
         duration_days: durationDays,
+        description: description.trim() || null,
+        social_copy: socialCopy.trim() || null,
       }).select("id").single();
 
       if (insertError) {
@@ -330,25 +360,42 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         return;
       }
 
-      // Save categories for the flyer
+      // Save categories (non-blocking)
       if (insertedFlyer && selectedCategories.length > 0) {
-        try {
-          await setFlyerCategories(insertedFlyer.id, selectedCategories);
-        } catch {
-          // Non-blocking — flyer still saved
+        setFlyerCategories(insertedFlyer.id, selectedCategories).catch(() => {});
+      }
+
+      // Upload extra images (non-blocking, best-effort)
+      if (insertedFlyer && extraImages.length > 0) {
+        for (let i = 0; i < extraImages.length; i++) {
+          const entry = extraImages[i];
+          const extraFileName = `extras/${insertedFlyer.id}-${i}-${Date.now()}.webp`;
+
+          const { error: extraUploadError } = await supabase.storage
+            .from("flyers")
+            .upload(extraFileName, entry.file, { contentType: "image/webp" });
+
+          if (!extraUploadError) {
+            const { data: { publicUrl: extraUrl } } = supabase.storage
+              .from("flyers")
+              .getPublicUrl(extraFileName);
+
+            await supabase.from("flyer_extra_images").insert({
+              flyer_id: insertedFlyer.id,
+              image_url: extraUrl,
+              display_order: i,
+            });
+          }
         }
       }
 
       onClose();
     } catch (err) {
-      setSubmitError(
-        err instanceof Error ? err.message : "An unexpected error occurred"
-      );
+      setSubmitError(err instanceof Error ? err.message : "An unexpected error occurred");
       setSubmitting(false);
     }
-  }, [imageFile, address, selectedCoords, title, user, onClose, durationDays, selectedCategories]);
+  }, [imageFile, address, selectedCoords, title, user, onClose, durationDays, selectedCategories, description, socialCopy, extraImages]);
 
-  // Cleanup preview URL on unmount
   useEffect(() => {
     return () => {
       if (imagePreview) URL.revokeObjectURL(imagePreview);
@@ -370,16 +417,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
           className="w-8 h-8 flex items-center justify-center rounded-full text-cave-fog hover:text-cave-white transition-colors"
           aria-label="Back"
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
@@ -388,7 +426,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         </h2>
       </div>
 
-      {/* Image upload area */}
+      {/* Main image upload */}
       <input
         ref={fileInputRef}
         type="file"
@@ -403,26 +441,10 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         className="relative w-full min-h-[200px] rounded-xl border-2 border-dashed border-cave-fog/40 hover:border-cave-fog bg-cave-rock flex flex-col items-center justify-center gap-3 overflow-hidden transition-colors mb-4"
       >
         {imagePreview ? (
-          <Image
-            src={imagePreview}
-            alt="Flyer preview"
-            fill
-            className="object-cover"
-            unoptimized
-          />
+          <Image src={imagePreview} alt="Flyer preview" fill className="object-cover" unoptimized />
         ) : (
           <>
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-cave-fog"
-            >
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-cave-fog">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
               <circle cx="8.5" cy="8.5" r="1.5" />
               <polyline points="21 15 16 10 5 21" />
@@ -442,9 +464,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
       {imageInfo && !converting && (
         <p className="text-xs text-cave-fog mb-2 font-[family-name:var(--font-space-mono)]">{imageInfo}</p>
       )}
-      {errors.image && (
-        <p className="text-xs text-red-400 mb-2">{errors.image}</p>
-      )}
+      {errors.image && <p className="text-xs text-red-400 mb-2">{errors.image}</p>}
       <p className="text-[10px] text-cave-smoke mb-4 font-[family-name:var(--font-space-mono)]">
         JPG, PNG, WebP, GIF, HEIC · Max 10MB · 200–4096px
       </p>
@@ -497,8 +517,6 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
           onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
           error={errors.address}
         />
-
-        {/* Suggestions dropdown */}
         {showSuggestions && (
           <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-xl bg-cave-stone border border-cave-ash overflow-hidden shadow-lg">
             {suggestions.map((result, i) => (
@@ -515,7 +533,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         )}
       </div>
 
-      {/* Use my location button */}
+      {/* Use my location */}
       <button
         type="button"
         onClick={handleUseMyLocation}
@@ -525,16 +543,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         {locatingMe ? (
           <div className="w-3.5 h-3.5 border border-cave-fog border-t-transparent rounded-full animate-spin" />
         ) : (
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10" />
             <circle cx="12" cy="12" r="3" />
             <line x1="12" y1="2" x2="12" y2="6" />
@@ -546,31 +555,24 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         {locatingMe ? "Getting location..." : "Use my location"}
       </button>
 
-      {/* Selected coordinates */}
       {selectedCoords && (
         <p className="text-xs text-cave-smoke mb-4 font-[family-name:var(--font-space-mono)]">
           {selectedCoords.lat.toFixed(5)}, {selectedCoords.lng.toFixed(5)}
         </p>
       )}
 
-      {/* Duration slider — horizontal line with 3 stops */}
+      {/* Duration */}
       <div className="mb-4">
         <p className="text-xs text-cave-fog mb-3 font-[family-name:var(--font-space-mono)]">
           Duration
         </p>
         <div className="flex flex-col gap-2 px-2">
-          {/* Track */}
           <div className="relative h-8 flex items-center">
-            {/* Background line */}
             <div className="absolute left-[10px] right-[10px] h-[2px] bg-cave-ash rounded-full" />
-            {/* Active line */}
             <div
               className="absolute left-[10px] h-[2px] bg-cave-white rounded-full transition-all"
-              style={{
-                width: durationDays === 7 ? "0%" : durationDays === 15 ? "calc(50% - 10px)" : "calc(100% - 20px)",
-              }}
+              style={{ width: durationDays === 7 ? "0%" : durationDays === 15 ? "calc(50% - 10px)" : "calc(100% - 20px)" }}
             />
-            {/* Stop points */}
             {([7, 15, 30] as const).map((days, i) => {
               const isActive = durationDays === days;
               const leftPercent = i === 0 ? 0 : i === 1 ? 50 : 100;
@@ -583,15 +585,12 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
                   style={{ left: `calc(${leftPercent}% - ${i === 2 ? 10 : i === 1 ? 10 : 0}px)` }}
                 >
                   <div className={`w-5 h-5 rounded-full border-2 transition-all ${
-                    isActive
-                      ? "bg-cave-white border-cave-white scale-110"
-                      : "bg-cave-rock border-cave-fog/50 hover:border-cave-white"
+                    isActive ? "bg-cave-white border-cave-white scale-110" : "bg-cave-rock border-cave-fog/50 hover:border-cave-white"
                   }`} />
                 </button>
               );
             })}
           </div>
-          {/* Labels */}
           <div className="flex justify-between px-[2px]">
             {([7, 15, 30] as const).map((days) => (
               <button
@@ -609,12 +608,124 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         </div>
       </div>
 
-      {/* Submit error */}
-      {submitError && (
-        <p className="text-xs text-neon-pink mb-4">{submitError}</p>
-      )}
+      {/* ── Optional event details ─────────────────────────────── */}
+      <div className="border-t border-cave-ash/60 pt-4 mb-4">
+        <button
+          type="button"
+          onClick={() => setShowDetails((v) => !v)}
+          className="flex items-center justify-between w-full text-left"
+        >
+          <span className="text-xs text-cave-fog font-[family-name:var(--font-space-mono)]">
+            Event details <span className="text-cave-smoke">(optional)</span>
+          </span>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`text-cave-fog transition-transform ${showDetails ? "rotate-180" : ""}`}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
 
-      {/* Submit button */}
+        {showDetails && (
+          <div className="flex flex-col gap-4 mt-4">
+            {/* Description */}
+            <div>
+              <label className="block text-xs text-cave-fog mb-1.5 font-[family-name:var(--font-space-mono)]">
+                Description
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Tell people what this event is about..."
+                maxLength={600}
+                rows={3}
+                className="w-full rounded-xl bg-cave-stone border border-cave-ash px-3 py-2.5 text-sm text-cave-white placeholder:text-cave-smoke resize-none focus:outline-none focus:border-cave-fog transition-colors font-[family-name:var(--font-inter)]"
+              />
+              <p className="text-[10px] text-cave-smoke mt-1 text-right font-[family-name:var(--font-space-mono)]">
+                {description.length}/600
+              </p>
+            </div>
+
+            {/* Social copy */}
+            <div>
+              <label className="block text-xs text-cave-fog mb-1.5 font-[family-name:var(--font-space-mono)]">
+                Social media copy
+              </label>
+              <textarea
+                value={socialCopy}
+                onChange={(e) => setSocialCopy(e.target.value)}
+                placeholder="Copy to share on Instagram, WhatsApp..."
+                maxLength={300}
+                rows={3}
+                className="w-full rounded-xl bg-cave-stone border border-cave-ash px-3 py-2.5 text-sm text-cave-white placeholder:text-cave-smoke resize-none focus:outline-none focus:border-cave-fog transition-colors font-[family-name:var(--font-inter)]"
+              />
+              <p className="text-[10px] text-cave-smoke mt-1 text-right font-[family-name:var(--font-space-mono)]">
+                {socialCopy.length}/300
+              </p>
+            </div>
+
+            {/* Extra images */}
+            <div>
+              <label className="block text-xs text-cave-fog mb-1.5 font-[family-name:var(--font-space-mono)]">
+                Extra photos <span className="text-cave-smoke">({extraImages.length}/{MAX_EXTRA_IMAGES})</span>
+              </label>
+
+              {extraImages.length > 0 && (
+                <div className="flex gap-2 mb-2 overflow-x-auto scrollbar-hide pb-1">
+                  {extraImages.map((entry, i) => (
+                    <div key={i} className="relative shrink-0 w-16 h-16 rounded-lg overflow-hidden">
+                      <Image src={entry.preview} alt={`Extra ${i + 1}`} fill className="object-cover" unoptimized />
+                      <button
+                        type="button"
+                        onClick={() => removeExtraImage(i)}
+                        className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/70 flex items-center justify-center text-cave-white"
+                      >
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <input
+                ref={extraInputRef}
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp,.gif,.heic,.heif"
+                multiple
+                onChange={handleExtraImagesSelect}
+                className="hidden"
+              />
+
+              {extraImages.length < MAX_EXTRA_IMAGES && (
+                <button
+                  type="button"
+                  onClick={() => extraInputRef.current?.click()}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-cave-fog/40 hover:border-cave-fog text-xs text-cave-fog hover:text-cave-white transition-colors font-[family-name:var(--font-space-mono)]"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Add photos
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {submitError && <p className="text-xs text-neon-pink mb-4">{submitError}</p>}
+
       <Button
         onClick={handleSubmit}
         disabled={submitting}

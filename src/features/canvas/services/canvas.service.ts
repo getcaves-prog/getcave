@@ -1,5 +1,8 @@
 import { createClient } from "@/shared/lib/supabase/client";
+import type { Tables } from "@/shared/types/database.types";
 import type { Flyer } from "../types/canvas.types";
+
+export type FlyerExtraImage = Tables<"flyer_extra_images">;
 
 interface FlyerCreator {
   username: string;
@@ -63,6 +66,16 @@ export async function getFlyers(categoryId?: string): Promise<Flyer[]> {
   return data;
 }
 
+export async function getFlyerExtraImages(flyerId: string): Promise<FlyerExtraImage[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("flyer_extra_images")
+    .select("*")
+    .eq("flyer_id", flyerId)
+    .order("display_order", { ascending: true });
+  return data ?? [];
+}
+
 export async function getNearbyFlyers(
   lat: number,
   lng: number,
@@ -80,5 +93,5 @@ export async function getNearbyFlyers(
     throw new Error(`Failed to fetch nearby flyers: ${error.message}`);
   }
 
-  return data ?? [];
+  return (data ?? []) as Flyer[];
 }

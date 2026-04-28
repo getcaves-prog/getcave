@@ -108,7 +108,7 @@ export default function HomePage() {
       className={`w-screen bg-cave-black ${
         displayMode === "grid"
           ? "min-h-dvh overflow-y-auto"
-          : "h-dvh overflow-hidden"
+          : "overflow-hidden"
       }`}
       style={displayMode === "grid" ? undefined : { position: "fixed", inset: 0 }}
     >

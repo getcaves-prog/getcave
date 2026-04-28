@@ -6,6 +6,8 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     androidScheme: 'https',
+    url: 'https://www.getcaves.com',
+    cleartext: false,
   },
   plugins: {
     SplashScreen: {

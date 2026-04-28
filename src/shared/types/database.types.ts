@@ -251,12 +251,45 @@ export type Database = {
           },
         ]
       }
+      flyer_extra_images: {
+        Row: {
+          id: string
+          flyer_id: string
+          image_url: string
+          display_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          flyer_id: string
+          image_url: string
+          display_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          flyer_id?: string
+          image_url?: string
+          display_order?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flyer_extra_images_flyer_id_fkey"
+            columns: ["flyer_id"]
+            isOneToOne: false
+            referencedRelation: "flyers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flyers: {
         Row: {
           address: string | null
           canvas_x: number
           canvas_y: number
           created_at: string
+          description: string | null
           duration_days: number | null
           expires_at: string | null
           height: number
@@ -266,6 +299,7 @@ export type Database = {
           location: unknown
           promoted_until: string | null
           rotation: number
+          social_copy: string | null
           status: string | null
           title: string | null
           user_id: string | null
@@ -276,6 +310,7 @@ export type Database = {
           canvas_x?: number
           canvas_y?: number
           created_at?: string
+          description?: string | null
           duration_days?: number | null
           expires_at?: string | null
           height?: number
@@ -285,6 +320,7 @@ export type Database = {
           location?: unknown
           promoted_until?: string | null
           rotation?: number
+          social_copy?: string | null
           status?: string | null
           title?: string | null
           user_id?: string | null
@@ -295,6 +331,7 @@ export type Database = {
           canvas_x?: number
           canvas_y?: number
           created_at?: string
+          description?: string | null
           duration_days?: number | null
           expires_at?: string | null
           height?: number
@@ -304,6 +341,7 @@ export type Database = {
           location?: unknown
           promoted_until?: string | null
           rotation?: number
+          social_copy?: string | null
           status?: string | null
           title?: string | null
           user_id?: string | null
