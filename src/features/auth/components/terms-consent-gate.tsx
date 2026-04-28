@@ -82,13 +82,29 @@ export function TermsConsentGate() {
           Before continuing, you need to accept our terms and conditions. Keep it clean — no illegal content, harassment, spam, or abusive material. Respect other users and use the app responsibly.
         </p>
 
-        <Link
-          href="/terms"
-          target="_blank"
-          className="mb-6 inline-flex text-xs tracking-widest text-cave-white underline underline-offset-4 uppercase transition-colors hover:text-cave-light font-[family-name:var(--font-space-mono)]"
-        >
-          Read full terms →
-        </Link>
+        <div className="mb-6 flex flex-wrap gap-x-4 gap-y-2">
+          <Link
+            href="/terms"
+            target="_blank"
+            className="inline-flex text-xs tracking-widest text-cave-white underline underline-offset-4 uppercase transition-colors hover:text-cave-light font-[family-name:var(--font-space-mono)]"
+          >
+            Términos →
+          </Link>
+          <Link
+            href="/organizer"
+            target="_blank"
+            className="inline-flex text-xs tracking-widest text-cave-fog underline underline-offset-4 uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+          >
+            Organizadores →
+          </Link>
+          <Link
+            href="/content-policy"
+            target="_blank"
+            className="inline-flex text-xs tracking-widest text-cave-fog underline underline-offset-4 uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+          >
+            Política →
+          </Link>
+        </div>
 
         {error && (
           <p className="mb-4 text-center text-xs text-red-400 font-[family-name:var(--font-space-mono)]">
