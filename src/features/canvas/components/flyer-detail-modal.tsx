@@ -9,9 +9,7 @@ import { toggleSaveFlyer, isFlyerSaved } from "../services/favorites.service";
 import { getFlyerCreator, getFlyerExtraImages } from "../services/canvas.service";
 import type { FlyerExtraImage } from "../services/canvas.service";
 import { trackFlyerView, getFlyerViewCount } from "../services/views.service";
-import { getFlyerCategories } from "../services/categories.service";
 import { ReportModal } from "./report-modal";
-import type { Category } from "../services/categories.service";
 import type { LayoutFlyer } from "../types/canvas.types";
 
 function computeDaysRemaining(expiresAt: string): number | null {
@@ -42,7 +40,6 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
   const [copyToast, setCopyToast] = useState(false);
   const [reportToast, setReportToast] = useState(false);
   const [showReport, setShowReport] = useState(false);
-  const [flyerCategories, setFlyerCategories] = useState<Category[]>([]);
   const [extraImages, setExtraImages] = useState<FlyerExtraImage[]>([]);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const viewTrackedRef = useRef(false);
@@ -85,7 +82,6 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
   }, [flyer.user_id]);
 
   useEffect(() => {
-    getFlyerCategories(flyer.id).then(setFlyerCategories).catch(() => {});
     getFlyerExtraImages(flyer.id).then(setExtraImages).catch(() => {});
   }, [flyer.id]);
 
@@ -253,21 +249,6 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
                 </button>
               </div>
             </div>
-
-            {/* Category pills */}
-            {flyerCategories.length > 0 && (
-              <div className="flex items-center gap-1.5 flex-wrap mt-3 justify-center">
-                {flyerCategories.map((cat) => (
-                  <span
-                    key={cat.id}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-cave-rock/50 text-[10px] text-cave-smoke"
-                  >
-                    {cat.icon && <span>{cat.icon}</span>}
-                    {cat.name}
-                  </span>
-                ))}
-              </div>
-            )}
 
             {/* ── Extra content section ───────────────────────── */}
             {hasExtraContent && (

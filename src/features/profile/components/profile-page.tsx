@@ -371,7 +371,28 @@ export function ProfilePage({ username }: ProfilePageProps) {
 
 
       {/* Flyer grid / list */}
-      {activeTab === "my-flyers" ? (
+      {!isOwnProfile ? (
+        <div className="grid grid-cols-3 gap-1 px-1 pb-8">
+          {publicFlyers.length === 0 ? (
+            <div className="col-span-3 py-12 text-center text-cave-fog text-sm font-[family-name:var(--font-space-mono)]">
+              No flyers yet
+            </div>
+          ) : (
+            publicFlyers.map((flyer) => (
+              <div key={flyer.id} className="relative aspect-[7/10] overflow-hidden bg-cave-stone">
+                <Image
+                  src={flyer.image_url}
+                  alt={flyer.title ?? "Flyer"}
+                  fill
+                  sizes="33vw"
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+            ))
+          )}
+        </div>
+      ) : activeTab === "my-flyers" ? (
         <div className="flex flex-col gap-3 px-4 pb-8">
           {myFlyers.length === 0 ? (
             <div className="py-12 text-center text-cave-fog text-sm font-[family-name:var(--font-space-mono)]">

@@ -10,11 +10,10 @@ function clampScale(scale: number): number {
   return Math.min(CANVAS_LIMITS.MAX_SCALE, Math.max(CANVAS_LIMITS.MIN_SCALE, scale));
 }
 
-export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
+export function useCanvasGestures(
+  initialTransform?: Partial<CanvasTransform>,
+) {
   const [isDragging, setIsDragging] = useState(false);
-  // True while a drag with meaningful movement is in progress or just ended.
-  // Checked by click handlers to distinguish tap from pan.
-  const dragOccurredRef = useRef(false);
 
   const transformRef = useRef<CanvasTransform>({
     x: initialTransform?.x ?? 0,
@@ -61,18 +60,10 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
 
   const bind = useGesture(
     {
-      onDrag: ({ delta: [dx, dy], pinching, first, last, movement: [mx, my] }) => {
+      onDrag: ({ delta: [dx, dy], pinching, first, last }) => {
         if (pinching) return;
         if (first) setIsDragging(true);
-        if (Math.abs(mx) > 6 || Math.abs(my) > 6) {
-          dragOccurredRef.current = true;
-        }
-        if (last) {
-          setIsDragging(false);
-          // Reset after the click event from this pointer-up has been processed.
-          // 100ms window: blocks accidental tap-after-drag, then clears for next gesture.
-          setTimeout(() => { dragOccurredRef.current = false; }, 100);
-        }
+        if (last) setIsDragging(false);
         updateTransform({
           x: transformRef.current.x + dx,
           y: transformRef.current.y + dy,
@@ -131,7 +122,6 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
     springScale,
     transformRef,
     isDragging,
-    dragOccurredRef,
     bind,
     jumpTo,
   };

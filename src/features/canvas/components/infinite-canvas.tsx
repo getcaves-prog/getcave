@@ -79,7 +79,7 @@ function generateVisibleFlyers(
 
 export function InfiniteCanvas() {
   const { flyers, loading, error, mode } = useFlyers();
-  const { springX, springY, springScale, isDragging, dragOccurredRef, bind, jumpTo, transformRef } = useCanvasGestures();
+  const { springX, springY, springScale, bind, jumpTo, transformRef } = useCanvasGestures();
   const incrementImagesLoaded = useCanvasReadyStore((s) => s.incrementImagesLoaded);
   const openActionModal = useActionModalStore((s) => s.open);
 
@@ -173,18 +173,11 @@ export function InfiniteCanvas() {
     }
   }, [visibleFlyers]);
 
-  const handleCanvasClick = useCallback(
-    (e: React.MouseEvent | React.TouchEvent) => {
-      // Ignore if the gesture was a drag (pan), not a tap
-      if (isDragging || dragOccurredRef.current) return;
-
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-      const clientX = "touches" in e ? e.changedTouches[0].clientX : e.clientX;
-      const clientY = "touches" in e ? e.changedTouches[0].clientY : e.clientY;
-
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
       const { x: tx, y: ty, scale } = transformRef.current;
-      const canvasX = (clientX - rect.left - tx) / scale;
-      const canvasY = (clientY - rect.top - ty) / scale;
+      const canvasX = (e.clientX - tx) / scale;
+      const canvasY = (e.clientY - ty) / scale;
 
       const { flyerWidth, flyerHeight, gap } = gridConfig;
       const cellW = flyerWidth + gap;
@@ -207,7 +200,7 @@ export function InfiniteCanvas() {
         layout_rotation: 0,
       });
     },
-    [isDragging, dragOccurredRef, flyers, gridConfig, transformRef]
+    [flyers, gridConfig, transformRef]
   );
 
   if (error) {
@@ -268,7 +261,7 @@ export function InfiniteCanvas() {
   return (
     <div
       {...bind()}
-      onClick={handleCanvasClick}
+      onClick={handleClick}
       className="w-screen overflow-hidden bg-cave-black touch-none select-none"
       style={{ height: "100dvh", overscrollBehavior: "none" }}
     >
