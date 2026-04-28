@@ -51,8 +51,20 @@ export function ProfilePage({ username }: ProfilePageProps) {
   const [activeTab, setActiveTab] = useState<Tab>("my-flyers");
   const [editOpen, setEditOpen] = useState(false);
   const [selectedFlyer, setSelectedFlyer] = useState<Flyer | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const isOwnProfile = user?.id === profile?.id;
+
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => setIsAdmin(data?.role === "admin"));
+  }, [user]);
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -277,7 +289,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
       {/* Sign out + admin — own profile only */}
       {isOwnProfile && (
         <div className="flex items-center justify-center gap-4 mb-4">
-          {profile.role === "admin" && (
+          {isAdmin && (
             <Link
               href="/admin"
               className="flex items-center gap-1.5 text-xs text-cave-smoke hover:text-cave-fog transition-colors font-[family-name:var(--font-space-mono)]"
