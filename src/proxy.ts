@@ -3,6 +3,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/shared/lib/supabase/env";
 
 export async function proxy(request: NextRequest) {
+  // Supabase OAuth sends ?code= to the Site URL when redirectTo isn't in the
+  // allowed list. Catch it here and forward to the real callback handler.
+  const oauthCode = request.nextUrl.searchParams.get("code");
+  if (oauthCode && !request.nextUrl.pathname.startsWith("/auth")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
