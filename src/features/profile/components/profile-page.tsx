@@ -274,9 +274,32 @@ export function ProfilePage({ username }: ProfilePageProps) {
         </div>
       </div>
 
-      {/* Sign out — own profile only */}
+      {/* Sign out + admin — own profile only */}
       {isOwnProfile && (
-        <div className="flex justify-center mb-4">
+        <div className="flex items-center justify-center gap-4 mb-4">
+          {profile.role === "admin" && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 text-xs text-cave-smoke hover:text-cave-fog transition-colors font-[family-name:var(--font-space-mono)]"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
+              Admin
+            </Link>
+          )}
           <button
             onClick={handleSignOut}
             className="flex items-center gap-1.5 text-xs text-cave-smoke hover:text-cave-fog transition-colors font-[family-name:var(--font-space-mono)]"
