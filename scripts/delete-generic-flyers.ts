@@ -5,11 +5,11 @@
 
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const SUPABASE_URL = process.env.CAVESAPP_SUPABASE_URL!;
+const SUPABASE_SERVICE_KEY = process.env.CAVESAPP_SUPABASE_SERVICE_ROLE_KEY!;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment");
+  console.error("Missing CAVESAPP_SUPABASE_URL or CAVESAPP_SUPABASE_SERVICE_ROLE_KEY in environment");
   process.exit(1);
 }
 

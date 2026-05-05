@@ -7,9 +7,12 @@
 
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = "https://akcjzvftujuscaqnydzj.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrY2p6dmZ0dWp1c2NhcW55ZHpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNjk3NDQsImV4cCI6MjA4OTk0NTc0NH0.Z3xX-WXyVC4_smLS7dcn6Zp2EyEkGSQ2CB5a-qMUfjE";
+const SUPABASE_URL = process.env.CAVESAPP_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.CAVESAPP_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error("Missing Supabase env vars");
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
