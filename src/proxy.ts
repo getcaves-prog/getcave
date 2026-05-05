@@ -40,7 +40,7 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Protected paths — require authentication
-  const protectedPaths = ["/upload", "/profile"];
+  const protectedPaths = ["/upload", "/profile", "/admin"];
   const isProtectedRoute =
     protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
