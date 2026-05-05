@@ -14,7 +14,7 @@ RETURNS TABLE (
   status         text,
   title          text,
   address        text,
-  location       geography,
+  location       extensions.geography,
   canvas_x       integer,
   canvas_y       integer,
   rotation       numeric,

@@ -13,7 +13,7 @@ RETURNS TABLE (
   status         text,
   title          text,
   address        text,
-  location       geography,
+  location       extensions.geography,
   canvas_x       integer,
   canvas_y       integer,
   rotation       numeric,
@@ -71,7 +71,7 @@ AS $$
       COALESCE((
         SELECT COUNT(*) FROM public.saved_flyers sf
         WHERE sf.flyer_id = b.id
-          AND sf.saved_at >= now() - interval '14 days'
+          AND sf.created_at >= now() - interval '14 days'
       ), 0) AS saves_14d
     FROM base b
   ),
