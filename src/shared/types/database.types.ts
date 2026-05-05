@@ -1,3 +1,4 @@
+Initialising login role...
 export type Json =
   | string
   | number
@@ -10,7 +11,32 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -190,6 +216,38 @@ export type Database = {
           },
         ]
       }
+      flyer_extra_images: {
+        Row: {
+          created_at: string
+          display_order: number
+          flyer_id: string
+          id: string
+          image_url: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          flyer_id: string
+          id?: string
+          image_url: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          flyer_id?: string
+          id?: string
+          image_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flyer_extra_images_flyer_id_fkey"
+            columns: ["flyer_id"]
+            isOneToOne: false
+            referencedRelation: "flyers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flyer_reports: {
         Row: {
           created_at: string | null
@@ -251,38 +309,6 @@ export type Database = {
           },
         ]
       }
-      flyer_extra_images: {
-        Row: {
-          id: string
-          flyer_id: string
-          image_url: string
-          display_order: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          flyer_id: string
-          image_url: string
-          display_order?: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          flyer_id?: string
-          image_url?: string
-          display_order?: number
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "flyer_extra_images_flyer_id_fkey"
-            columns: ["flyer_id"]
-            isOneToOne: false
-            referencedRelation: "flyers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       flyers: {
         Row: {
           address: string | null
@@ -291,6 +317,8 @@ export type Database = {
           created_at: string
           description: string | null
           duration_days: number | null
+          event_date: string | null
+          event_time: string | null
           expires_at: string | null
           height: number
           id: string
@@ -312,6 +340,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration_days?: number | null
+          event_date?: string | null
+          event_time?: string | null
           expires_at?: string | null
           height?: number
           id?: string
@@ -333,6 +363,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration_days?: number | null
+          event_date?: string | null
+          event_time?: string | null
           expires_at?: string | null
           height?: number
           id?: string
@@ -388,35 +420,6 @@ export type Database = {
         }
         Relationships: []
       }
-      terms_acceptances: {
-        Row: {
-          id: string
-          user_id: string
-          accepted_at: string
-          terms_version: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          accepted_at?: string
-          terms_version?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          accepted_at?: string
-          terms_version?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "terms_acceptances_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       saved_flyers: {
         Row: {
           created_at: string | null
@@ -445,6 +448,56 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      terms_acceptances: {
+        Row: {
+          accepted_at: string
+          id: string
+          terms_version: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          id?: string
+          terms_version?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          id?: string
+          terms_version?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "terms_acceptances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zones: {
+        Row: {
+          geom: unknown
+          id: string
+          name: string
+          priority: number
+        }
+        Insert: {
+          geom: unknown
+          id?: string
+          name: string
+          priority?: number
+        }
+        Update: {
+          geom?: unknown
+          id?: string
+          name?: string
+          priority?: number
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -488,34 +541,72 @@ export type Database = {
         }[]
       }
       get_user_stats: { Args: { target_user_id: string }; Returns: Json }
+      get_zone_name: { Args: { lat: number; lng: number }; Returns: string }
       increment_view_count: { Args: { event_id: string }; Returns: undefined }
       nearby_flyers: {
         Args: { radius_km?: number; user_lat: number; user_lng: number }
         Returns: {
-          address: string | null
+          address: string
           canvas_x: number
           canvas_y: number
           created_at: string
-          duration_days: number | null
-          expires_at: string | null
+          description: string
+          distance_m: number
+          duration_days: number
+          event_date: string
+          event_time: string
+          expires_at: string
           height: number
           id: string
           image_url: string
-          is_promoted: boolean | null
+          is_promoted: boolean
           location: unknown
-          promoted_until: string | null
+          promoted_until: string
           rotation: number
-          status: string | null
-          title: string | null
-          user_id: string | null
+          social_copy: string
+          status: string
+          title: string
+          user_id: string
           width: number
+          zone_name: string
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "flyers"
-          isOneToOne: false
-          isSetofReturn: true
+      }
+      nearby_flyers_scored: {
+        Args: {
+          radius_km?: number
+          result_limit?: number
+          user_lat: number
+          user_lng: number
         }
+        Returns: {
+          address: string
+          canvas_x: number
+          canvas_y: number
+          created_at: string
+          description: string
+          distance_m: number
+          distance_score: number
+          duration_days: number
+          event_date: string
+          event_time: string
+          expires_at: string
+          height: number
+          id: string
+          image_url: string
+          interaction_score: number
+          is_promoted: boolean
+          location: unknown
+          promoted_until: string
+          rotation: number
+          social_copy: string
+          status: string
+          time_score: number
+          title: string
+          total_score: number
+          user_id: string
+          width: number
+          zone_name: string
+        }[]
       }
       toggle_event_heat: { Args: { p_event_id: string }; Returns: Json }
     }
@@ -646,7 +737,12 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
 } as const
+A new version of Supabase CLI is available: v2.98.1 (currently installed v2.89.1)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
