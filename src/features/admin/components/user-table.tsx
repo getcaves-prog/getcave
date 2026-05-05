@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getUsers } from "@/features/admin/services/admin.service";
-import { updateUserRoleAction } from "@/features/admin/services/admin.actions";
+import { updateUserRoleAction, deleteUserAction } from "@/features/admin/services/admin.actions";
 import type { Profile, UserRole } from "@/features/admin/types/admin.types";
 
 const ROLES: UserRole[] = ["admin", "user", "lector"];
@@ -12,6 +12,8 @@ export function UserTable() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [roleError, setRoleError] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -28,6 +30,24 @@ export function UserTable() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const handleDelete = async (userId: string) => {
+    if (confirmDeleteId !== userId) {
+      setConfirmDeleteId(userId);
+      return;
+    }
+    setDeletingId(userId);
+    setConfirmDeleteId(null);
+    try {
+      await deleteUserAction(userId);
+      await fetchUsers();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to delete user";
+      setRoleError(message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const handleRoleChange = async (userId: string, role: UserRole) => {
     setUpdatingId(userId);
@@ -123,6 +143,17 @@ export function UserTable() {
                   </option>
                 ))}
               </select>
+              <button
+                onClick={() => handleDelete(user.id)}
+                disabled={deletingId === user.id}
+                className="mt-2 min-h-[44px] w-full rounded-lg border border-neon-pink/40 bg-neon-pink/10 font-[family-name:var(--font-space-mono)] text-xs text-neon-pink transition-colors hover:bg-neon-pink/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {deletingId === user.id
+                  ? "Eliminando…"
+                  : confirmDeleteId === user.id
+                  ? "¿Confirmar eliminación?"
+                  : "Eliminar usuario"}
+              </button>
             </div>
           ))
         )}
@@ -148,13 +179,16 @@ export function UserTable() {
               <th className="px-4 py-3 text-left font-[family-name:var(--font-space-mono)] text-xs tracking-wider text-cave-fog uppercase">
                 Terms
               </th>
+              <th className="px-4 py-3 text-left font-[family-name:var(--font-space-mono)] text-xs tracking-wider text-cave-fog uppercase">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className="px-4 py-8 text-center text-cave-fog"
                 >
                   Loading...
@@ -163,7 +197,7 @@ export function UserTable() {
             ) : users.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className="px-4 py-8 text-center text-cave-fog"
                 >
                   No users found
@@ -226,6 +260,19 @@ export function UserTable() {
                     ) : (
                       <span className="text-cave-ash">—</span>
                     )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => handleDelete(user.id)}
+                      disabled={deletingId === user.id}
+                      className="rounded-lg border border-neon-pink/40 bg-neon-pink/10 px-3 py-1 font-[family-name:var(--font-space-mono)] text-xs text-neon-pink transition-colors hover:bg-neon-pink/20 disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap"
+                    >
+                      {deletingId === user.id
+                        ? "Eliminando…"
+                        : confirmDeleteId === user.id
+                        ? "¿Confirmar?"
+                        : "Eliminar"}
+                    </button>
                   </td>
                 </tr>
               ))

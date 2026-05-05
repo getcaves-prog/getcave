@@ -99,3 +99,31 @@ export async function updateUserRoleAction(userId: string, role: UserRole) {
 
   if (error) throw new Error(error.message);
 }
+
+export async function deleteUserAction(userId: string) {
+  await assertAdmin();
+  const supabase = createAdminClient();
+
+  // Delete storage objects for each flyer owned by this user
+  const { data: flyers } = await supabase
+    .from("flyers")
+    .select("image_url")
+    .eq("user_id", userId);
+
+  if (flyers && flyers.length > 0) {
+    await Promise.allSettled(
+      flyers
+        .filter((f) => f.image_url?.includes("supabase.co/storage"))
+        .map((f) => {
+          const path = f.image_url!.split("/storage/v1/object/public/")[1];
+          if (!path) return Promise.resolve();
+          const [bucket, ...rest] = path.split("/");
+          return supabase.storage.from(bucket).remove([rest.join("/")]);
+        })
+    );
+  }
+
+  // deleteUser removes auth.users row — profiles + flyers cascade via FK
+  const { error } = await supabase.auth.admin.deleteUser(userId);
+  if (error) throw new Error(error.message);
+}
