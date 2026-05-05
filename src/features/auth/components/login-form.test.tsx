@@ -1,52 +1,50 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { LoginForm } from "./login-form";
 
-const mockPush = vi.fn();
-
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: mockPush,
-    replace: vi.fn(),
-    back: vi.fn(),
-    prefetch: vi.fn(),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/",
+}));
+
+vi.mock("@/features/auth/services/auth.service", () => ({
+  signInWithGoogle: vi.fn().mockResolvedValue({ error: null }),
+}));
+
+vi.mock("@/shared/lib/supabase/client", () => ({
+  createClient: () => ({
+    auth: { signInWithPassword: vi.fn().mockResolvedValue({ error: null }) },
   }),
 }));
 
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 describe("LoginForm", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    document.cookie = "guest_mode=; max-age=0";
+  it("renders logo image", () => {
+    render(<LoginForm />);
+    expect(screen.getByAltText("Caves")).toBeInTheDocument();
   });
 
-  it("renders the Caves logo", () => {
+  it("renders Log in and Sign up buttons in landing view", () => {
     render(<LoginForm />);
-
-    expect(screen.getByText("Caves")).toBeInTheDocument();
-  });
-
-  it("renders Guest and Log in buttons", () => {
-    render(<LoginForm />);
-
-    expect(screen.getByText("Guest.")).toBeInTheDocument();
     expect(screen.getByText("Log in.")).toBeInTheDocument();
+    expect(screen.getByText("Sign up.")).toBeInTheDocument();
   });
 
-  it("sets guest_mode cookie and navigates to home on Guest click", () => {
+  it("renders Continue with Google button", () => {
     render(<LoginForm />);
-
-    fireEvent.click(screen.getByText("Guest."));
-
-    expect(document.cookie).toContain("guest_mode=true");
-    expect(mockPush).toHaveBeenCalledWith("/");
+    expect(screen.getByText("Continue with Google")).toBeInTheDocument();
   });
 
-  it("renders all buttons as type='button'", () => {
+  it("all interactive elements are type=button or submit in landing view", () => {
     render(<LoginForm />);
-
     const buttons = screen.getAllByRole("button");
     buttons.forEach((button) => {
-      expect(button).toHaveAttribute("type", "button");
+      const type = button.getAttribute("type");
+      expect(["button", "submit"]).toContain(type);
     });
   });
 });

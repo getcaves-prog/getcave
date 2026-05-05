@@ -5,10 +5,12 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { InfiniteCanvas } from "@/features/canvas/components/infinite-canvas";
 import { CanvasHeader } from "@/shared/components/layout/canvas-header";
+import { InlineAuthModal } from "@/features/auth/components/inline-auth-modal";
 import { useGeolocation } from "@/shared/hooks/use-geolocation";
 import { useLocationStore } from "@/shared/stores/location.store";
 import { useCanvasReadyStore } from "@/features/canvas/stores/canvas-ready.store";
 import { useDisplayModeStore } from "@/features/canvas/stores/display-mode.store";
+import { usePendingActionStore } from "@/features/auth/stores/pending-action.store";
 import { reverseGeocode } from "@/shared/lib/geocoding/geocoding.service";
 import { registerPushNotifications } from "@/shared/lib/notifications/push.service";
 
@@ -22,6 +24,7 @@ export default function HomePage() {
 
   const canvasReady = useCanvasReadyStore((s) => s.ready);
   const displayMode = useDisplayModeStore((s) => s.mode);
+  const authModalOpen = usePendingActionStore((s) => s.authModalOpen);
   const timeoutFiredRef = useRef(false);
   const animationDoneRef = useRef(false);
   const maxWaitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -117,6 +120,11 @@ export default function HomePage() {
         <CanvasHeader hidelogo={!introComplete} />
         <InfiniteCanvas />
       </div>
+
+      {/* Inline auth modal — save gate for unauthenticated users */}
+      <AnimatePresence>
+        {authModalOpen && <InlineAuthModal />}
+      </AnimatePresence>
 
       {/* Intro overlay — fades out to reveal canvas underneath */}
       <AnimatePresence>

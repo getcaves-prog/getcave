@@ -16,8 +16,8 @@ import {
 } from "../types/canvas.types";
 import type {
   Viewport,
-  Flyer,
   LayoutFlyer,
+  NearbyFlyer,
   GridConfig,
 } from "../types/canvas.types";
 
@@ -36,7 +36,7 @@ function getGridConfig(): GridConfig {
  * Only generates flyers visible in the current viewport.
  */
 function generateVisibleFlyers(
-  sourceFlyers: Flyer[],
+  sourceFlyers: NearbyFlyer[],
   viewport: Viewport,
   config: GridConfig
 ): LayoutFlyer[] {
@@ -289,7 +289,19 @@ export function InfiniteCanvas() {
         {selectedFlyer && (
           <FlyerDetailModal
             flyer={selectedFlyer}
+            allFlyers={flyers}
             onClose={() => setSelectedFlyer(null)}
+            onFlyerSelect={(nearbyFlyer: NearbyFlyer) => {
+              setSelectedFlyer({
+                ...nearbyFlyer,
+                grid_id: "mas-hoy",
+                layout_x: 0,
+                layout_y: 0,
+                layout_width: gridConfig.flyerWidth,
+                layout_height: gridConfig.flyerHeight,
+                layout_rotation: 0,
+              });
+            }}
           />
         )}
       </AnimatePresence>

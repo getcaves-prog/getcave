@@ -5,12 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/features/auth/hooks/use-auth";
+import { usePendingActionStore } from "@/features/auth/stores/pending-action.store";
 import { toggleSaveFlyer, isFlyerSaved } from "../services/favorites.service";
 import { getFlyerCreator, getFlyerExtraImages } from "../services/canvas.service";
 import type { FlyerExtraImage } from "../services/canvas.service";
 import { trackFlyerView, getFlyerViewCount } from "../services/views.service";
 import { ReportModal } from "./report-modal";
-import type { LayoutFlyer } from "../types/canvas.types";
+import { EventInfoLine } from "./event-info-line";
+import { MasHoyCarousel } from "./mas-hoy-carousel";
+import { useMasHoy } from "../hooks/use-mas-hoy";
+import type { LayoutFlyer, NearbyFlyer } from "../types/canvas.types";
 
 function computeDaysRemaining(expiresAt: string): number | null {
   const expiryDate = new Date(expiresAt);
@@ -27,13 +31,16 @@ interface CreatorInfo {
 
 interface FlyerDetailModalProps {
   flyer: LayoutFlyer;
+  allFlyers: NearbyFlyer[];
   onClose: () => void;
+  onFlyerSelect?: (flyer: NearbyFlyer) => void;
 }
 
-export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
+export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: FlyerDetailModalProps) {
   const { user } = useAuth();
   const [saved, setSaved] = useState(false);
   const [savingInProgress, setSavingInProgress] = useState(false);
+  const [savedFeedback, setSavedFeedback] = useState(false);
   const [creator, setCreator] = useState<CreatorInfo | null>(null);
   const [viewCount, setViewCount] = useState<number>(0);
   const [shareToast, setShareToast] = useState(false);
@@ -43,6 +50,8 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
   const [extraImages, setExtraImages] = useState<FlyerExtraImage[]>([]);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const viewTrackedRef = useRef(false);
+
+  const masHoyFlyers = useMasHoy(flyer.id, allFlyers, flyer.event_date ?? null);
 
   const daysRemaining = useMemo(() => {
     if (!flyer.expires_at) return null;
@@ -86,11 +95,21 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
   }, [flyer.id]);
 
   const handleToggleSave = useCallback(async () => {
-    if (!user || savingInProgress) return;
+    if (savingInProgress) return;
+
+    if (!user) {
+      usePendingActionStore.getState().setPending({ kind: "save-flyer", flyerId: flyer.id });
+      return;
+    }
+
     setSavingInProgress(true);
     try {
       const newState = await toggleSaveFlyer(flyer.id);
       setSaved(newState);
+      if (newState) {
+        setSavedFeedback(true);
+        setTimeout(() => setSavedFeedback(false), 1200);
+      }
     } finally {
       setSavingInProgress(false);
     }
@@ -149,19 +168,10 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
       transition={{ duration: 0.25 }}
       style={{ willChange: "opacity" }}
     >
-      {/* Backdrop */}
-      <motion.div
-        className="absolute inset-0"
+      {/* Backdrop — static, no blur animation */}
+      <div
+        className="absolute inset-0 bg-black/80"
         onClick={onClose}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        style={{
-          background: "rgba(0,0,0,0.92)",
-          WebkitBackdropFilter: "blur(40px)",
-          backdropFilter: "blur(40px)",
-        }}
       />
 
       {/* Close X */}
@@ -215,8 +225,17 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
               )}
             </div>
 
+            {/* Info line — below image, above bottom bar */}
+            <div className="mt-2 px-1">
+              <EventInfoLine
+                username={creator?.username}
+                zoneName={flyer.zone_name}
+                eventDate={flyer.event_date}
+              />
+            </div>
+
             {/* Bottom bar */}
-            <div className="flex items-center justify-between mt-2 px-4 py-3 rounded-b-[16px] bg-cave-stone">
+            <div className="flex items-center justify-between mt-1 px-4 py-3 rounded-b-[16px] bg-cave-stone">
               {creator ? (
                 <Link href={`/profile/${creator.username}`} className="text-xs text-cave-fog hover:text-cave-white transition-colors font-[family-name:var(--font-space-mono)]">
                   @{creator.username}
@@ -224,18 +243,42 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
               ) : <div />}
 
               <div className="flex items-center gap-2">
-                {user && (
+                <div className="relative">
                   <button
                     onClick={handleToggleSave}
                     disabled={savingInProgress}
-                    className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors disabled:opacity-50 ${saved ? "text-cave-white" : "text-cave-smoke hover:text-cave-white"}`}
-                    aria-label={saved ? "Saved" : "Save"}
+                    className={`min-h-[44px] min-w-[44px] flex items-center justify-center gap-1.5 rounded-full px-3 transition-colors disabled:opacity-50 ${saved ? "text-[#39FF14]" : "text-cave-smoke hover:text-cave-white"}`}
+                    aria-label={saved ? "Guardado" : "Guardar"}
+                    style={{ fontFamily: "var(--font-space-mono)" }}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                     </svg>
+                    <span className="text-[10px] font-bold tracking-widest uppercase">
+                      GUARDAR
+                    </span>
                   </button>
-                )}
+
+                  {/* Saved feedback overlay */}
+                  <AnimatePresence>
+                    {savedFeedback && (
+                      <motion.div
+                        className="absolute inset-0 flex items-center justify-center rounded-full pointer-events-none"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <span
+                          className="text-[9px] font-bold text-[#39FF14] whitespace-nowrap"
+                          style={{ fontFamily: "var(--font-space-mono)" }}
+                        >
+                          guardado — ya estás dentro
+                        </span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
                 <button
                   onClick={handleShare}
                   className="w-8 h-8 flex items-center justify-center rounded-full text-cave-smoke hover:text-cave-white transition-colors"
@@ -260,7 +303,7 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
                     <p className="text-[10px] tracking-[0.2em] text-cave-smoke uppercase mb-2 font-[family-name:var(--font-space-mono)]">
                       Acerca del evento
                     </p>
-                    <p className="text-sm leading-6 text-cave-fog font-[family-name:var(--font-inter)] whitespace-pre-wrap">
+                    <p className="text-sm leading-6 text-cave-fog font-[family-name:var(--font-inter)] line-clamp-1">
                       {flyer.description}
                     </p>
                   </div>
@@ -319,6 +362,12 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
 
               </div>
             )}
+
+            {/* Más hoy carousel */}
+            <MasHoyCarousel
+              flyers={masHoyFlyers}
+              onFlyerSelect={onFlyerSelect ?? (() => {})}
+            />
 
           </motion.div>
         </div>

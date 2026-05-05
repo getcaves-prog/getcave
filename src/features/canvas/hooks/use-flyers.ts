@@ -1,17 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getFlyers, getNearbyFlyers } from "../services/canvas.service";
+import { getFlyers, getNearbyFlyers, getNearbyFlyersScored } from "../services/canvas.service";
 import { useLocationStore } from "@/shared/stores/location.store";
 import { useCanvasReadyStore } from "../stores/canvas-ready.store";
 import { useCategoryFilterStore } from "../stores/category-filter.store";
 import { useDisplayModeStore } from "../stores/display-mode.store";
-import type { Flyer, DisplayMode } from "../types/canvas.types";
+import type { NearbyFlyer, DisplayMode } from "../types/canvas.types";
+
+const SCORED_FEED_ENABLED =
+  process.env.NEXT_PUBLIC_FEATURE_SCORED_FEED === "true";
 
 /** Minimum flyer count to use infinite canvas mode */
 const CANVAS_THRESHOLD = 8;
 
-const RADIUS_STEPS_KM = [50, 100, 200];
+/** Per-step minimum to advance to the next radius (spec: 10 at 5km, 20 at 10km) */
+const RADIUS_STEP_THRESHOLDS = [10, 20];
+const RADIUS_STEPS_KM = [5, 10, 25];
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 2_000;
 
@@ -26,7 +31,7 @@ function resolveDisplayMode(count: number): DisplayMode {
 }
 
 export function useFlyers() {
-  const [flyers, setFlyers] = useState<Flyer[]>([]);
+  const [flyers, setFlyers] = useState<NearbyFlyer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<DisplayMode>("empty");
@@ -45,26 +50,34 @@ export function useFlyers() {
     // Reset canvas readiness when we start a new fetch
     useCanvasReadyStore.getState().reset();
 
-    async function fetchFlyersOnce(): Promise<Flyer[]> {
+    async function fetchFlyersOnce(): Promise<NearbyFlyer[]> {
       // If category filter is active, use getFlyers with category
       if (selectedCategoryId) {
-        return getFlyers(selectedCategoryId);
+        return getFlyers(selectedCategoryId) as Promise<NearbyFlyer[]>;
       }
 
       if (latitude !== null && longitude !== null) {
-        // Try increasingly larger radii until we get enough results
-        for (const radius of RADIUS_STEPS_KM) {
-          const data = await getNearbyFlyers(latitude, longitude, radius);
-
-          // If we have enough for canvas, or this is the last radius step, return whatever we have
-          if (data.length >= CANVAS_THRESHOLD || radius === RADIUS_STEPS_KM[RADIUS_STEPS_KM.length - 1]) {
-            return data; // Could be 0 — that's fine, shows empty state
-          }
+        // Scored feed: single RPC call, ordered by weighted score
+        if (SCORED_FEED_ENABLED) {
+          return getNearbyFlyersScored(latitude, longitude, 25);
         }
-        return []; // No flyers nearby at any radius
+
+        // Default: expand radius until we hit the step threshold or exhaust all steps
+        for (let i = 0; i < RADIUS_STEPS_KM.length; i++) {
+          const radius = RADIUS_STEPS_KM[i];
+          const data = await getNearbyFlyers(latitude, longitude, radius);
+          const isLastStep = i === RADIUS_STEPS_KM.length - 1;
+          const stepThreshold = RADIUS_STEP_THRESHOLDS[i];
+
+          // Last step: always return what we have
+          if (isLastStep) return data;
+
+          // Has enough for this step's threshold — stop expanding
+          if (data.length >= stepThreshold) return data;
+        }
       }
 
-      // No location available — show empty state (don't fetch all flyers globally)
+      // No location available — show empty state
       return [];
     }
 

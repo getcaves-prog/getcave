@@ -2,11 +2,27 @@ import type { Tables } from "@/shared/types/database.types";
 
 export type Flyer = Tables<"flyers">;
 
+/** Flyer returned by nearby_flyers RPC — includes zone and distance */
+export type NearbyFlyer = Flyer & {
+  event_date: string | null;
+  event_time: string | null;
+  zone_name: string | null;
+  distance_m: number;
+};
+
+/** Flyer returned by nearby_flyers_scored RPC — includes weighted score fields */
+export type ScoredFlyer = NearbyFlyer & {
+  distance_score: number;
+  time_score: number;
+  interaction_score: number;
+  total_score: number;
+};
+
 /** Determines how flyers are displayed based on result count */
 export type DisplayMode = "canvas" | "grid" | "empty";
 
 /** A flyer with client-side computed grid position and size */
-export interface LayoutFlyer extends Flyer {
+export interface LayoutFlyer extends NearbyFlyer {
   /** Grid position key for React rendering (e.g. "3,5") */
   grid_id: string;
   /** Computed x position on canvas */

@@ -22,6 +22,8 @@ const MAX_EXTRA_IMAGES = 5;
 const flyerSchema = z.object({
   image: z.instanceof(File, { message: "Image is required" }),
   address: z.string().min(1, "Address is required"),
+  event_date: z.string().nullable().optional(),
+  event_time: z.string().nullable().optional(),
 });
 
 function validateImageFile(file: File): string | null {
@@ -125,6 +127,8 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [description, setDescription] = useState("");
   const [socialCopy, setSocialCopy] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [eventTime, setEventTime] = useState("");
   const [extraImages, setExtraImages] = useState<ExtraImageEntry[]>([]);
 
   useEffect(() => {
@@ -352,6 +356,8 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         duration_days: durationDays,
         description: description.trim() || null,
         social_copy: socialCopy.trim() || null,
+        ...(eventDate ? { event_date: eventDate } : {}),
+        ...(eventTime ? { event_time: eventTime } : {}),
       }).select("id").single();
 
       if (insertError) {
@@ -394,7 +400,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
       setSubmitError(err instanceof Error ? err.message : "An unexpected error occurred");
       setSubmitting(false);
     }
-  }, [imageFile, address, selectedCoords, title, user, onClose, durationDays, selectedCategories, description, socialCopy, extraImages]);
+  }, [imageFile, address, selectedCoords, title, user, onClose, durationDays, selectedCategories, description, socialCopy, eventDate, eventTime, extraImages]);
 
   useEffect(() => {
     return () => {
@@ -669,6 +675,32 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
               <p className="text-[10px] text-cave-smoke mt-1 text-right font-[family-name:var(--font-space-mono)]">
                 {socialCopy.length}/300
               </p>
+            </div>
+
+            {/* Event date & time */}
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="block text-xs text-cave-fog mb-1.5 font-[family-name:var(--font-space-mono)]">
+                  Fecha del evento <span className="text-cave-smoke">(opcional)</span>
+                </label>
+                <input
+                  type="date"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
+                  className="w-full h-11 rounded-xl border border-cave-ash bg-cave-rock text-cave-white px-4 text-sm focus:outline-none focus:border-cave-fog transition-colors font-[family-name:var(--font-inter)] [color-scheme:dark]"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs text-cave-fog mb-1.5 font-[family-name:var(--font-space-mono)]">
+                  Hora
+                </label>
+                <input
+                  type="time"
+                  value={eventTime}
+                  onChange={(e) => setEventTime(e.target.value)}
+                  className="w-full h-11 rounded-xl border border-cave-ash bg-cave-rock text-cave-white px-4 text-sm focus:outline-none focus:border-cave-fog transition-colors font-[family-name:var(--font-inter)] [color-scheme:dark]"
+                />
+              </div>
             </div>
 
             {/* Extra images */}

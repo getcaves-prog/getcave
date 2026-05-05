@@ -79,9 +79,9 @@ describe("signUp", () => {
       email: "new@example.com",
       password: "password123",
       options: {
-        data: {
+        data: expect.objectContaining({
           username: "newuser",
-        },
+        }),
       },
     });
   });

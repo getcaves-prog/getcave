@@ -1,6 +1,6 @@
 import { createClient } from "@/shared/lib/supabase/client";
 import type { Tables } from "@/shared/types/database.types";
-import type { Flyer } from "../types/canvas.types";
+import type { Flyer, NearbyFlyer, ScoredFlyer } from "../types/canvas.types";
 
 export type FlyerExtraImage = Tables<"flyer_extra_images">;
 
@@ -79,8 +79,8 @@ export async function getFlyerExtraImages(flyerId: string): Promise<FlyerExtraIm
 export async function getNearbyFlyers(
   lat: number,
   lng: number,
-  radiusKm: number = 50
-): Promise<Flyer[]> {
+  radiusKm: number = 25
+): Promise<NearbyFlyer[]> {
   const supabase = createClient();
 
   const { data, error } = await supabase.rpc("nearby_flyers", {
@@ -93,5 +93,42 @@ export async function getNearbyFlyers(
     throw new Error(`Failed to fetch nearby flyers: ${error.message}`);
   }
 
-  return (data ?? []) as Flyer[];
+  return (data ?? []) as NearbyFlyer[];
+}
+
+export async function getNearbyFlyersScored(
+  lat: number,
+  lng: number,
+  radiusKm: number = 25,
+  limit: number = 200
+): Promise<ScoredFlyer[]> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("nearby_flyers_scored", {
+    user_lat: lat,
+    user_lng: lng,
+    radius_km: radiusKm,
+    result_limit: limit,
+  });
+
+  if (error) {
+    throw new Error(`Failed to fetch scored flyers: ${error.message}`);
+  }
+
+  return (data ?? []) as ScoredFlyer[];
+}
+
+export async function getZoneName(
+  lat: number,
+  lng: number
+): Promise<string | null> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("get_zone_name", {
+    lat,
+    lng,
+  });
+
+  if (error) return null;
+  return data as string | null;
 }
