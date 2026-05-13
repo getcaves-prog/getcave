@@ -57,7 +57,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
   const [reportToast, setReportToast] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [extraImages, setExtraImages] = useState<FlyerExtraImage[]>([]);
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const viewTrackedRef = useRef(false);
 
   const masHoyFlyers = useMasHoy(flyer.id, allFlyers, flyer.event_date ?? null);
@@ -173,13 +173,18 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (lightboxImage) { setLightboxImage(null); return; }
+        if (lightboxIndex !== null) { setLightboxIndex(null); return; }
         onClose();
+      }
+      if (lightboxIndex !== null) {
+        if (e.key === "ArrowLeft") setLightboxIndex((i) => Math.max(0, (i ?? 0) - 1));
+        if (e.key === "ArrowRight") setLightboxIndex((i) => Math.min(allImages.length - 1, (i ?? 0) + 1));
+        return;
       }
       if (e.key === "ArrowLeft") navigateCarousel(-1);
       if (e.key === "ArrowRight") navigateCarousel(1);
     },
-    [onClose, lightboxImage, navigateCarousel]
+    [onClose, lightboxIndex, allImages.length, navigateCarousel]
   );
 
   useEffect(() => {
@@ -242,7 +247,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                   <button
                     key={i}
                     type="button"
-                    onClick={() => setLightboxImage(src)}
+                    onClick={() => setLightboxIndex(i)}
                     className="relative shrink-0 w-full"
                     style={{ aspectRatio: "7 / 10" }}
                   >
@@ -317,10 +322,9 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
               )}
             </div>
 
-            {/* Info line */}
+            {/* Info line — zona y fecha, sin username */}
             <div className="mt-2 px-1">
               <EventInfoLine
-                username={creator?.username}
                 zoneName={flyer.zone_name}
                 eventDate={flyer.event_date}
               />
@@ -387,10 +391,10 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
 
             {/* Creator link */}
             {creator && (
-              <div className="mt-2 px-1">
+              <div className="mt-3 px-1">
                 <Link
                   href={`/profile/${creator.username}`}
-                  className="text-[10px] text-cave-fog hover:text-cave-white transition-colors font-[family-name:var(--font-space-mono)]"
+                  className="text-sm text-cave-white hover:text-[#39FF14] transition-colors font-[family-name:var(--font-space-mono)]"
                 >
                   @{creator.username}
                 </Link>
@@ -446,28 +450,70 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
         </div>
       </div>
 
-      {/* Lightbox — full screen image viewer */}
+      {/* Lightbox — full screen image viewer with navigation */}
       <AnimatePresence>
-        {lightboxImage && (
+        {lightboxIndex !== null && (
           <motion.div
             className="fixed inset-0 z-[80] flex items-center justify-center bg-black/95"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setLightboxImage(null)}
+            onClick={() => setLightboxIndex(null)}
           >
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full" onClick={(e) => e.stopPropagation()}>
               <Image
-                src={lightboxImage}
+                src={allImages[lightboxIndex]}
                 alt="Event photo"
                 fill
                 className="object-contain"
                 unoptimized
               />
             </div>
+
+            {/* Prev */}
+            {lightboxIndex > 0 && (
+              <button
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => Math.max(0, (i ?? 0) - 1)); }}
+                aria-label="Anterior"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+            )}
+
+            {/* Next */}
+            {lightboxIndex < allImages.length - 1 && (
+              <button
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => Math.min(allImages.length - 1, (i ?? 0) + 1)); }}
+                aria-label="Siguiente"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            )}
+
+            {/* Dot indicator */}
+            {allImages.length > 1 && (
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+                {allImages.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`rounded-full transition-all duration-200 ${
+                      i === lightboxIndex ? "w-4 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/40"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Close */}
             <button
               className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-cave-rock/80 text-cave-white"
-              onClick={() => setLightboxImage(null)}
+              onClick={() => setLightboxIndex(null)}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
