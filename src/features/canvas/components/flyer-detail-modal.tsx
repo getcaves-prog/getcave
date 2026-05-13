@@ -82,6 +82,14 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
     setCarouselIndex(Math.round(el.scrollLeft / el.clientWidth));
   }, []);
 
+  const navigateCarousel = useCallback((dir: -1 | 1) => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const next = Math.max(0, Math.min(allImages.length - 1, carouselIndex + dir));
+    el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+    setCarouselIndex(next);
+  }, [carouselIndex, allImages.length]);
+
   // Track view
   useEffect(() => {
     if (viewTrackedRef.current) return;
@@ -168,8 +176,10 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
         if (lightboxImage) { setLightboxImage(null); return; }
         onClose();
       }
+      if (e.key === "ArrowLeft") navigateCarousel(-1);
+      if (e.key === "ArrowRight") navigateCarousel(1);
     },
-    [onClose, lightboxImage]
+    [onClose, lightboxImage, navigateCarousel]
   );
 
   useEffect(() => {
@@ -259,20 +269,51 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                 </div>
               )}
 
-              {/* Dot indicators — only when there are multiple images */}
+              {/* Arrow buttons + dot indicators — only when multiple images */}
               {allImages.length > 1 && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
-                  {allImages.map((_, i) => (
-                    <div
-                      key={i}
-                      className={`rounded-full transition-all duration-200 ${
-                        i === carouselIndex
-                          ? "w-4 h-1.5 bg-white"
-                          : "w-1.5 h-1.5 bg-white/40"
-                      }`}
-                    />
-                  ))}
-                </div>
+                <>
+                  {/* Left arrow */}
+                  {carouselIndex > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); navigateCarousel(-1); }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 transition-colors"
+                      aria-label="Imagen anterior"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 18 9 12 15 6" />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* Right arrow */}
+                  {carouselIndex < allImages.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); navigateCarousel(1); }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 transition-colors"
+                      aria-label="Imagen siguiente"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* Dot indicators */}
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+                    {allImages.map((_, i) => (
+                      <div
+                        key={i}
+                        className={`rounded-full transition-all duration-200 ${
+                          i === carouselIndex
+                            ? "w-4 h-1.5 bg-white"
+                            : "w-1.5 h-1.5 bg-white/40"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
             </div>
 
