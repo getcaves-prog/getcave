@@ -16,35 +16,42 @@ interface MyFlyerCardProps {
   onChange: () => void;
 }
 
-function getStatusStyle(status: string | null): {
+interface StatusStyle {
   label: string;
-  className: string;
-} {
+  badgeClass: string;
+  dot?: string;
+  hint?: string;
+}
+
+function getStatusStyle(status: string | null): StatusStyle {
   switch (status) {
     case "approved":
       return {
-        label: "Approved",
-        className: "border-cave-white text-cave-white",
+        label: "Activo",
+        badgeClass: "border-[#39FF14] text-[#39FF14]",
       };
     case "pending":
       return {
-        label: "Pending",
-        className: "border-cave-smoke text-cave-smoke",
+        label: "En revisión",
+        badgeClass: "border-amber-400 text-amber-400",
+        dot: "bg-amber-400",
+        hint: "Lo revisaremos pronto y te avisaremos.",
       };
     case "rejected":
       return {
-        label: "Rejected",
-        className: "border-cave-smoke text-cave-smoke",
+        label: "Rechazado",
+        badgeClass: "border-[#FF2D7B] text-[#FF2D7B]",
+        hint: "Este flyer no cumple con nuestras políticas.",
       };
     case "expired":
       return {
-        label: "Expired",
-        className: "border-cave-smoke text-cave-smoke",
+        label: "Expirado",
+        badgeClass: "border-cave-smoke text-cave-smoke",
       };
     default:
       return {
-        label: status ?? "Unknown",
-        className: "border-cave-smoke text-cave-smoke",
+        label: status ?? "Desconocido",
+        badgeClass: "border-cave-smoke text-cave-smoke",
       };
   }
 }
@@ -68,6 +75,7 @@ export function MyFlyerCard({ flyer, onChange }: MyFlyerCardProps) {
 
   const statusStyle = getStatusStyle(flyer.status);
   const expiresLabel = getExpiresLabel(flyer.expires_at);
+  const isPending = flyer.status === "pending";
 
   const handleDelete = useCallback(async () => {
     if (!confirm("Delete this flyer? This action cannot be undone.")) return;
@@ -98,7 +106,7 @@ export function MyFlyerCard({ flyer, onChange }: MyFlyerCardProps) {
 
   return (
     <>
-      <div className="rounded-xl border border-cave-ash bg-cave-stone p-4">
+      <div className={`rounded-xl border bg-cave-stone p-4 ${isPending ? "border-amber-400/40" : "border-cave-ash"}`}>
         <div className="flex gap-3">
           {/* Thumbnail */}
           <div className="relative w-16 h-[calc(16*10/7*4px)] shrink-0 rounded-lg overflow-hidden bg-cave-rock">
@@ -130,8 +138,11 @@ export function MyFlyerCard({ flyer, onChange }: MyFlyerCardProps) {
             <div className="mt-2 flex items-center gap-2 flex-wrap">
               {/* Status badge */}
               <span
-                className={`inline-flex items-center rounded-full border px-2 py-0.5 font-[family-name:var(--font-space-mono)] text-[10px] uppercase tracking-wider ${statusStyle.className}`}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-[family-name:var(--font-space-mono)] text-[10px] uppercase tracking-wider ${statusStyle.badgeClass}`}
               >
+                {statusStyle.dot && (
+                  <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${statusStyle.dot}`} />
+                )}
                 {statusStyle.label}
               </span>
 
@@ -142,6 +153,13 @@ export function MyFlyerCard({ flyer, onChange }: MyFlyerCardProps) {
                 </span>
               )}
             </div>
+
+            {/* Hint for pending/rejected */}
+            {statusStyle.hint && (
+              <p className="mt-1.5 text-[10px] text-cave-fog font-[family-name:var(--font-space-mono)] leading-relaxed">
+                {statusStyle.hint}
+              </p>
+            )}
 
             <span className="mt-1 block font-[family-name:var(--font-space-mono)] text-[10px] text-cave-smoke">
               {new Date(flyer.created_at).toLocaleDateString()}

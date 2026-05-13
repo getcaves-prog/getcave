@@ -16,6 +16,15 @@ import { MasHoyCarousel } from "./mas-hoy-carousel";
 import { useMasHoy } from "../hooks/use-mas-hoy";
 import type { LayoutFlyer, NearbyFlyer } from "../types/canvas.types";
 
+// Bookmark icon — filled when saved
+function BookmarkIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
 function computeDaysRemaining(expiresAt: string): number | null {
   const expiryDate = new Date(expiresAt);
   if (isNaN(expiryDate.getTime())) return null;
@@ -52,17 +61,26 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
   const viewTrackedRef = useRef(false);
 
   const masHoyFlyers = useMasHoy(flyer.id, allFlyers, flyer.event_date ?? null);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   const daysRemaining = useMemo(() => {
     if (!flyer.expires_at) return null;
     return computeDaysRemaining(flyer.expires_at);
   }, [flyer.expires_at]);
 
-  const hasExtraContent = !!(
-    flyer.description ||
-    flyer.social_copy ||
-    extraImages.length > 0
+  const allImages = useMemo(
+    () => [flyer.image_url, ...extraImages.map((e) => e.image_url)],
+    [flyer.image_url, extraImages]
   );
+
+  const hasExtraContent = !!(flyer.description || flyer.social_copy);
+
+  const handleCarouselScroll = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    setCarouselIndex(Math.round(el.scrollLeft / el.clientWidth));
+  }, []);
 
   // Track view
   useEffect(() => {
@@ -201,20 +219,37 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
             style={{ willChange: "transform, opacity" }}
           >
-            {/* Main flyer image */}
-            <div
-              className={`relative w-full overflow-hidden rounded-[16px] ${flyer.is_promoted ? "ring-1 ring-amber-500/30" : ""}`}
-              style={{ aspectRatio: "7 / 10" }}
-            >
-              <Image
-                src={flyer.image_url}
-                alt={flyer.title ?? "Event flyer"}
-                fill
-                sizes="400px"
-                className="object-cover"
-                loading="eager"
-                unoptimized
-              />
+            {/* ── Image carousel ─────────────────────────── */}
+            <div className={`relative w-full overflow-hidden rounded-[16px] ${flyer.is_promoted ? "ring-1 ring-amber-500/30" : ""}`}>
+              {/* Slides */}
+              <div
+                ref={carouselRef}
+                onScroll={handleCarouselScroll}
+                className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+                style={{ scrollBehavior: "auto" }}
+              >
+                {allImages.map((src, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setLightboxImage(src)}
+                    className="relative shrink-0 w-full"
+                    style={{ aspectRatio: "7 / 10" }}
+                  >
+                    <Image
+                      src={src}
+                      alt={i === 0 ? (flyer.title ?? "Event flyer") : `Foto ${i}`}
+                      fill
+                      sizes="400px"
+                      className="object-cover snap-start"
+                      loading={i === 0 ? "eager" : "lazy"}
+                      unoptimized
+                    />
+                  </button>
+                ))}
+              </div>
+
+              {/* Promoted badge */}
               {flyer.is_promoted && (
                 <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 backdrop-blur-sm">
                   <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" className="text-amber-400">
@@ -223,9 +258,25 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                   <span className="text-[9px] text-amber-300">Promoted</span>
                 </div>
               )}
+
+              {/* Dot indicators — only when there are multiple images */}
+              {allImages.length > 1 && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+                  {allImages.map((_, i) => (
+                    <div
+                      key={i}
+                      className={`rounded-full transition-all duration-200 ${
+                        i === carouselIndex
+                          ? "w-4 h-1.5 bg-white"
+                          : "w-1.5 h-1.5 bg-white/40"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Info line — below image, above bottom bar */}
+            {/* Info line */}
             <div className="mt-2 px-1">
               <EventInfoLine
                 username={creator?.username}
@@ -234,109 +285,91 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
               />
             </div>
 
-            {/* Bottom bar */}
-            <div className="flex items-center justify-between mt-1 px-4 py-3 rounded-b-[16px] bg-cave-stone">
-              {creator ? (
-                <Link href={`/profile/${creator.username}`} className="text-xs text-cave-fog hover:text-cave-white transition-colors font-[family-name:var(--font-space-mono)]">
-                  @{creator.username}
-                </Link>
-              ) : <div />}
+            {/* ── GUARDAR — grande, centrado ──────────────── */}
+            <div className="mt-3 flex items-center gap-2">
+              <motion.button
+                onClick={handleToggleSave}
+                disabled={savingInProgress}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                className={`flex-1 h-[52px] flex items-center justify-center gap-2.5 rounded-full border-2 font-bold tracking-[0.2em] uppercase text-sm transition-colors disabled:opacity-50 ${
+                  saved
+                    ? "border-[#39FF14] text-[#39FF14] bg-[#39FF14]/8"
+                    : "border-cave-ash text-cave-white hover:border-cave-fog"
+                }`}
+                style={{ fontFamily: "var(--font-space-mono)" }}
+                aria-label={saved ? "Guardado" : "Guardar"}
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  {savedFeedback ? (
+                    <motion.span
+                      key="feedback"
+                      className="flex items-center gap-2"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      <span>GUARDADO</span>
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="label"
+                      className="flex items-center gap-2"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <BookmarkIcon filled={saved} />
+                      <span>{saved ? "GUARDADO" : "GUARDAR"}</span>
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
 
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <button
-                    onClick={handleToggleSave}
-                    disabled={savingInProgress}
-                    className={`min-h-[44px] min-w-[44px] flex items-center justify-center gap-1.5 rounded-full px-3 transition-colors disabled:opacity-50 ${saved ? "text-[#39FF14]" : "text-cave-smoke hover:text-cave-white"}`}
-                    aria-label={saved ? "Guardado" : "Guardar"}
-                    style={{ fontFamily: "var(--font-space-mono)" }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                    </svg>
-                    <span className="text-[10px] font-bold tracking-widest uppercase">
-                      GUARDAR
-                    </span>
-                  </button>
-
-                  {/* Saved feedback overlay */}
-                  <AnimatePresence>
-                    {savedFeedback && (
-                      <motion.div
-                        className="absolute inset-0 flex items-center justify-center rounded-full pointer-events-none"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <span
-                          className="text-[9px] font-bold text-[#39FF14] whitespace-nowrap"
-                          style={{ fontFamily: "var(--font-space-mono)" }}
-                        >
-                          guardado — ya estás dentro
-                        </span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-                <button
-                  onClick={handleShare}
-                  className="w-8 h-8 flex items-center justify-center rounded-full text-cave-smoke hover:text-cave-white transition-colors"
-                  aria-label="Share"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                    <polyline points="16 6 12 2 8 6" />
-                    <line x1="12" y1="2" x2="12" y2="15" />
-                  </svg>
-                </button>
-              </div>
+              <button
+                onClick={handleShare}
+                className="w-[52px] h-[52px] flex items-center justify-center rounded-full border-2 border-cave-ash text-cave-smoke hover:text-cave-white hover:border-cave-fog transition-colors"
+                aria-label="Compartir"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                  <polyline points="16 6 12 2 8 6" />
+                  <line x1="12" y1="2" x2="12" y2="15" />
+                </svg>
+              </button>
             </div>
 
-            {/* ── Extra content section ───────────────────────── */}
+            {/* Creator link */}
+            {creator && (
+              <div className="mt-2 px-1">
+                <Link
+                  href={`/profile/${creator.username}`}
+                  className="text-[10px] text-cave-fog hover:text-cave-white transition-colors font-[family-name:var(--font-space-mono)]"
+                >
+                  @{creator.username}
+                </Link>
+              </div>
+            )}
+
+            {/* ── Extra content ───────────────────────────── */}
             {hasExtraContent && (
               <div className="mt-5 flex flex-col gap-5">
-
-                {/* Description */}
                 {flyer.description && (
                   <div className="rounded-2xl bg-cave-stone/60 border border-cave-ash/40 px-4 py-4">
                     <p className="text-[10px] tracking-[0.2em] text-cave-smoke uppercase mb-2 font-[family-name:var(--font-space-mono)]">
                       Acerca del evento
                     </p>
-                    <p className="text-sm leading-6 text-cave-fog font-[family-name:var(--font-inter)] line-clamp-1">
+                    <p className="text-sm leading-6 text-cave-fog font-[family-name:var(--font-inter)] line-clamp-3">
                       {flyer.description}
                     </p>
                   </div>
                 )}
 
-                {/* Extra images gallery */}
-                {extraImages.length > 0 && (
-                  <div>
-                    <p className="text-[10px] tracking-[0.2em] text-cave-smoke uppercase mb-3 font-[family-name:var(--font-space-mono)]">
-                      Fotos del evento
-                    </p>
-                    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-                      {extraImages.map((img) => (
-                        <button
-                          key={img.id}
-                          type="button"
-                          onClick={() => setLightboxImage(img.image_url)}
-                          className="relative shrink-0 w-28 h-28 rounded-xl overflow-hidden border border-cave-ash/40 hover:border-cave-fog transition-colors"
-                        >
-                          <Image
-                            src={img.image_url}
-                            alt="Event photo"
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Social copy */}
                 {flyer.social_copy && (
                   <div className="rounded-2xl bg-cave-stone/60 border border-cave-ash/40 px-4 py-4">
                     <div className="flex items-center justify-between mb-2">
@@ -359,7 +392,6 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                     </p>
                   </div>
                 )}
-
               </div>
             )}
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
 import { FlyerDetailModal } from "./flyer-detail-modal";
-import type { Flyer, LayoutFlyer } from "../types/canvas.types";
+import type { Flyer, LayoutFlyer, NearbyFlyer } from "../types/canvas.types";
 
 interface FlyerGridProps {
   flyers: Flyer[];
@@ -22,6 +22,10 @@ export function FlyerGrid({ flyers }: FlyerGridProps) {
             onClick={() =>
               setSelected({
                 ...flyer,
+                event_date: (flyer as NearbyFlyer).event_date ?? null,
+                event_time: (flyer as NearbyFlyer).event_time ?? null,
+                zone_name: (flyer as NearbyFlyer).zone_name ?? null,
+                distance_m: (flyer as NearbyFlyer).distance_m ?? 0,
                 grid_id: flyer.id,
                 layout_x: 0,
                 layout_y: 0,
@@ -48,6 +52,7 @@ export function FlyerGrid({ flyers }: FlyerGridProps) {
         {selected && (
           <FlyerDetailModal
             flyer={selected}
+            allFlyers={[]}
             onClose={() => setSelected(null)}
           />
         )}
