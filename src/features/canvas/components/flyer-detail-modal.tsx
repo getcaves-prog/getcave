@@ -460,7 +460,8 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
             exit={{ opacity: 0 }}
             onClick={() => setLightboxIndex(null)}
           >
-            <div className="relative w-full h-full" onClick={(e) => e.stopPropagation()}>
+            {/* Image — tap anywhere closes; pointer-events-none lets click pass to parent */}
+            <div className="relative w-full h-full pointer-events-none">
               <Image
                 src={allImages[lightboxIndex]}
                 alt="Event photo"
@@ -473,7 +474,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
             {/* Prev */}
             {lightboxIndex > 0 && (
               <button
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm"
                 onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => Math.max(0, (i ?? 0) - 1)); }}
                 aria-label="Anterior"
               >
@@ -486,7 +487,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
             {/* Next */}
             {lightboxIndex < allImages.length - 1 && (
               <button
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm"
                 onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => Math.min(allImages.length - 1, (i ?? 0) + 1)); }}
                 aria-label="Siguiente"
               >
@@ -496,10 +497,14 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
               </button>
             )}
 
-            {/* Dot indicator */}
-            {allImages.length > 1 && (
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
-                {allImages.map((_, i) => (
+            {/* Bottom bar — dots + close button, thumb-reachable */}
+            <div
+              className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Dot indicators */}
+              <div className="flex items-center gap-1.5">
+                {allImages.length > 1 && allImages.map((_, i) => (
                   <div
                     key={i}
                     className={`rounded-full transition-all duration-200 ${
@@ -508,18 +513,19 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                   />
                 ))}
               </div>
-            )}
 
-            {/* Close */}
-            <button
-              className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-cave-rock/80 text-cave-white"
-              onClick={() => setLightboxIndex(null)}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
+              {/* Close — bottom right, fácil de alcanzar con el pulgar */}
+              <button
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm border border-white/20"
+                onClick={() => setLightboxIndex(null)}
+                aria-label="Cerrar"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
