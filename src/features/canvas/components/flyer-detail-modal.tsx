@@ -248,7 +248,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                     key={i}
                     type="button"
                     onClick={() => setLightboxIndex(i)}
-                    className="relative shrink-0 w-full"
+                    className="relative flex-none w-full snap-start"
                     style={{ aspectRatio: "7 / 10" }}
                   >
                     <Image
@@ -256,7 +256,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                       alt={i === 0 ? (flyer.title ?? "Event flyer") : `Foto ${i}`}
                       fill
                       sizes="400px"
-                      className="object-cover snap-start"
+                      className="object-cover"
                       loading={i === 0 ? "eager" : "lazy"}
                       unoptimized
                     />
@@ -345,35 +345,8 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                 style={{ fontFamily: "var(--font-space-mono)" }}
                 aria-label={saved ? "Guardado" : "Guardar"}
               >
-                <AnimatePresence mode="wait" initial={false}>
-                  {savedFeedback ? (
-                    <motion.span
-                      key="feedback"
-                      className="flex items-center gap-2"
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -4 }}
-                      transition={{ duration: 0.15 }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                      <span>GUARDADO</span>
-                    </motion.span>
-                  ) : (
-                    <motion.span
-                      key="label"
-                      className="flex items-center gap-2"
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -4 }}
-                      transition={{ duration: 0.15 }}
-                    >
-                      <BookmarkIcon filled={saved} />
-                      <span>{saved ? "GUARDADO" : "GUARDAR"}</span>
-                    </motion.span>
-                  )}
-                </AnimatePresence>
+                <BookmarkIcon filled={saved} />
+                <span>{saved ? "GUARDADO" : "GUARDAR"}</span>
               </motion.button>
 
               <button

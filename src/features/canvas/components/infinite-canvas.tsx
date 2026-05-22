@@ -260,9 +260,12 @@ export function InfiniteCanvas() {
   }
 
   // mode === "canvas" — infinite tiling canvas
+  // Disable canvas gestures while a flyer modal is open so the background doesn't pan
+  const isModalOpen = selectedFlyer !== null;
+
   return (
     <div
-      {...bind()}
+      {...(isModalOpen ? {} : bind())}
       onClick={handleClick}
       className="w-screen overflow-hidden bg-cave-black touch-none select-none"
       style={{ height: "100dvh", overscrollBehavior: "none" }}
