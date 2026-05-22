@@ -1,149 +1,106 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getLocationByIp } from "@/shared/lib/geocoding/ip-location";
 
-const SESSION_KEY = "cavesapp:geolocation";
+// Minimum distance (km) to trigger a location update and flyer refetch.
+// At 5km we're confident the user moved to a different zone.
+const REFETCH_THRESHOLD_KM = 5;
 
-interface GeolocationState {
-  latitude: number | null;
-  longitude: number | null;
-  loading: boolean;
-  error: string | null;
-}
-
-interface StoredGeolocation {
-  latitude: number;
-  longitude: number;
-}
-
-function getStoredLocation(): StoredGeolocation | null {
-  if (typeof window === "undefined") return null;
-
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-
-    const parsed: unknown = JSON.parse(raw);
-
-    if (
-      typeof parsed === "object" &&
-      parsed !== null &&
-      "latitude" in parsed &&
-      "longitude" in parsed &&
-      typeof (parsed as StoredGeolocation).latitude === "number" &&
-      typeof (parsed as StoredGeolocation).longitude === "number"
-    ) {
-      return parsed as StoredGeolocation;
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-function storeLocation(latitude: number, longitude: number): void {
-  try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ latitude, longitude }));
-  } catch {
-    // sessionStorage may be unavailable in some contexts
-  }
+function haversineKm(
+  lat1: number, lng1: number,
+  lat2: number, lng2: number
+): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 export function useGeolocation() {
-  const [state, setState] = useState<GeolocationState>(() => {
-    const stored = getStoredLocation();
-
-    return {
-      latitude: stored?.latitude ?? null,
-      longitude: stored?.longitude ?? null,
-      loading: !stored,
-      error: null,
-    };
+  const [state, setState] = useState({
+    latitude: null as number | null,
+    longitude: null as number | null,
+    loading: true,
+    error: null as string | null,
   });
 
-  const requestBrowserLocation = useCallback(() => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setState((prev) => ({
-        ...prev,
-        loading: false,
-        error: prev.latitude === null
-          ? "Geolocation is not supported by this browser."
-          : null,
-      }));
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-
-        storeLocation(latitude, longitude);
-
-        setState({
-          latitude,
-          longitude,
-          loading: false,
-          error: null,
-        });
-      },
-      () => {
-        // Browser geolocation failed/denied — keep IP location if we have one
-        setState((prev) => ({
-          ...prev,
-          loading: false,
-          // Only set error if we have NO location at all
-          error: prev.latitude === null ? "Location unavailable" : null,
-        }));
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000, // 5 minutes
-      }
-    );
-  }, []);
+  // Tracks last committed GPS position to detect significant moves
+  const lastGpsRef = useRef<{ lat: number; lng: number } | null>(null);
+  const watchIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const stored = getStoredLocation();
-
-    // If we already have a stored (precise) location, skip IP lookup
-    if (stored) return;
-
     let cancelled = false;
 
-    async function resolveLocation() {
-      // Step 1: Try IP geolocation (instant, no permission)
-      const ipResult = await getLocationByIp();
+    // Step 1: IP geolocation — instant, no permission required.
+    // Used as a fast placeholder while GPS resolves.
+    getLocationByIp().then((ip) => {
+      if (cancelled || !ip) return;
+      if (lastGpsRef.current) return; // GPS already resolved, skip
+      setState({
+        latitude: ip.lat,
+        longitude: ip.lng,
+        loading: true, // still waiting for precise GPS
+        error: null,
+      });
+    });
 
-      if (cancelled) return;
+    // Step 2: Continuous GPS watch — precise, updates when user moves.
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (pos) => {
+          if (cancelled) return;
 
-      if (ipResult) {
-        storeLocation(ipResult.lat, ipResult.lng);
-        setState({
-          latitude: ipResult.lat,
-          longitude: ipResult.lng,
-          loading: false,
-          error: null,
-        });
-      } else {
-        setState((prev) => ({ ...prev, loading: false }));
-      }
+          const { latitude, longitude } = pos.coords;
+          const last = lastGpsRef.current;
+
+          const isFirst = !last;
+          const movedFar =
+            last !== null &&
+            haversineKm(last.lat, last.lng, latitude, longitude) >= REFETCH_THRESHOLD_KM;
+
+          if (isFirst || movedFar) {
+            lastGpsRef.current = { lat: latitude, lng: longitude };
+            setState({ latitude, longitude, loading: false, error: null });
+          } else {
+            // Same area — just mark loading done on first tick
+            setState((prev) => (prev.loading ? { ...prev, loading: false } : prev));
+          }
+        },
+        () => {
+          if (cancelled) return;
+          // GPS denied or unavailable — keep IP location, stop loading
+          setState((prev) => ({ ...prev, loading: false }));
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000, // accept positions up to 1 min old
+        }
+      );
+    } else {
+      // No geolocation support at all
+      setState((prev) => ({ ...prev, loading: false }));
     }
-
-    resolveLocation();
 
     return () => {
       cancelled = true;
+      if (watchIdRef.current !== null && typeof navigator !== "undefined") {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
     };
-  }, [requestBrowserLocation]);
+  }, []);
 
   return {
     latitude: state.latitude,
     longitude: state.longitude,
     loading: state.loading,
     error: state.error,
-    requestLocation: requestBrowserLocation,
   };
 }
