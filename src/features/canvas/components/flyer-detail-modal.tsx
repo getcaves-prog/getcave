@@ -14,6 +14,10 @@ import { ReportModal } from "./report-modal";
 import { EventInfoLine } from "./event-info-line";
 import { MasHoyCarousel } from "./mas-hoy-carousel";
 import { useMasHoy } from "../hooks/use-mas-hoy";
+import { QrPasscodeModal } from "@/features/invitations/components/qr-passcode-modal";
+import { QrDisplayModal } from "@/features/invitations/components/qr-display-modal";
+import { getInvitationStatus, getMyInviteForFlyer, verifyAndGetInvite } from "@/features/invitations/services/invitation.service";
+import type { GenerateInviteResult, QrInvite } from "@/features/invitations/types/invitation.types";
 import type { LayoutFlyer, NearbyFlyer } from "../types/canvas.types";
 
 // Bookmark icon — filled when saved
@@ -58,6 +62,11 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
   const [showReport, setShowReport] = useState(false);
   const [extraImages, setExtraImages] = useState<FlyerExtraImage[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [invitationEnabled, setInvitationEnabled] = useState(false);
+  const [myInvite, setMyInvite] = useState<QrInvite | null>(null);
+  const [showQrPasscode, setShowQrPasscode] = useState(false);
+  const [showQrDisplay, setShowQrDisplay] = useState(false);
+  const [qrResult, setQrResult] = useState<GenerateInviteResult | null>(null);
   const viewTrackedRef = useRef(false);
 
   const masHoyFlyers = useMasHoy(flyer.id, allFlyers, flyer.event_date ?? null);
@@ -119,6 +128,42 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
   useEffect(() => {
     getFlyerExtraImages(flyer.id).then(setExtraImages).catch(() => {});
   }, [flyer.id]);
+
+  useEffect(() => {
+    getInvitationStatus(flyer.id)
+      .then((s) => {
+        setInvitationEnabled(s.enabled);
+        if (s.enabled && user) {
+          getMyInviteForFlyer(flyer.id).then(setMyInvite).catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }, [flyer.id, user]);
+
+  const handleQrButtonClick = useCallback(() => {
+    if (myInvite) {
+      setQrResult({
+        qr_token: myInvite.qr_token,
+        display_name: myInvite.display_name,
+        phone: myInvite.phone,
+        flyer_title: flyer.title,
+        already_existed: true,
+      });
+      setShowQrDisplay(true);
+    } else {
+      setShowQrPasscode(true);
+    }
+  }, [myInvite, flyer.title]);
+
+  const handleQrVerify = useCallback(async (passcode: string, displayName: string, phone: string | null) => {
+    const result = await verifyAndGetInvite(flyer.id, passcode, displayName, phone);
+    setMyInvite({ id: "", flyer_id: flyer.id, user_id: user?.id ?? "", qr_token: result.qr_token, display_name: result.display_name, phone: result.phone, checked_in: false, checked_in_at: null, created_at: "" });
+    setQrResult(result);
+    setShowQrPasscode(false);
+    setShowQrDisplay(true);
+  }, [flyer.id, user]);
+
+  const isOwner = user?.id === flyer.user_id;
 
   const handleToggleSave = useCallback(async () => {
     if (savingInProgress) return;
@@ -374,6 +419,29 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
               </div>
             )}
 
+            {/* ── QR Invitation button ────────────────────── */}
+            {invitationEnabled && !isOwner && (
+              <div className="mt-3">
+                <motion.button
+                  type="button"
+                  onClick={handleQrButtonClick}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className="w-full h-[48px] flex items-center justify-center gap-2.5 rounded-full bg-neon-green text-cave-black font-bold tracking-[0.15em] uppercase text-sm"
+                  style={{ fontFamily: "var(--font-space-mono)" }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="5" height="5" rx="1" /><rect x="16" y="3" width="5" height="5" rx="1" />
+                    <rect x="3" y="16" width="5" height="5" rx="1" />
+                    <path d="M21 16h-3a2 2 0 0 0-2 2v3" /><line x1="21" y1="21" x2="21" y2="21" />
+                    <line x1="12" y1="3" x2="12" y2="7" /><line x1="12" y1="12" x2="12" y2="12" />
+                    <line x1="3" y1="12" x2="7" y2="12" />
+                  </svg>
+                  {myInvite ? "Ver mi QR" : "Generar mi QR"}
+                </motion.button>
+              </div>
+            )}
+
             {/* ── Extra content ───────────────────────────── */}
             {hasExtraContent && (
               <div className="mt-5 flex flex-col gap-5">
@@ -422,6 +490,28 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
           </motion.div>
         </div>
       </div>
+
+      {/* QR modals */}
+      <AnimatePresence>
+        {showQrPasscode && (
+          <QrPasscodeModal
+            flyerTitle={flyer.title}
+            onVerify={handleQrVerify}
+            onClose={() => setShowQrPasscode(false)}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showQrDisplay && qrResult && (
+          <QrDisplayModal
+            qrToken={qrResult.qr_token}
+            displayName={qrResult.display_name}
+            flyerTitle={qrResult.flyer_title}
+            alreadyExisted={qrResult.already_existed}
+            onClose={() => setShowQrDisplay(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Lightbox — full screen image viewer with navigation */}
       <AnimatePresence>

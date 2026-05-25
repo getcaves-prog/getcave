@@ -11,6 +11,7 @@ import { useAuth } from "@/features/auth/hooks/use-auth";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { getCategories, setFlyerCategories } from "@/features/canvas/services/categories.service";
+import { saveInvitationConfig } from "@/features/invitations/services/invitation.service";
 import type { Category } from "@/features/canvas/services/categories.service";
 import type { GeocodingResult } from "@/shared/lib/geocoding/types";
 
@@ -130,6 +131,9 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
   const [eventDate, setEventDate] = useState("");
   const [eventTime, setEventTime] = useState("");
   const [extraImages, setExtraImages] = useState<ExtraImageEntry[]>([]);
+  const [invitationsEnabled, setInvitationsEnabled] = useState(false);
+  const [invitePasscode, setInvitePasscode] = useState("");
+  const [inviteCapacity, setInviteCapacity] = useState("");
 
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {});
@@ -366,6 +370,16 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         return;
       }
 
+      // Save invitation config if enabled
+      if (insertedFlyer && invitationsEnabled && invitePasscode.trim()) {
+        saveInvitationConfig(
+          insertedFlyer.id,
+          invitePasscode.trim(),
+          true,
+          inviteCapacity ? parseInt(inviteCapacity, 10) : null
+        ).catch(() => {});
+      }
+
       // Save categories (non-blocking)
       if (insertedFlyer && selectedCategories.length > 0) {
         setFlyerCategories(insertedFlyer.id, selectedCategories).catch(() => {});
@@ -400,7 +414,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
       setSubmitError(err instanceof Error ? err.message : "An unexpected error occurred");
       setSubmitting(false);
     }
-  }, [imageFile, address, selectedCoords, title, user, onClose, durationDays, selectedCategories, description, socialCopy, eventDate, eventTime, extraImages]);
+  }, [imageFile, address, selectedCoords, title, user, onClose, durationDays, selectedCategories, description, socialCopy, eventDate, eventTime, extraImages, invitationsEnabled, invitePasscode, inviteCapacity]);
 
   useEffect(() => {
     return () => {
@@ -756,11 +770,72 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         )}
       </div>
 
+      {/* ── QR Invitations ─────────────────────────────── */}
+      <div className="border-t border-cave-ash/60 pt-4 mb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-cave-fog font-[family-name:var(--font-space-mono)]">
+              Invitaciones QR
+            </p>
+            <p className="text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)] mt-0.5">
+              Los asistentes generan su QR con un código
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setInvitationsEnabled((v) => !v)}
+            className={`relative w-11 h-6 rounded-full transition-colors ${
+              invitationsEnabled ? "bg-neon-green" : "bg-cave-ash"
+            }`}
+            aria-label="Toggle invitations"
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                invitationsEnabled ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+
+        {invitationsEnabled && (
+          <div className="flex flex-col gap-3 mt-4">
+            <div>
+              <label className="block text-[10px] text-cave-fog uppercase tracking-widest mb-2 font-[family-name:var(--font-space-mono)]">
+                Código de acceso <span className="text-neon-pink">*</span>
+              </label>
+              <input
+                type="text"
+                value={invitePasscode}
+                onChange={(e) => setInvitePasscode(e.target.value)}
+                placeholder="ej: CAVE2025"
+                className="w-full h-11 px-4 rounded-xl bg-cave-rock border border-cave-ash text-cave-white placeholder:text-cave-smoke focus:outline-none focus:border-neon-green transition-colors font-[family-name:var(--font-space-mono)] text-sm"
+              />
+              <p className="mt-1 text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)]">
+                Compartí este código con tus invitados.
+              </p>
+            </div>
+            <div>
+              <label className="block text-[10px] text-cave-fog uppercase tracking-widest mb-2 font-[family-name:var(--font-space-mono)]">
+                Capacidad máxima <span className="text-cave-smoke normal-case">(opcional)</span>
+              </label>
+              <input
+                type="number"
+                value={inviteCapacity}
+                onChange={(e) => setInviteCapacity(e.target.value)}
+                placeholder="Sin límite"
+                min="1"
+                className="w-full h-11 px-4 rounded-xl bg-cave-rock border border-cave-ash text-cave-white placeholder:text-cave-smoke focus:outline-none focus:border-neon-green transition-colors font-[family-name:var(--font-space-mono)] text-sm"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       {submitError && <p className="text-xs text-neon-pink mb-4">{submitError}</p>}
 
       <Button
         onClick={handleSubmit}
-        disabled={submitting}
+        disabled={submitting || (invitationsEnabled && !invitePasscode.trim())}
         className="w-full rounded-full bg-cave-white text-cave-black hover:bg-cave-light"
       >
         {submitting ? "Uploading..." : "Upload"}

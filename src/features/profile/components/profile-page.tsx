@@ -13,6 +13,7 @@ import {
 } from "@/features/profile/services/profile.service";
 import { ProfileEditModal } from "@/features/profile/components/profile-edit-modal";
 import { MyFlyerCard } from "@/features/profile/components/my-flyer-card";
+import { AttendeeList } from "@/features/invitations/components/attendee-list";
 import { getMyFlyers } from "@/features/profile/services/my-flyers.service";
 import { getSavedFlyers } from "@/features/canvas/services/favorites.service";
 import type { Tables } from "@/shared/types/database.types";
@@ -400,11 +401,13 @@ export function ProfilePage({ username }: ProfilePageProps) {
             </div>
           ) : (
             myFlyers.map((flyer) => (
-              <MyFlyerCard
-                key={flyer.id}
-                flyer={flyer}
-                onChange={handleMyFlyerChange}
-              />
+              <div key={flyer.id} className="flex flex-col gap-2">
+                <MyFlyerCard
+                  flyer={flyer}
+                  onChange={handleMyFlyerChange}
+                />
+                <AttendeeList flyerId={flyer.id} flyerTitle={flyer.title} />
+              </div>
             ))
           )}
         </div>
