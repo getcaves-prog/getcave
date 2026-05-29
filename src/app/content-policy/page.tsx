@@ -88,6 +88,12 @@ export default function ContentPolicyPage() {
             Términos y condiciones →
           </Link>
           <Link
+            href="/privacy"
+            className="text-xs tracking-widest text-cave-fog underline underline-offset-4 uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+          >
+            Política de privacidad →
+          </Link>
+          <Link
             href="/"
             className="text-xs tracking-widest text-cave-fog underline underline-offset-4 uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
           >

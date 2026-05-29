@@ -104,6 +104,13 @@ export function TermsConsentGate() {
           >
             Política →
           </Link>
+          <Link
+            href="/privacy"
+            target="_blank"
+            className="inline-flex text-xs tracking-widest text-cave-fog underline underline-offset-4 uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+          >
+            Privacidad →
+          </Link>
         </div>
 
         {error && (

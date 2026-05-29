@@ -17,6 +17,18 @@ workflows:
         script: npx cap add ios || true
       - name: Sync Capacitor
         script: npx cap sync ios
+      - name: Add iOS privacy permissions
+        working_directory: ios/App
+        script: |
+          PLIST="App/Info.plist"
+          set_plist() {
+            /usr/libexec/PlistBuddy -c "Add :$1 string $2" "$PLIST" 2>/dev/null || \
+            /usr/libexec/PlistBuddy -c "Set :$1 $2" "$PLIST"
+          }
+
+          set_plist NSCameraUsageDescription "Usamos la cámara para escanear códigos QR de invitaciones y check-ins."
+          set_plist NSLocationWhenInUseUsageDescription "Usamos tu ubicación para mostrar eventos cercanos y mejorar recomendaciones dentro de la app."
+          set_plist NSPhotoLibraryUsageDescription "Usamos tu fototeca cuando elegís imágenes para publicar contenido dentro de la app."
       - name: Set build number
         working_directory: ios/App
         script: |
