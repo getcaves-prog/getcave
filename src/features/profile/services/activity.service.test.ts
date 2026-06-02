@@ -9,10 +9,6 @@ import {
 // ─── Mock Supabase client ──────────────────────────────────────────────────
 const mockFrom = vi.fn();
 const mockSelect = vi.fn();
-const mockEq = vi.fn();
-const mockOrder = vi.fn();
-const mockLimit = vi.fn();
-const mockIn = vi.fn();
 const mockGetUser = vi.fn();
 
 vi.mock("@/shared/lib/supabase/client", () => ({
@@ -173,8 +169,6 @@ describe("getMyCommunities", () => {
 
 // ─── getMyEvents ──────────────────────────────────────────────────────────
 describe("getMyEvents", () => {
-  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-
   const futureDate = "2099-01-01";
   const pastDate = "2000-01-01";
 
@@ -387,7 +381,6 @@ describe("getMyConversations", () => {
     flyersResult: { data: unknown; error: unknown } = { data: flyerRows, error: null },
     communitiesResult: { data: unknown; error: unknown } = { data: communityRows, error: null }
   ) {
-    let callCount = 0;
     mockFrom.mockImplementation((table: string) => {
       if (table === "messages") {
         const chain = makeSimpleChain(messagesResult);
@@ -453,6 +446,41 @@ describe("getMyConversations", () => {
     const commConv = result.find((c) => c.subject_type === "community");
     expect(commConv).toBeDefined();
     expect(commConv!.subject_label).toBe("Cave Collective");
+  });
+
+  it("resolves community_slug for community subjects (used for /communities/[slug] routing)", async () => {
+    setupMyConversations({ data: messageRows, error: null });
+
+    const result = await getMyConversations("user-1");
+
+    const commConv = result.find((c) => c.subject_type === "community");
+    expect(commConv).toBeDefined();
+    expect(commConv!.community_slug).toBe("cave-collective");
+  });
+
+  it("sets community_slug to null for flyer subjects", async () => {
+    setupMyConversations({ data: messageRows, error: null });
+
+    const result = await getMyConversations("user-1");
+
+    const flyerConv = result.find((c) => c.subject_type === "flyer");
+    expect(flyerConv).toBeDefined();
+    expect(flyerConv!.community_slug).toBeNull();
+  });
+
+  it("sets community_slug to null when community cannot be resolved", async () => {
+    setupMyConversations(
+      { data: messageRows, error: null },
+      { data: convRows, error: null },
+      { data: flyerRows, error: null },
+      { data: [], error: null } // community not found
+    );
+
+    const result = await getMyConversations("user-1");
+
+    const commConv = result.find((c) => c.subject_type === "community");
+    expect(commConv).toBeDefined();
+    expect(commConv!.community_slug).toBeNull();
   });
 
   it("sets subject_label to null when subject cannot be resolved", async () => {
@@ -568,7 +596,6 @@ describe("getRecentActivity", () => {
     flyers?: { data: unknown; error: unknown };
     messages?: { data: unknown; error: unknown };
   }) {
-    const def = { data: [], error: null };
     const m = { ...{ members: { data: memberRows, error: null }, communities: { data: communityRows, error: null }, attendance: { data: attendanceRows, error: null }, flyers: { data: flyerRows, error: null }, messages: { data: messageRows, error: null } }, ...opts };
 
     // Track per-table call counts for tables that appear multiple times (flyers, communities)
@@ -576,7 +603,6 @@ describe("getRecentActivity", () => {
 
     mockFrom.mockImplementation((table: string) => {
       callCounters[table] = (callCounters[table] ?? 0) + 1;
-      const callNum = callCounters[table];
 
       if (table === "community_members") {
         const chain = makeSimpleChain(m.members!);

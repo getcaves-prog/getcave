@@ -10,9 +10,7 @@ const mockFrom = vi.fn();
 const mockSelect = vi.fn();
 const mockOrder = vi.fn();
 const mockEq = vi.fn();
-const mockIn = vi.fn();
 const mockInsert = vi.fn();
-const mockDelete = vi.fn();
 const mockGetUser = vi.fn();
 
 vi.mock("@/shared/lib/supabase/client", () => ({

@@ -52,6 +52,11 @@ export interface MyConversation {
   subject_id: string;
   /** Human label: flyer title or community name */
   subject_label: string | null;
+  /**
+   * Routing slug for community subjects — used to build /communities/[slug].
+   * Null for flyer subjects (those link via subject_id directly).
+   */
+  community_slug: string | null;
   /** ISO timestamp of the user's most recent message in this conversation */
   last_activity_at: string;
 }

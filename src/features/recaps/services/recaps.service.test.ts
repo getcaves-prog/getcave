@@ -18,6 +18,7 @@ const mockGetUser = vi.fn();
 // Storage mocks
 const mockStorageUpload = vi.fn();
 const mockStorageGetPublicUrl = vi.fn();
+const mockStorageRemove = vi.fn();
 const mockStorageFrom = vi.fn();
 
 vi.mock("@/shared/lib/supabase/client", () => ({
@@ -39,9 +40,11 @@ beforeEach(() => {
   mockStorageGetPublicUrl.mockReturnValue({
     data: { publicUrl: "https://cdn.example.com/recaps/user-1/flyer-1/abc.jpg" },
   });
+  mockStorageRemove.mockResolvedValue({ data: null, error: null });
   mockStorageFrom.mockReturnValue({
     upload: mockStorageUpload,
     getPublicUrl: mockStorageGetPublicUrl,
+    remove: mockStorageRemove,
   });
 });
 
@@ -231,15 +234,41 @@ describe("uploadRecapMedia", () => {
 
 // ─── deleteRecapMedia ──────────────────────────────────────────────────────
 describe("deleteRecapMedia", () => {
+  const MEDIA_URL =
+    "https://proj.supabase.co/storage/v1/object/public/recaps/user-1/flyer-1/uuid.jpg";
+
+  // Helpers to set up the fetch (select/eq/single) and delete (delete/eq) chains
+  const mockFetchSingle = vi.fn();
+  const mockFetchEq = vi.fn();
+  const mockFetchSelect = vi.fn();
   const mockDeleteEq = vi.fn();
 
-  beforeEach(() => {
-    mockDeleteEq.mockResolvedValue({ error: null });
-    mockDelete.mockReturnValue({ eq: mockDeleteEq });
-    mockFrom.mockReturnValue({ delete: mockDelete });
-  });
+  function setupDelete(
+    fetchResult: { data: unknown; error: unknown },
+    deleteResult: { error: unknown } = { error: null }
+  ) {
+    mockFetchSingle.mockResolvedValue(fetchResult);
+    mockFetchEq.mockReturnValue({ single: mockFetchSingle });
+    mockFetchSelect.mockReturnValue({ eq: mockFetchEq });
 
-  it("deletes the event_media row by id", async () => {
+    mockDeleteEq.mockResolvedValue(deleteResult);
+    mockDelete.mockReturnValue({ eq: mockDeleteEq });
+
+    // from("event_media") is called twice: once for fetch (select), once for delete
+    let callCount = 0;
+    mockFrom.mockImplementation((table: string) => {
+      if (table === "event_media") {
+        callCount++;
+        if (callCount === 1) return { select: mockFetchSelect };
+        return { delete: mockDelete };
+      }
+      return {};
+    });
+  }
+
+  it("fetches the row first, then deletes the DB row by id", async () => {
+    setupDelete({ data: { id: "m-1", media_url: MEDIA_URL }, error: null });
+
     await deleteRecapMedia("m-1");
 
     expect(mockFrom).toHaveBeenCalledWith("event_media");
@@ -247,11 +276,60 @@ describe("deleteRecapMedia", () => {
     expect(mockDeleteEq).toHaveBeenCalledWith("id", "m-1");
   });
 
-  it("throws on Supabase error", async () => {
-    mockDeleteEq.mockResolvedValue({ error: { message: "RLS denied" } });
+  it("calls storage.remove with the correct path after DB delete", async () => {
+    setupDelete({ data: { id: "m-1", media_url: MEDIA_URL }, error: null });
+
+    await deleteRecapMedia("m-1");
+
+    expect(mockStorageFrom).toHaveBeenCalledWith("recaps");
+    expect(mockStorageRemove).toHaveBeenCalledWith(["user-1/flyer-1/uuid.jpg"]);
+  });
+
+  it("extracts storage path from Supabase public URL correctly", async () => {
+    const url =
+      "https://xyzabc.supabase.co/storage/v1/object/public/recaps/a/b/c/file.mp4";
+    setupDelete({ data: { id: "m-2", media_url: url }, error: null });
+
+    await deleteRecapMedia("m-2");
+
+    expect(mockStorageRemove).toHaveBeenCalledWith(["a/b/c/file.mp4"]);
+  });
+
+  it("does not call storage.remove when media_url is null", async () => {
+    setupDelete({ data: { id: "m-3", media_url: null }, error: null });
+
+    await deleteRecapMedia("m-3");
+
+    expect(mockStorageRemove).not.toHaveBeenCalled();
+  });
+
+  it("does not throw when storage.remove fails (best-effort cleanup)", async () => {
+    setupDelete({ data: { id: "m-4", media_url: MEDIA_URL }, error: null });
+    mockStorageRemove.mockResolvedValue({ data: null, error: { message: "Not found" } });
+
+    // Should not throw — DB delete already succeeded
+    await expect(deleteRecapMedia("m-4")).resolves.toBeUndefined();
+  });
+
+  it("throws on fetch error", async () => {
+    setupDelete({ data: null, error: { message: "RLS denied" } });
 
     await expect(deleteRecapMedia("m-1")).rejects.toThrow(
       "Failed to delete media: RLS denied"
     );
+    expect(mockDelete).not.toHaveBeenCalled();
+  });
+
+  it("throws on DB delete error", async () => {
+    setupDelete(
+      { data: { id: "m-1", media_url: MEDIA_URL }, error: null },
+      { error: { message: "FK constraint" } }
+    );
+
+    await expect(deleteRecapMedia("m-1")).rejects.toThrow(
+      "Failed to delete media: FK constraint"
+    );
+    // Storage should NOT be cleaned up if DB delete failed
+    expect(mockStorageRemove).not.toHaveBeenCalled();
   });
 });

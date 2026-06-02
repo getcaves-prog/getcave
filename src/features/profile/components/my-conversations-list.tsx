@@ -27,7 +27,8 @@ function resolveHref(conv: MyConversation): string {
     return `/flyer/${conv.subject_id}`;
   }
   if (conv.subject_type === "community") {
-    return `/communities/${conv.subject_id}`;
+    // Route is /communities/[slug] — use community_slug, fallback to "#" if missing
+    return conv.community_slug ? `/communities/${conv.community_slug}` : "#";
   }
   return "#";
 }

@@ -9,7 +9,6 @@ import {
 } from "../services/broadcast.service";
 import type {
   Broadcast,
-  BroadcastKind,
   CreateBroadcastInput,
   CreatePollInput,
 } from "../types/community.types";

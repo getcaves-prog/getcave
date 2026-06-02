@@ -14,9 +14,7 @@ const mockSelect = vi.fn();
 const mockEq = vi.fn();
 const mockOrder = vi.fn();
 const mockLimit = vi.fn();
-const mockIn = vi.fn();
 const mockInsert = vi.fn();
-const mockDelete = vi.fn();
 const mockSingle = vi.fn();
 const mockGetUser = vi.fn();
 
@@ -179,13 +177,7 @@ describe("createPoll", () => {
     updated_at: "2026-06-01T12:00:00Z",
   };
 
-  const mockOptions = [
-    { id: "opt-1", broadcast_id: "poll-1", label: "Viernes", position: 0 },
-    { id: "opt-2", broadcast_id: "poll-1", label: "Sábado", position: 1 },
-  ];
-
   function setupCreatePollChain() {
-    let callCount = 0;
     mockFrom.mockImplementation((table: string) => {
       if (table === "broadcasts") {
         const localSingle = vi.fn().mockResolvedValue({ data: mockBroadcast, error: null });

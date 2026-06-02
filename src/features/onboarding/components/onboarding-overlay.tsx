@@ -68,6 +68,10 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
   useEffect(() => {
     const seen = localStorage.getItem(STORAGE_KEY);
     if (!seen) {
+      // Reading localStorage must happen inside an effect (client-only API).
+      // The setState here is the initial sync from external storage — not a
+      // cascading render trigger — so the lint warning is a false positive.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisible(true);
     } else {
       onComplete();

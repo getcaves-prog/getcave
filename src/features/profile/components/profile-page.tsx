@@ -9,7 +9,6 @@ import { createClient } from "@/shared/lib/supabase/client";
 import {
   getProfileByUsername,
   getUserFlyers,
-  getUserStats,
 } from "@/features/profile/services/profile.service";
 import { ProfileEditModal } from "@/features/profile/components/profile-edit-modal";
 import { MyFlyerCard } from "@/features/profile/components/my-flyer-card";
@@ -31,12 +30,6 @@ type Profile = Pick<
 
 type Flyer = Tables<"flyers">;
 
-interface UserStats {
-  flyers_posted: number;
-  total_views: number;
-  total_saves: number;
-}
-
 type Tab = "flyers" | "my-flyers" | "saved" | "communities" | "events" | "conversations" | "activity" | "interests";
 
 interface ProfilePageProps {
@@ -49,11 +42,6 @@ export function ProfilePage({ username }: ProfilePageProps) {
   const [publicFlyers, setPublicFlyers] = useState<Flyer[]>([]);
   const [myFlyers, setMyFlyers] = useState<Flyer[]>([]);
   const [savedFlyers, setSavedFlyers] = useState<Flyer[]>([]);
-  const [stats, setStats] = useState<UserStats>({
-    flyers_posted: 0,
-    total_views: 0,
-    total_saves: 0,
-  });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("my-flyers");
   const [editOpen, setEditOpen] = useState(false);
@@ -85,13 +73,9 @@ export function ProfilePage({ username }: ProfilePageProps) {
     }
     setProfile(profileData);
 
-    const [flyersData, statsData] = await Promise.all([
-      getUserFlyers(profileData.id),
-      getUserStats(profileData.id),
-    ]);
+    const flyersData = await getUserFlyers(profileData.id);
 
     setPublicFlyers(flyersData);
-    setStats(statsData);
     setLoading(false);
   }, [username]);
 
@@ -157,8 +141,6 @@ export function ProfilePage({ username }: ProfilePageProps) {
     "en-US",
     { month: "short", year: "numeric" }
   );
-
-  const displayFlyers = activeTab === "saved" ? savedFlyers : activeTab === "my-flyers" ? myFlyers : publicFlyers;
 
   return (
     <div className="min-h-dvh bg-cave-black">

@@ -2,7 +2,6 @@ import { createClient } from "@/shared/lib/supabase/client";
 import type { Json, Tables } from "@/shared/types/database.types";
 import type {
   Broadcast,
-  BroadcastKind,
   CreateBroadcastInput,
   CreatePollInput,
   PollResults,

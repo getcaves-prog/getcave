@@ -239,8 +239,9 @@ export async function getMyConversations(
     }
   }
 
-  // Q3b: community labels
+  // Q3b: community labels + slugs (slug is needed for deep-link routing)
   const communityLabelMap = new Map<string, string | null>();
+  const communitySlugMap = new Map<string, string>();
   if (communitySubjectIds.length > 0) {
     const { data: communityRows } = await supabase
       .from("communities")
@@ -249,6 +250,7 @@ export async function getMyConversations(
     if (communityRows) {
       for (const c of communityRows) {
         communityLabelMap.set(c.id, c.name);
+        communitySlugMap.set(c.id, c.slug);
       }
     }
   }
@@ -260,10 +262,12 @@ export async function getMyConversations(
       if (!conv) return null;
 
       let subjectLabel: string | null = null;
+      let communitySlug: string | null = null;
       if (conv.subject_type === "flyer") {
         subjectLabel = flyerLabelMap.get(conv.subject_id) ?? null;
       } else if (conv.subject_type === "community") {
         subjectLabel = communityLabelMap.get(conv.subject_id) ?? null;
+        communitySlug = communitySlugMap.get(conv.subject_id) ?? null;
       }
 
       return {
@@ -271,6 +275,7 @@ export async function getMyConversations(
         subject_type: conv.subject_type,
         subject_id: conv.subject_id,
         subject_label: subjectLabel,
+        community_slug: communitySlug,
         last_activity_at: lastActivityMap.get(convId)!,
       };
     })

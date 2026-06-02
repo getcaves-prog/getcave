@@ -74,7 +74,7 @@ export async function listMessages(
     ),
   ];
 
-  let profileMap = new Map<
+  const profileMap = new Map<
     string,
     { id: string; username: string; avatar_url: string | null }
   >();

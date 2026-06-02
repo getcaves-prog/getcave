@@ -104,22 +104,61 @@ export async function uploadRecapMedia(
 }
 
 // ─── deleteRecapMedia ──────────────────────────────────────────────────────
-// Deletes the event_media row by id.
+// Deletes the event_media row AND the corresponding file in the `recaps` bucket.
 // RLS enforces: uploaded_by = auth.uid() OR flyer.user_id = auth.uid().
-// DECISION: storage file is NOT deleted here for MVP — storage cleanup can
-// be handled by a background job or Supabase Storage lifecycle rule. The
-// public URL becomes orphaned but does not expose sensitive data.
+//
+// DECISION: fetch the row first to extract the storage path from media_url,
+// then delete DB row, then remove storage object.
+// Order: DB first — the user-visible delete succeeds even if storage removal
+// fails (no user-facing error on orphaned file; logged only).
+// Storage path is extracted from the public URL pattern:
+//   …/storage/v1/object/public/recaps/<path>
+// Everything after "/recaps/" is the object path inside the bucket.
 export async function deleteRecapMedia(mediaId: string): Promise<void> {
   const supabase = createClient();
 
-  const { error } = await supabase
+  // Step 1: fetch the row to get the media_url (need it for storage path)
+  const { data: row, error: fetchError } = await supabase
+    .from("event_media")
+    .select("id, media_url")
+    .eq("id", mediaId)
+    .single();
+
+  if (fetchError) {
+    throw new Error(`Failed to delete media: ${fetchError.message}`);
+  }
+
+  // Step 2: delete DB row
+  const { error: deleteError } = await supabase
     .from("event_media")
     .delete()
     .eq("id", mediaId);
 
-  if (error) {
-    throw new Error(`Failed to delete media: ${error.message}`);
+  if (deleteError) {
+    throw new Error(`Failed to delete media: ${deleteError.message}`);
   }
+
+  // Step 3: remove storage object (best-effort — don't throw on failure)
+  if (row?.media_url) {
+    const storagePath = extractStoragePath(row.media_url);
+    if (storagePath) {
+      // Ignore errors — missing file or permission issue should not surface to user
+      await supabase.storage.from("recaps").remove([storagePath]);
+    }
+  }
+}
+
+// ─── extractStoragePath ────────────────────────────────────────────────────
+// Extracts the storage object path from a Supabase public URL.
+// Input:  "https://…/storage/v1/object/public/recaps/user-id/flyer-id/uuid.jpg"
+// Output: "user-id/flyer-id/uuid.jpg"
+// Returns null if the URL doesn't match the expected pattern (defensive).
+function extractStoragePath(publicUrl: string): string | null {
+  const marker = "/storage/v1/object/public/recaps/";
+  const idx = publicUrl.indexOf(marker);
+  if (idx === -1) return null;
+  const path = publicUrl.slice(idx + marker.length);
+  return path.length > 0 ? path : null;
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────

@@ -126,7 +126,6 @@ describe("listMessages", () => {
   ) {
     // from("messages") → select().eq().order().limit()
     // from("profiles") → select().in()
-    let callCount = 0;
     mockFrom.mockImplementation((table: string) => {
       if (table === "messages") {
         const mockLimitMsg = vi.fn().mockResolvedValue(messagesResult);
