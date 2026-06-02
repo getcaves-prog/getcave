@@ -1,76 +1,188 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
+import Image from "next/image";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { SlideMenu } from "@/shared/components/layout/slide-menu";
+import Link from "next/link";
+import { LocationSearch } from "@/shared/components/layout/location-search";
+import { ActionModal } from "@/shared/components/layout/action-modal";
+import { SearchOverlay } from "@/features/search/components/search-overlay";
+import { useLocationStore } from "@/shared/stores/location.store";
+import { useActionModalStore } from "@/shared/stores/action-modal.store";
 
-export function CanvasHeader() {
-  const { user, signOut } = useAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
+interface CanvasHeaderProps {
+  hidelogo?: boolean;
+}
 
-  const openMenu = useCallback(() => setMenuOpen(true), []);
-  const closeMenu = useCallback(() => setMenuOpen(false), []);
+export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
+  const { user } = useAuth();
+  const locationName = useLocationStore((s) => s.locationName);
+  const actionModalOpen = useActionModalStore((s) => s.isOpen);
+  const openActionModal = useActionModalStore((s) => s.open);
+  const closeActionModal = useActionModalStore((s) => s.close);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [textSearchOpen, setTextSearchOpen] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const [active, setActive] = useState(false);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleUploadClick = () => {
-    alert("Coming soon");
+    if (!user) {
+      window.location.href = "/auth/signup";
+      return;
+    }
+    openActionModal();
   };
+
+  const openSearch = useCallback(() => {
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    setSearchOpen(true);
+    setActive(true);
+  }, []);
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+    setLocked(false);
+    setActive(false);
+  }, []);
+
+  const handleZoneMouseLeave = useCallback(() => {
+    if (locked) return;
+    closeTimeoutRef.current = setTimeout(() => {
+      setSearchOpen(false);
+      setActive(false);
+    }, 300);
+  }, [locked]);
+
+  const handleSearchInteraction = useCallback(() => {
+    setLocked(true);
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+  }, []);
 
   return (
     <>
-      <header
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 backdrop-blur-md"
-        style={{
-          height: 56,
-          backgroundColor: "rgba(5, 5, 5, 0.8)",
-        }}
-      >
-        {/* Left: Hamburger */}
-        <button
-          onClick={openMenu}
-          className="flex items-center justify-center w-10 h-10 text-neon-green"
-          aria-label="Open menu"
+    <header
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 backdrop-blur-md safe-area-top transition-colors duration-300"
+      style={{
+        minHeight: 48,
+        paddingTop: "max(env(safe-area-inset-top), 4px)",
+        backgroundColor: active ? "rgba(5, 5, 5, 0.55)" : "rgba(5, 5, 5, 0.25)",
+        WebkitBackdropFilter: "blur(12px)",
+      }}
+    >
+      {/* Left: Profile / Auth action */}
+      {user ? (
+        <Link
+          href="/profile"
+          className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
+          aria-label="My profile"
         >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        </Link>
+      ) : (
+        <Link
+          href="/auth/login"
+          className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
+          aria-label="Sign in"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+            <polyline points="10 17 15 12 10 7" />
+            <line x1="15" y1="12" x2="3" y2="12" />
+          </svg>
+        </Link>
+      )}
+
+      {/* Center: Logo + Search zone */}
+      <div
+        className="absolute left-1/2 -translate-x-1/2"
+        onMouseLeave={handleZoneMouseLeave}
+      >
+        <Image
+          src="/Logo.png"
+          alt="Caves"
+          width={100}
+          height={36}
+          className="h-auto w-[100px] transition-opacity duration-300 cursor-pointer"
+          style={{ opacity: hidelogo ? 0 : 1 }}
+          onClick={() => { openSearch(); handleSearchInteraction(); }}
+        />
+
+      </div>
+
+      <LocationSearch
+        isOpen={searchOpen}
+        onClose={closeSearch}
+        onInteraction={handleSearchInteraction}
+      />
+
+      {/* Right: Search + Upload buttons */}
+      <div className="flex items-center">
+        <button
+          onClick={() => setTextSearchOpen(true)}
+          className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
+          aria-label="Search flyers"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
         </button>
 
-        {/* Center: Logo */}
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-3xl text-cave-white font-[family-name:var(--font-pinyon-script)]">
-          Caves
-        </h1>
+        <button
+          onClick={handleUploadClick}
+          className="flex items-center justify-center w-11 h-11 text-cave-fog hover:text-cave-white transition-colors"
+          aria-label="Upload flyer"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+      </div>
 
-        {/* Right: Upload button (auth only) */}
-        {user ? (
-          <button
-            onClick={handleUploadClick}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-neon-green text-cave-black font-bold text-xl leading-none"
-            aria-label="Upload flyer"
-          >
-            +
-          </button>
-        ) : (
-          <div className="w-10 h-10" aria-hidden="true" />
-        )}
-      </header>
-
-      <SlideMenu
-        isOpen={menuOpen}
-        onClose={closeMenu}
-        user={user}
-        onSignOut={signOut}
+      <ActionModal
+        isOpen={actionModalOpen}
+        onClose={closeActionModal}
       />
+    </header>
+
+    <SearchOverlay
+      isOpen={textSearchOpen}
+      onClose={() => setTextSearchOpen(false)}
+    />
+
+    {/* Location pill — centered below logo */}
+    {locationName && (
+      <button
+        onClick={() => { openSearch(); handleSearchInteraction(); }}
+        className="fixed z-40 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-cave-black/15 backdrop-blur-sm cursor-pointer transition-all hover:bg-cave-black/25 group"
+        style={{
+          top: "max(calc(env(safe-area-inset-top) + 52px), 56px)",
+        }}
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-cave-fog group-hover:text-cave-white shrink-0"
+        >
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+        <span className="text-xs text-white tracking-wide truncate max-w-[200px] font-[family-name:var(--font-space-mono)]">
+          {locationName}
+        </span>
+      </button>
+    )}
     </>
   );
 }

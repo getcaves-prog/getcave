@@ -82,7 +82,7 @@ export function SlideMenu({ isOpen, onClose, user, onSignOut }: SlideMenuProps) 
             <div className="flex items-center justify-end h-14 px-4">
               <button
                 onClick={onClose}
-                className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-neon-green transition-colors"
+                className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
                 aria-label="Close menu"
               >
                 <svg
@@ -103,11 +103,28 @@ export function SlideMenu({ isOpen, onClose, user, onSignOut }: SlideMenuProps) 
 
             {/* Menu items */}
             <ul className="px-4 space-y-2">
+              {/* Comunidades — siempre visible */}
+              <li>
+                <Link
+                  href="/communities"
+                  onClick={onClose}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-cave-light font-[family-name:var(--font-space-mono)] text-sm tracking-wide hover:bg-cave-ash hover:text-cave-white transition-colors"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  Comunidades
+                </Link>
+              </li>
+
               {user ? (
                 <li>
                   <button
                     onClick={handleSignOut}
-                    className="w-full text-left px-4 py-3 rounded-lg text-cave-light font-[family-name:var(--font-space-mono)] text-sm tracking-wide hover:bg-cave-ash hover:text-neon-green transition-colors"
+                    className="w-full text-left px-4 py-3 rounded-lg text-cave-light font-[family-name:var(--font-space-mono)] text-sm tracking-wide hover:bg-cave-ash hover:text-cave-white transition-colors"
                   >
                     Log Out
                   </button>
@@ -117,7 +134,7 @@ export function SlideMenu({ isOpen, onClose, user, onSignOut }: SlideMenuProps) 
                   <Link
                     href="/auth/login"
                     onClick={onClose}
-                    className="block px-4 py-3 rounded-lg text-cave-light font-[family-name:var(--font-space-mono)] text-sm tracking-wide hover:bg-cave-ash hover:text-neon-green transition-colors"
+                    className="block px-4 py-3 rounded-lg text-cave-light font-[family-name:var(--font-space-mono)] text-sm tracking-wide hover:bg-cave-ash hover:text-cave-white transition-colors"
                   >
                     Log In
                   </Link>

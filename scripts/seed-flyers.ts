@@ -1,23 +1,22 @@
 /**
- * Seed script to populate the flyers table with 30 test records.
- *
- * Uses picsum.photos for placeholder images (vertical flyer-like posters).
- * Positions are randomly scattered across a large canvas area.
+ * Seed script to populate the flyers table with 200 test records.
+ * Uses picsum.photos with unique seeds for each image.
  *
  * Usage: npx tsx scripts/seed-flyers.ts
  */
 
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = "https://akcjzvftujuscaqnydzj.supabase.co";
-const SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrY2p6dmZ0dWp1c2NhcW55ZHpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNjk3NDQsImV4cCI6MjA4OTk0NTc0NH0.Z3xX-WXyVC4_smLS7dcn6Zp2EyEkGSQ2CB5a-qMUfjE";
+const SUPABASE_URL = process.env.CAVESAPP_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.CAVESAPP_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error("Missing Supabase env vars");
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const FLYER_COUNT = 30;
-const CANVAS_RANGE = 2000; // -2000 to 2000
-const ROTATION_RANGE = 5; // -5 to 5 degrees
+const FLYER_COUNT = 200;
 
 const EVENT_NAMES = [
   "Noche de Rock Underground",
@@ -50,59 +49,78 @@ const EVENT_NAMES = [
   "Noche de Salsa Dura",
   "Post-Punk Revival",
   "Psychedelic Sessions",
+  "Ambient Cave Sounds",
+  "Lo-Fi Beats Live",
+  "Reggaeton Underground",
+  "Afrobeat Sessions",
+  "Noise Rock Night",
+  "Downtempo Chill",
+  "Hardcore Punk Vol. 3",
+  "Bossa Nova Evening",
+  "Dubstep Madness",
+  "Neo Soul Night",
+  "Breakbeat Sessions",
+  "Tango Electrónico",
+  "Shoegaze Dreams",
+  "Grime Night MX",
+  "Dub Reggae Sessions",
+  "Math Rock Marathon",
+  "Vaporwave Lounge",
+  "Stoner Rock Fest",
+  "City Pop Night",
+  "Jungle Sessions",
+  "Krautrock Experience",
+  "Chiptune Arcade",
+  "Grunge Revival",
+  "Trip Hop Evening",
+  "Footwork Sessions",
+  "Drone Music Night",
+  "Cumbia Villera Fest",
+  "New Wave Revival",
+  "Industrial Night",
+  "UK Garage Sessions",
 ];
 
-function randomInRange(min: number, max: number): number {
-  return Math.random() * (max - min) + min;
-}
-
 async function seed() {
-  console.log("Seeding flyers table with", FLYER_COUNT, "records...");
+  console.log(`Seeding flyers table with ${FLYER_COUNT} records...`);
 
-  // Check if flyers already exist
+  // Clear existing flyers
   const { count } = await supabase
     .from("flyers")
     .select("*", { count: "exact", head: true });
 
   if (count && count > 0) {
-    console.log(`Table already has ${count} flyers. Clearing first...`);
-    // Delete using a filter that matches all (RLS allows select, not delete for anon)
-    // If this fails, we'll just insert anyway
-    const { error: deleteError } = await supabase
-      .from("flyers")
-      .delete()
-      .gte("created_at", "1970-01-01");
-
-    if (deleteError) {
-      console.warn("Could not clear existing flyers:", deleteError.message);
-      console.log("Inserting additional flyers...");
-    }
+    console.log(`Clearing ${count} existing flyers...`);
+    await supabase.from("flyers").delete().gte("created_at", "1970-01-01");
   }
 
   const flyers = Array.from({ length: FLYER_COUNT }, (_, i) => ({
-    image_url: `https://picsum.photos/seed/cave-flyer-${i + 1}/280/400`,
+    image_url: `https://picsum.photos/seed/caves-${i + 100}/280/400`,
     title: EVENT_NAMES[i % EVENT_NAMES.length],
-    canvas_x: randomInRange(-CANVAS_RANGE, CANVAS_RANGE),
-    canvas_y: randomInRange(-CANVAS_RANGE, CANVAS_RANGE),
-    rotation: randomInRange(-ROTATION_RANGE, ROTATION_RANGE),
+    canvas_x: 0,
+    canvas_y: 0,
+    rotation: 0,
     width: 280,
     height: 400,
   }));
 
-  const { data, error } = await supabase.from("flyers").insert(flyers).select();
+  // Insert in batches of 50
+  for (let batch = 0; batch < FLYER_COUNT; batch += 50) {
+    const chunk = flyers.slice(batch, batch + 50);
+    const { error } = await supabase.from("flyers").insert(chunk);
 
-  if (error) {
-    console.error("Failed to insert flyers:", error.message);
-    process.exit(1);
+    if (error) {
+      console.error(`Failed to insert batch ${batch / 50 + 1}:`, error.message);
+      process.exit(1);
+    }
+    console.log(`  Batch ${batch / 50 + 1} inserted (${chunk.length} flyers)`);
   }
 
-  console.log(`Successfully inserted ${data.length} flyers!`);
-  console.log("Sample positions:");
-  data.slice(0, 3).forEach((f) => {
-    console.log(
-      `  "${f.title}" at (${f.canvas_x.toFixed(0)}, ${f.canvas_y.toFixed(0)}) rot=${f.rotation.toFixed(1)}°`
-    );
-  });
+  const { count: finalCount } = await supabase
+    .from("flyers")
+    .select("*", { count: "exact", head: true });
+
+  console.log(`Done! ${finalCount} flyers in database.`);
 }
 
 seed();

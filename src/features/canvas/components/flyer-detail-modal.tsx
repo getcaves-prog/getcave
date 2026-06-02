@@ -1,21 +1,247 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
-import type { LayoutFlyer } from "../types/canvas.types";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import { usePendingActionStore } from "@/features/auth/stores/pending-action.store";
+import { toggleSaveFlyer, isFlyerSaved } from "../services/favorites.service";
+import { getFlyerCreator, getFlyerExtraImages } from "../services/canvas.service";
+import type { FlyerExtraImage } from "../services/canvas.service";
+import { trackFlyerView, getFlyerViewCount } from "../services/views.service";
+import { ReportModal } from "./report-modal";
+import { EventInfoLine } from "./event-info-line";
+import { MasHoyCarousel } from "./mas-hoy-carousel";
+import { AttendanceControls } from "./attendance-controls";
+import { useMasHoy } from "../hooks/use-mas-hoy";
+import { QrPasscodeModal } from "@/features/invitations/components/qr-passcode-modal";
+import { QrDisplayModal } from "@/features/invitations/components/qr-display-modal";
+import { getInvitationStatus, getMyInviteForFlyer, verifyAndGetInvite } from "@/features/invitations/services/invitation.service";
+import type { GenerateInviteResult, QrInvite } from "@/features/invitations/types/invitation.types";
+// Cross-feature import: EventThread lives in conversations/; this is the minimal
+// surface (one import, no shared state). Alternative (route-based) would require
+// significant routing changes — not justified at MVP scale. See engram note.
+import { EventThread } from "@/features/conversations/components/event-thread";
+// Cross-feature import: RecapsGallery lives in recaps/. Same minimal-surface
+// pattern as EventThread — one named import, no shared state. isOwner is
+// derived locally from user?.id === flyer.user_id (already computed as isOwner).
+import { RecapsGallery } from "@/features/recaps/components/recaps-gallery";
+import type { LayoutFlyer, NearbyFlyer } from "../types/canvas.types";
+
+// Bookmark icon — filled when saved
+function BookmarkIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+function computeDaysRemaining(expiresAt: string): number | null {
+  const expiryDate = new Date(expiresAt);
+  if (isNaN(expiryDate.getTime())) return null;
+  const now = new Date();
+  const diffMs = expiryDate.getTime() - now.getTime();
+  return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+}
+
+interface CreatorInfo {
+  username: string;
+  avatar_url: string | null;
+}
 
 interface FlyerDetailModalProps {
   flyer: LayoutFlyer;
+  allFlyers: NearbyFlyer[];
   onClose: () => void;
+  onFlyerSelect?: (flyer: NearbyFlyer) => void;
 }
 
-export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
+export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: FlyerDetailModalProps) {
+  const { user } = useAuth();
+  const [saved, setSaved] = useState(false);
+  const [savingInProgress, setSavingInProgress] = useState(false);
+  const [savedFeedback, setSavedFeedback] = useState(false);
+  const [creator, setCreator] = useState<CreatorInfo | null>(null);
+  const [viewCount, setViewCount] = useState<number>(0);
+  const [shareToast, setShareToast] = useState(false);
+  const [copyToast, setCopyToast] = useState(false);
+  const [reportToast, setReportToast] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [extraImages, setExtraImages] = useState<FlyerExtraImage[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [invitationEnabled, setInvitationEnabled] = useState(false);
+  const [myInvite, setMyInvite] = useState<QrInvite | null>(null);
+  const [showQrPasscode, setShowQrPasscode] = useState(false);
+  const [showQrDisplay, setShowQrDisplay] = useState(false);
+  const [qrResult, setQrResult] = useState<GenerateInviteResult | null>(null);
+  const [showThread, setShowThread] = useState(false);
+  const [showRecaps, setShowRecaps] = useState(false);
+  const viewTrackedRef = useRef(false);
+
+  const masHoyFlyers = useMasHoy(flyer.id, allFlyers, flyer.event_date ?? null);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+
+  const daysRemaining = useMemo(() => {
+    if (!flyer.expires_at) return null;
+    return computeDaysRemaining(flyer.expires_at);
+  }, [flyer.expires_at]);
+
+  const allImages = useMemo(
+    () => [flyer.image_url, ...extraImages.map((e) => e.image_url)],
+    [flyer.image_url, extraImages]
+  );
+
+  const hasExtraContent = !!(flyer.description || flyer.social_copy);
+
+  const handleCarouselScroll = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    setCarouselIndex(Math.round(el.scrollLeft / el.clientWidth));
+  }, []);
+
+  const navigateCarousel = useCallback((dir: -1 | 1) => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const next = Math.max(0, Math.min(allImages.length - 1, carouselIndex + dir));
+    el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+    setCarouselIndex(next);
+  }, [carouselIndex, allImages.length]);
+
+  // Track view
+  useEffect(() => {
+    if (viewTrackedRef.current) return;
+    const timer = setTimeout(() => {
+      viewTrackedRef.current = true;
+      trackFlyerView(flyer.id);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [flyer.id]);
+
+  useEffect(() => {
+    getFlyerViewCount(flyer.id).then(setViewCount);
+  }, [flyer.id]);
+
+  useEffect(() => {
+    if (!user || !flyer.id) return;
+    isFlyerSaved(flyer.id).then(setSaved);
+  }, [user, flyer.id]);
+
+  useEffect(() => {
+    if (!flyer.user_id) { setCreator(null); return; }
+    getFlyerCreator(flyer.user_id).then((data) => {
+      if (data) setCreator({ username: data.username, avatar_url: data.avatar_url });
+    });
+  }, [flyer.user_id]);
+
+  useEffect(() => {
+    getFlyerExtraImages(flyer.id).then(setExtraImages).catch(() => {});
+  }, [flyer.id]);
+
+  useEffect(() => {
+    getInvitationStatus(flyer.id)
+      .then((s) => {
+        if (!s) return;
+        setInvitationEnabled(s.enabled);
+        if (s.enabled && user) {
+          getMyInviteForFlyer(flyer.id).then(setMyInvite).catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }, [flyer.id, user]);
+
+  const handleQrButtonClick = useCallback(() => {
+    if (myInvite) {
+      setQrResult({
+        qr_token: myInvite.qr_token,
+        display_name: myInvite.display_name,
+        phone: myInvite.phone,
+        flyer_title: flyer.title,
+        already_existed: true,
+      });
+      setShowQrDisplay(true);
+    } else {
+      setShowQrPasscode(true);
+    }
+  }, [myInvite, flyer.title]);
+
+  const handleQrVerify = useCallback(async (passcode: string, displayName: string, phone: string | null) => {
+    const result = await verifyAndGetInvite(flyer.id, passcode, displayName, phone);
+    setMyInvite({ id: "", flyer_id: flyer.id, user_id: user?.id ?? "", qr_token: result.qr_token, display_name: result.display_name, phone, checked_in: false, checked_in_at: null, created_at: "" });
+    setQrResult({ ...result, phone, flyer_title: flyer.title ?? "" });
+    setShowQrPasscode(false);
+    setShowQrDisplay(true);
+  }, [flyer.id, flyer.title, user]);
+
+  const isOwner = user?.id === flyer.user_id;
+
+  const handleToggleSave = useCallback(async () => {
+    if (savingInProgress) return;
+
+    if (!user) {
+      usePendingActionStore.getState().setPending({ kind: "save-flyer", flyerId: flyer.id });
+      return;
+    }
+
+    setSavingInProgress(true);
+    try {
+      const newState = await toggleSaveFlyer(flyer.id);
+      setSaved(newState);
+      if (newState) {
+        setSavedFeedback(true);
+        setTimeout(() => setSavedFeedback(false), 1200);
+      }
+    } finally {
+      setSavingInProgress(false);
+    }
+  }, [user, flyer.id, savingInProgress]);
+
+  const handleShare = useCallback(async () => {
+    const shareData = {
+      title: flyer.title || "Check out this event on Caves",
+      text: flyer.social_copy || "Found this on Caves — discover events near you!",
+      url: `${window.location.origin}/flyer/${flyer.id}`,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch { /* user cancelled */ }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        setShareToast(true);
+        setTimeout(() => setShareToast(false), 2000);
+      } catch { /* clipboard unavailable */ }
+    }
+  }, [flyer.id, flyer.title, flyer.social_copy]);
+
+  const handleCopySocialCopy = useCallback(async () => {
+    if (!flyer.social_copy) return;
+    try {
+      await navigator.clipboard.writeText(flyer.social_copy);
+      setCopyToast(true);
+      setTimeout(() => setCopyToast(false), 2000);
+    } catch { /* clipboard unavailable */ }
+  }, [flyer.social_copy]);
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (lightboxIndex !== null) { setLightboxIndex(null); return; }
+        onClose();
+      }
+      if (lightboxIndex !== null) {
+        if (e.key === "ArrowLeft") setLightboxIndex((i) => Math.max(0, (i ?? 0) - 1));
+        if (e.key === "ArrowRight") setLightboxIndex((i) => Math.min(allImages.length - 1, (i ?? 0) + 1));
+        return;
+      }
+      if (e.key === "ArrowLeft") navigateCarousel(-1);
+      if (e.key === "ArrowRight") navigateCarousel(1);
     },
-    [onClose]
+    [onClose, lightboxIndex, allImages.length, navigateCarousel]
   );
 
   useEffect(() => {
@@ -25,73 +251,526 @@ export function FlyerDetailModal({ flyer, onClose }: FlyerDetailModalProps) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex flex-col safe-area-bottom"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: 0.25 }}
+      style={{ willChange: "opacity" }}
     >
-      {/* Backdrop */}
-      <motion.div
-        className="absolute inset-0 bg-black/85 backdrop-blur-md"
+      {/* Backdrop — static, no blur animation */}
+      <div
+        className="absolute inset-0 bg-black/80"
         onClick={onClose}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
       />
 
-      {/* Content */}
-      <motion.div
-        className="relative z-10 flex flex-col items-center max-w-[500px] w-full"
-        initial={{ scale: 0.7, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.7, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      {/* Close X */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 z-30 w-10 h-10 flex items-center justify-center rounded-full bg-cave-rock/80 text-cave-fog hover:text-cave-white transition-colors safe-area-top"
+        aria-label="Close"
       >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute -top-2 -right-2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-cave-black/80 border border-cave-ash/40 text-cave-fog hover:text-neon-green hover:border-neon-green/50 transition-colors"
-          aria-label="Close flyer detail"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+
+      {/* Scrollable content — centers when short, scrolls when tall */}
+      <div
+        className="relative z-10 flex-1 overflow-y-auto scrollbar-hide"
+        onClick={onClose}
+      >
+        <div className="min-h-full flex flex-col items-center justify-center px-8 py-16">
+          <motion.div
+            className="w-full max-w-[400px]"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ scale: 0.92, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.92, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 28 }}
+            style={{ willChange: "transform, opacity" }}
           >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+            {/* ── Image carousel ─────────────────────────── */}
+            <div className={`relative w-full overflow-hidden rounded-[16px] ${flyer.is_promoted ? "ring-1 ring-amber-500/30" : ""}`}>
+              {/* Slides */}
+              <div
+                ref={carouselRef}
+                onScroll={handleCarouselScroll}
+                className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+                style={{ scrollBehavior: "auto" }}
+              >
+                {allImages.map((src, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setLightboxIndex(i)}
+                    className="relative flex-none w-full snap-start"
+                    style={{ aspectRatio: "7 / 10" }}
+                  >
+                    <Image
+                      src={src}
+                      alt={i === 0 ? (flyer.title ?? "Event flyer") : `Foto ${i}`}
+                      fill
+                      sizes="400px"
+                      className="object-cover"
+                      loading={i === 0 ? "eager" : "lazy"}
+                      unoptimized
+                    />
+                  </button>
+                ))}
+              </div>
 
-        {/* Flyer image */}
-        <div
-          className="relative w-full overflow-hidden border border-cave-ash/60"
-          style={{ aspectRatio: "7 / 10" }}
-        >
-          <Image
-            src={flyer.image_url}
-            alt={flyer.title ?? "Event flyer"}
-            fill
-            sizes="500px"
-            className="object-cover"
-            unoptimized
-          />
+              {/* Promoted badge */}
+              {flyer.is_promoted && (
+                <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 backdrop-blur-sm">
+                  <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" className="text-amber-400">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                  <span className="text-[9px] text-amber-300">Promoted</span>
+                </div>
+              )}
+
+              {/* Arrow buttons + dot indicators — only when multiple images */}
+              {allImages.length > 1 && (
+                <>
+                  {/* Left arrow */}
+                  {carouselIndex > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); navigateCarousel(-1); }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 transition-colors"
+                      aria-label="Imagen anterior"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 18 9 12 15 6" />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* Right arrow */}
+                  {carouselIndex < allImages.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); navigateCarousel(1); }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 transition-colors"
+                      aria-label="Imagen siguiente"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* Dot indicators */}
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+                    {allImages.map((_, i) => (
+                      <div
+                        key={i}
+                        className={`rounded-full transition-all duration-200 ${
+                          i === carouselIndex
+                            ? "w-4 h-1.5 bg-white"
+                            : "w-1.5 h-1.5 bg-white/40"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Info line — zona y fecha, sin username */}
+            <div className="mt-2 px-1">
+              <EventInfoLine
+                zoneName={flyer.zone_name}
+                eventDate={flyer.event_date}
+              />
+            </div>
+
+            {/* ── GUARDAR — grande, centrado ──────────────── */}
+            <div className="mt-3 flex items-center gap-2">
+              <motion.button
+                onClick={handleToggleSave}
+                disabled={savingInProgress}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                className={`flex-1 h-[52px] flex items-center justify-center gap-2.5 rounded-full border-2 font-bold tracking-[0.2em] uppercase text-sm transition-colors disabled:opacity-50 ${
+                  saved
+                    ? "border-[#39FF14] text-[#39FF14] bg-[#39FF14]/8"
+                    : "border-cave-ash text-cave-white hover:border-cave-fog"
+                }`}
+                style={{ fontFamily: "var(--font-space-mono)" }}
+                aria-label={saved ? "Guardado" : "Guardar"}
+              >
+                <BookmarkIcon filled={saved} />
+                <span>{saved ? "GUARDADO" : "GUARDAR"}</span>
+              </motion.button>
+
+              <button
+                onClick={handleShare}
+                className="w-[52px] h-[52px] flex items-center justify-center rounded-full border-2 border-cave-ash text-cave-smoke hover:text-cave-white hover:border-cave-fog transition-colors"
+                aria-label="Compartir"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                  <polyline points="16 6 12 2 8 6" />
+                  <line x1="12" y1="2" x2="12" y2="15" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Creator link */}
+            {creator && (
+              <div className="mt-3 px-1">
+                <Link
+                  href={`/profile/${creator.username}`}
+                  className="text-sm text-cave-white hover:text-[#39FF14] transition-colors font-[family-name:var(--font-space-mono)]"
+                >
+                  @{creator.username}
+                </Link>
+              </div>
+            )}
+
+            {/* ── Attendance controls ─────────────────────── */}
+            <div className="mt-4">
+              <AttendanceControls
+                flyerId={flyer.id}
+                userId={user?.id}
+                onSignInRequest={() => {
+                  usePendingActionStore.getState().setPending({ kind: "save-flyer", flyerId: flyer.id });
+                }}
+              />
+            </div>
+
+            {/* ── QR Invitation button ────────────────────── */}
+            {invitationEnabled && !isOwner && (
+              <div className="mt-3">
+                <motion.button
+                  type="button"
+                  onClick={handleQrButtonClick}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className="w-full h-[48px] flex items-center justify-center gap-2.5 rounded-full bg-neon-green text-cave-black font-bold tracking-[0.15em] uppercase text-sm"
+                  style={{ fontFamily: "var(--font-space-mono)" }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="5" height="5" rx="1" /><rect x="16" y="3" width="5" height="5" rx="1" />
+                    <rect x="3" y="16" width="5" height="5" rx="1" />
+                    <path d="M21 16h-3a2 2 0 0 0-2 2v3" /><line x1="21" y1="21" x2="21" y2="21" />
+                    <line x1="12" y1="3" x2="12" y2="7" /><line x1="12" y1="12" x2="12" y2="12" />
+                    <line x1="3" y1="12" x2="7" y2="12" />
+                  </svg>
+                  {myInvite ? "Ver mi QR" : "Generar mi QR"}
+                </motion.button>
+              </div>
+            )}
+
+            {/* ── Extra content ───────────────────────────── */}
+            {hasExtraContent && (
+              <div className="mt-5 flex flex-col gap-5">
+                {flyer.description && (
+                  <div className="rounded-2xl bg-cave-stone/60 border border-cave-ash/40 px-4 py-4">
+                    <p className="text-[10px] tracking-[0.2em] text-cave-smoke uppercase mb-2 font-[family-name:var(--font-space-mono)]">
+                      Acerca del evento
+                    </p>
+                    <p className="text-sm leading-6 text-cave-fog font-[family-name:var(--font-inter)] line-clamp-3">
+                      {flyer.description}
+                    </p>
+                  </div>
+                )}
+
+                {flyer.social_copy && (
+                  <div className="rounded-2xl bg-cave-stone/60 border border-cave-ash/40 px-4 py-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] tracking-[0.2em] text-cave-smoke uppercase font-[family-name:var(--font-space-mono)]">
+                        Copy para compartir
+                      </p>
+                      <button
+                        onClick={handleCopySocialCopy}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cave-ash/60 hover:bg-cave-ash text-[10px] text-cave-fog hover:text-cave-white transition-colors font-[family-name:var(--font-space-mono)]"
+                      >
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                        Copiar
+                      </button>
+                    </div>
+                    <p className="text-sm leading-6 text-cave-fog font-[family-name:var(--font-inter)] whitespace-pre-wrap">
+                      {flyer.social_copy}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Conversación ────────────────────────────── */}
+            <div className="mt-5">
+              <button
+                type="button"
+                onClick={() => setShowThread((prev) => !prev)}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cave-fog">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-cave-fog font-[family-name:var(--font-space-mono)]">
+                    Conversación
+                  </span>
+                </div>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`text-cave-smoke transition-transform duration-200 ${showThread ? "rotate-180" : ""}`}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+
+              <AnimatePresence>
+                {showThread && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ type: "spring", stiffness: 280, damping: 28 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-3 px-1">
+                      <EventThread
+                        subjectType="flyer"
+                        subjectId={flyer.id}
+                        currentUserId={user?.id}
+                        onSignInRequest={() => {
+                          usePendingActionStore.getState().setPending({ kind: "save-flyer", flyerId: flyer.id });
+                        }}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* ── Recaps ──────────────────────────────────────── */}
+            {/* Cross-feature import: RecapsGallery from recaps/. isOwner
+                allows the flyer creator to delete any recap; regular users
+                can only delete their own uploads (enforced by RLS + UI). */}
+            <div className="mt-5">
+              <button
+                type="button"
+                onClick={() => setShowRecaps((prev) => !prev)}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-cave-fog"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-cave-fog font-[family-name:var(--font-space-mono)]">
+                    Recaps
+                  </span>
+                </div>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`text-cave-smoke transition-transform duration-200 ${showRecaps ? "rotate-180" : ""}`}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+
+              <AnimatePresence>
+                {showRecaps && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ type: "spring", stiffness: 280, damping: 28 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-3 px-1">
+                      <RecapsGallery flyerId={flyer.id} isOwner={isOwner} />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Más hoy carousel */}
+            <MasHoyCarousel
+              flyers={masHoyFlyers}
+              onFlyerSelect={onFlyerSelect ?? (() => {})}
+            />
+
+          </motion.div>
         </div>
+      </div>
 
-        {/* Title */}
-        {flyer.title && (
-          <p className="mt-3 text-cave-white font-mono text-sm text-center leading-tight">
-            {flyer.title}
-          </p>
+      {/* QR modals */}
+      <AnimatePresence>
+        {showQrPasscode && (
+          <QrPasscodeModal
+            flyerTitle={flyer.title}
+            onVerify={handleQrVerify}
+            onClose={() => setShowQrPasscode(false)}
+          />
         )}
-      </motion.div>
+      </AnimatePresence>
+      <AnimatePresence>
+        {showQrDisplay && qrResult && (
+          <QrDisplayModal
+            qrToken={qrResult.qr_token}
+            displayName={qrResult.display_name}
+            flyerTitle={qrResult.flyer_title ?? null}
+            alreadyExisted={qrResult.already_existed}
+            onClose={() => setShowQrDisplay(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Lightbox — full screen image viewer with navigation */}
+      <AnimatePresence>
+        {lightboxIndex !== null && (
+          <motion.div
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/95"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setLightboxIndex(null)}
+          >
+            {/* Image — tap anywhere closes; pointer-events-none lets click pass to parent */}
+            <div className="relative w-full h-full pointer-events-none">
+              <Image
+                src={allImages[lightboxIndex]}
+                alt="Event photo"
+                fill
+                className="object-contain"
+                unoptimized
+              />
+            </div>
+
+            {/* Prev */}
+            {lightboxIndex > 0 && (
+              <button
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => Math.max(0, (i ?? 0) - 1)); }}
+                aria-label="Anterior"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+            )}
+
+            {/* Next */}
+            {lightboxIndex < allImages.length - 1 && (
+              <button
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex((i) => Math.min(allImages.length - 1, (i ?? 0) + 1)); }}
+                aria-label="Siguiente"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            )}
+
+            {/* Bottom bar — dots + close button, thumb-reachable */}
+            <div
+              className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Dot indicators */}
+              <div className="flex items-center gap-1.5">
+                {allImages.length > 1 && allImages.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`rounded-full transition-all duration-200 ${
+                      i === lightboxIndex ? "w-4 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/40"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Close — bottom right, fácil de alcanzar con el pulgar */}
+              <button
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm border border-white/20"
+                onClick={() => setLightboxIndex(null)}
+                aria-label="Cerrar"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Toasts */}
+      {shareToast && (
+        <motion.div
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full bg-cave-rock border border-cave-ash text-xs text-cave-white font-[family-name:var(--font-space-mono)]"
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+        >
+          Link copied to clipboard
+        </motion.div>
+      )}
+      {copyToast && (
+        <motion.div
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full bg-cave-rock border border-cave-ash text-xs text-cave-white font-[family-name:var(--font-space-mono)]"
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+        >
+          Copy copiado ✓
+        </motion.div>
+      )}
+      {reportToast && (
+        <motion.div
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full bg-cave-rock border border-cave-ash text-xs text-cave-white font-[family-name:var(--font-space-mono)]"
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+        >
+          Report submitted. Thank you.
+        </motion.div>
+      )}
+
+      <AnimatePresence>
+        {showReport && (
+          <ReportModal
+            flyerId={flyer.id}
+            onClose={() => setShowReport(false)}
+            onReported={() => {
+              setShowReport(false);
+              setReportToast(true);
+              setTimeout(() => setReportToast(false), 2000);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

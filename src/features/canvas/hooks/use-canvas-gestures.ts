@@ -10,7 +10,9 @@ function clampScale(scale: number): number {
   return Math.min(CANVAS_LIMITS.MAX_SCALE, Math.max(CANVAS_LIMITS.MIN_SCALE, scale));
 }
 
-export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
+export function useCanvasGestures(
+  initialTransform?: Partial<CanvasTransform>,
+) {
   const [isDragging, setIsDragging] = useState(false);
 
   const transformRef = useRef<CanvasTransform>({
@@ -19,9 +21,9 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
     scale: initialTransform?.scale ?? 1,
   });
 
-  const springX = useSpring(transformRef.current.x, { stiffness: 300, damping: 30 });
-  const springY = useSpring(transformRef.current.y, { stiffness: 300, damping: 30 });
-  const springScale = useSpring(transformRef.current.scale, { stiffness: 300, damping: 30 });
+  const springX = useSpring(transformRef.current.x, { stiffness: 400, damping: 35 });
+  const springY = useSpring(transformRef.current.y, { stiffness: 400, damping: 35 });
+  const springScale = useSpring(transformRef.current.scale, { stiffness: 400, damping: 35 });
 
   const updateTransform = useCallback(
     (updates: Partial<CanvasTransform>) => {
@@ -69,17 +71,41 @@ export function useCanvasGestures(initialTransform?: Partial<CanvasTransform>) {
       },
       onWheel: ({ delta: [, dy], event }) => {
         event.preventDefault();
-        const zoomFactor = 1 - dy * 0.001;
-        const newScale = transformRef.current.scale * zoomFactor;
-        updateTransform({ scale: newScale });
+        const { x, y, scale } = transformRef.current;
+        const zoomFactor = 1 - dy * 0.0015;
+        const newScale = clampScale(scale * zoomFactor);
+        if (newScale === scale) return;
+
+        // Zoom toward cursor position
+        const cursorX = (event as WheelEvent).clientX;
+        const cursorY = (event as WheelEvent).clientY;
+        const ratio = 1 - newScale / scale;
+
+        updateTransform({
+          x: x + (cursorX - x) * ratio,
+          y: y + (cursorY - y) * ratio,
+          scale: newScale,
+        });
       },
-      onPinch: ({ offset: [scale] }) => {
-        updateTransform({ scale });
+      onPinch: ({ offset: [scale], origin: [ox, oy] }) => {
+        const prev = transformRef.current;
+        const newScale = clampScale(scale);
+        if (newScale === prev.scale) return;
+
+        // Zoom toward pinch midpoint
+        const ratio = 1 - newScale / prev.scale;
+
+        updateTransform({
+          x: prev.x + (ox - prev.x) * ratio,
+          y: prev.y + (oy - prev.y) * ratio,
+          scale: newScale,
+        });
       },
     },
     {
       drag: {
         filterTaps: true,
+        threshold: 3,
       },
       wheel: {
         eventOptions: { passive: false },

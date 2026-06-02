@@ -1,14 +1,11 @@
-"use server";
-
-import { createClient } from "@/shared/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { createClient } from "@/shared/lib/supabase/client";
 import type {
   LoginCredentials,
   SignupCredentials,
 } from "@/features/auth/types/auth.types";
 
 export async function signIn(credentials: LoginCredentials) {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { error } = await supabase.auth.signInWithPassword({
     email: credentials.email,
@@ -19,37 +16,43 @@ export async function signIn(credentials: LoginCredentials) {
     return { error: error.message };
   }
 
-  redirect("/");
+  return { error: null };
 }
 
 export async function signUp(credentials: SignupCredentials) {
-  const supabase = await createClient();
+  const supabase = createClient();
 
-  const { data, error } = await supabase.auth.signUp({
+  const { error } = await supabase.auth.signUp({
     email: credentials.email,
     password: credentials.password,
+    options: {
+      data: {
+        username: credentials.username,
+        terms_version: "1.0",
+      },
+    },
   });
 
   if (error) {
     return { error: error.message };
   }
 
-  if (data.user) {
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: data.user.id,
-      username: credentials.username,
-    });
+  return { error: null };
+}
 
-    if (profileError) {
-      return { error: profileError.message };
-    }
-  }
-
-  return { error: null, requiresConfirmation: true };
+export async function signInWithGoogle() {
+  const supabase = createClient();
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    },
+  });
+  if (error) return { error: error.message };
+  return { error: null };
 }
 
 export async function signOut() {
-  const supabase = await createClient();
+  const supabase = createClient();
   await supabase.auth.signOut();
-  redirect("/");
 }

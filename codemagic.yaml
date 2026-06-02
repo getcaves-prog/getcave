@@ -1,0 +1,50 @@
+workflows:
+  ios-app-store:
+    name: iOS — App Store Release
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Cave ASC Key
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.getcaves.app
+      node: 20.11.0
+    scripts:
+      - name: Install dependencies
+        script: npm install
+      - name: Add iOS platform
+        script: npx cap add ios || true
+      - name: Sync Capacitor
+        script: npx cap sync ios
+      - name: Add iOS privacy permissions
+        working_directory: ios/App
+        script: |
+          PLIST="App/Info.plist"
+          set_plist() {
+            /usr/libexec/PlistBuddy -c "Add :$1 string $2" "$PLIST" 2>/dev/null || \
+            /usr/libexec/PlistBuddy -c "Set :$1 $2" "$PLIST"
+          }
+
+          set_plist NSCameraUsageDescription "Usamos la cámara para escanear códigos QR de invitaciones y check-ins."
+          set_plist NSLocationWhenInUseUsageDescription "Usamos tu ubicación para mostrar eventos cercanos y mejorar recomendaciones dentro de la app."
+          set_plist NSPhotoLibraryUsageDescription "Usamos tu fototeca cuando elegís imágenes para publicar contenido dentro de la app."
+      - name: Set build number
+        working_directory: ios/App
+        script: |
+          BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number "com.getcaves.app") + 1))
+          xcrun agvtool new-version -all "$BUILD_NUMBER"
+      - name: Build IPA
+        script: |
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --workspace ios/App/App.xcworkspace \
+            --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false

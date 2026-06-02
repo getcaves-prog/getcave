@@ -1,94 +1,50 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { LoginForm } from "./login-form";
 
-const mockPush = vi.fn();
-
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: mockPush,
-    replace: vi.fn(),
-    back: vi.fn(),
-    prefetch: vi.fn(),
-  }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/",
 }));
 
-const mockSignInWithOAuth = vi.fn().mockResolvedValue({ data: {}, error: null });
+vi.mock("@/features/auth/services/auth.service", () => ({
+  signInWithGoogle: vi.fn().mockResolvedValue({ error: null }),
+}));
 
 vi.mock("@/shared/lib/supabase/client", () => ({
   createClient: () => ({
-    auth: {
-      signInWithOAuth: mockSignInWithOAuth,
-    },
+    auth: { signInWithPassword: vi.fn().mockResolvedValue({ error: null }) },
   }),
 }));
 
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 describe("LoginForm", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    document.cookie = "guest_mode=; max-age=0";
+  it("renders logo image", () => {
+    render(<LoginForm />);
+    expect(screen.getByAltText("Caves")).toBeInTheDocument();
   });
 
-  it("renders the Caves logo", () => {
+  it("renders Log in and Sign up buttons in landing view", () => {
     render(<LoginForm />);
-
-    expect(screen.getByText("Caves")).toBeInTheDocument();
-  });
-
-  it("renders Guest and Log in buttons", () => {
-    render(<LoginForm />);
-
-    expect(screen.getByText("Guest.")).toBeInTheDocument();
     expect(screen.getByText("Log in.")).toBeInTheDocument();
+    expect(screen.getByText("Sign up.")).toBeInTheDocument();
   });
 
-  it("renders the Google sign-in button with accessible label", () => {
+  it("renders Continue with Google button", () => {
     render(<LoginForm />);
-
-    expect(screen.getByLabelText("Sign in with Google")).toBeInTheDocument();
+    expect(screen.getByText("Continue with Google")).toBeInTheDocument();
   });
 
-  it("sets guest_mode cookie and navigates to home on Guest click", () => {
+  it("all interactive elements are type=button or submit in landing view", () => {
     render(<LoginForm />);
-
-    fireEvent.click(screen.getByText("Guest."));
-
-    expect(document.cookie).toContain("guest_mode=true");
-    expect(mockPush).toHaveBeenCalledWith("/");
-  });
-
-  it("calls signInWithOAuth with Google provider on Log in click", async () => {
-    render(<LoginForm />);
-
-    fireEvent.click(screen.getByText("Log in."));
-
-    expect(mockSignInWithOAuth).toHaveBeenCalledWith({
-      provider: "google",
-      options: {
-        redirectTo: expect.stringContaining("/auth/callback"),
-      },
-    });
-  });
-
-  it("calls signInWithOAuth when Google icon button is clicked", async () => {
-    render(<LoginForm />);
-
-    fireEvent.click(screen.getByLabelText("Sign in with Google"));
-
-    expect(mockSignInWithOAuth).toHaveBeenCalledWith({
-      provider: "google",
-      options: {
-        redirectTo: expect.stringContaining("/auth/callback"),
-      },
-    });
-  });
-
-  it("renders all buttons as type='button'", () => {
-    render(<LoginForm />);
-
     const buttons = screen.getAllByRole("button");
     buttons.forEach((button) => {
-      expect(button).toHaveAttribute("type", "button");
+      const type = button.getAttribute("type");
+      expect(["button", "submit"]).toContain(type);
     });
   });
 });

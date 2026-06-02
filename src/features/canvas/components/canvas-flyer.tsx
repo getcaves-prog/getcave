@@ -1,83 +1,113 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import Image from "next/image";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { getOptimizedImageUrl } from "@/shared/lib/utils/image";
 import type { LayoutFlyer } from "../types/canvas.types";
 
-const DOUBLE_TAP_DELAY = 300;
+const IMAGE_LOAD_TIMEOUT_MS = 8_000;
 
 interface CanvasFlyerProps {
   flyer: LayoutFlyer;
-  onDoubleTap: () => void;
+  onImageLoad?: () => void;
 }
 
-export function CanvasFlyer({ flyer, onDoubleTap }: CanvasFlyerProps) {
+export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
   const [imageError, setImageError] = useState(false);
-  const lastTapRef = useRef(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [retried, setRetried] = useState(false);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleClick = useCallback(() => {
-    const now = Date.now();
-    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
-      lastTapRef.current = 0;
-      onDoubleTap();
-    } else {
-      lastTapRef.current = now;
+  // Serve optimized thumbnail — 2x the display size for retina, quality 60
+  const optimizedUrl = useMemo(
+    () => getOptimizedImageUrl(flyer.image_url, flyer.layout_width * 2, 60),
+    [flyer.image_url, flyer.layout_width],
+  );
+
+  const [imageSrc, setImageSrc] = useState(optimizedUrl);
+
+  const clearLoadTimeout = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
-  }, [onDoubleTap]);
+  }, []);
+
+  useEffect(() => {
+    if (imageLoaded || imageError) return;
+
+    timeoutRef.current = setTimeout(() => {
+      if (!retried) {
+        // Retry with original URL (no transforms) as fallback
+        setRetried(true);
+        setImageSrc(flyer.image_url);
+      } else {
+        setImageError(true);
+      }
+    }, IMAGE_LOAD_TIMEOUT_MS);
+
+    return clearLoadTimeout;
+  }, [imageSrc, imageLoaded, imageError, retried, flyer.image_url, clearLoadTimeout]);
+
+  const handleImageLoad = useCallback(() => {
+    clearLoadTimeout();
+    setImageLoaded(true);
+    onImageLoad?.();
+  }, [onImageLoad, clearLoadTimeout]);
+
+  // Handle images loaded from cache before onLoad listener attached
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth > 0 && !imageLoaded) {
+      handleImageLoad();
+    }
+  });
+
+  const handleImageError = useCallback(() => {
+    clearLoadTimeout();
+    if (!retried) {
+      // Fallback to original URL without transforms
+      setRetried(true);
+      setImageSrc(flyer.image_url);
+    } else {
+      setImageError(true);
+    }
+  }, [retried, flyer.image_url, clearLoadTimeout]);
 
   return (
     <div
-      className="absolute group transition-transform duration-200 hover:z-10 hover:scale-[1.02]"
+      className={`absolute select-none pointer-events-none ${flyer.is_promoted ? "ring-1 ring-amber-500/30" : ""}`}
       style={{
         left: flyer.layout_x,
         top: flyer.layout_y,
         width: flyer.layout_width,
         height: flyer.layout_height,
+        transform: "translateZ(0)",
+        backfaceVisibility: "hidden",
       }}
-      onClick={handleClick}
     >
-      <div
-        className={`
-          relative w-full h-full overflow-hidden
-          border transition-all duration-200
-          border-cave-ash/60
-          group-hover:border-cave-smoke group-hover:shadow-[0_0_10px_rgba(57,255,20,0.15)]
-        `}
-        style={{
-          boxShadow:
-            "0 2px 8px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255,255,255,0.03)",
-        }}
-      >
-        {imageError ? (
-          <div className="w-full h-full bg-cave-stone flex items-center justify-center">
-            <span className="text-cave-fog text-sm font-mono text-center px-4">
-              {flyer.title ?? "Event Flyer"}
-            </span>
-          </div>
-        ) : (
-          <Image
-            src={flyer.image_url}
-            alt={flyer.title ?? "Event flyer"}
-            fill
-            sizes={`${flyer.layout_width}px`}
-            className="object-cover"
-            onError={() => setImageError(true)}
-            unoptimized
-          />
-        )}
-
-        {/* Title overlay at the bottom */}
-        {flyer.title && !imageError && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 pt-6">
-            <p className="text-cave-white text-[10px] font-mono truncate leading-tight">
-              {flyer.title}
-            </p>
-          </div>
-        )}
-
-        {/* Subtle worn-poster edge effect */}
-        <div className="absolute inset-0 pointer-events-none border border-white/[0.02]" />
-      </div>
+      {imageError ? (
+        <div className="w-full h-full bg-cave-stone/50 rounded-sm" />
+      ) : (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          ref={imgRef}
+          src={imageSrc}
+          alt={flyer.title ?? "Event flyer"}
+          width={flyer.layout_width}
+          height={flyer.layout_height}
+          className="w-full h-full object-cover pointer-events-none"
+          style={{
+            opacity: imageLoaded ? 1 : 0,
+            transition: "opacity 0.15s",
+          }}
+          draggable={false}
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+          loading="eager"
+          decoding="async"
+        />
+      )}
     </div>
   );
 }
