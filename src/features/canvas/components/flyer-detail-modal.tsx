@@ -23,6 +23,10 @@ import type { GenerateInviteResult, QrInvite } from "@/features/invitations/type
 // surface (one import, no shared state). Alternative (route-based) would require
 // significant routing changes — not justified at MVP scale. See engram note.
 import { EventThread } from "@/features/conversations/components/event-thread";
+// Cross-feature import: RecapsGallery lives in recaps/. Same minimal-surface
+// pattern as EventThread — one named import, no shared state. isOwner is
+// derived locally from user?.id === flyer.user_id (already computed as isOwner).
+import { RecapsGallery } from "@/features/recaps/components/recaps-gallery";
 import type { LayoutFlyer, NearbyFlyer } from "../types/canvas.types";
 
 // Bookmark icon — filled when saved
@@ -73,6 +77,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
   const [showQrDisplay, setShowQrDisplay] = useState(false);
   const [qrResult, setQrResult] = useState<GenerateInviteResult | null>(null);
   const [showThread, setShowThread] = useState(false);
+  const [showRecaps, setShowRecaps] = useState(false);
   const viewTrackedRef = useRef(false);
 
   const masHoyFlyers = useMasHoy(flyer.id, allFlyers, flyer.event_date ?? null);
@@ -547,6 +552,68 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                           usePendingActionStore.getState().setPending({ kind: "save-flyer", flyerId: flyer.id });
                         }}
                       />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* ── Recaps ──────────────────────────────────────── */}
+            {/* Cross-feature import: RecapsGallery from recaps/. isOwner
+                allows the flyer creator to delete any recap; regular users
+                can only delete their own uploads (enforced by RLS + UI). */}
+            <div className="mt-5">
+              <button
+                type="button"
+                onClick={() => setShowRecaps((prev) => !prev)}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-cave-fog"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-cave-fog font-[family-name:var(--font-space-mono)]">
+                    Recaps
+                  </span>
+                </div>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`text-cave-smoke transition-transform duration-200 ${showRecaps ? "rotate-180" : ""}`}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+
+              <AnimatePresence>
+                {showRecaps && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ type: "spring", stiffness: 280, damping: 28 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-3 px-1">
+                      <RecapsGallery flyerId={flyer.id} isOwner={isOwner} />
                     </div>
                   </motion.div>
                 )}

@@ -10,7 +10,12 @@ import { listMembers } from "../services/community.service";
 // Cross-feature import: EventThread lives in conversations/; same pattern as
 // flyer-detail-modal.tsx. Minimal surface — one named import.
 import { EventThread } from "@/features/conversations/components/event-thread";
-import type { MemberWithProfile, Flyer } from "../types/community.types";
+// Cross-feature import: RecapsGallery lives in recaps/; same minimal-surface
+// pattern as EventThread. isOwner not applicable in community context — gallery
+// is read-only for non-uploaders; community admins cannot delete others' recaps
+// at the community level (delete is per-flyer). See decision note below.
+import { BroadcastChannel } from "./broadcast-channel";
+import type { MemberWithProfile, Flyer, MemberRole } from "../types/community.types";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -531,33 +536,57 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
         </AnimatePresence>
       </div>
 
-      {/* ── Difusión — mount point (next task) ───────────────────────── */}
+      {/* ── Difusión ──────────────────────────────────────────────────── */}
       <div className="h-px bg-cave-ash/20 mx-5" />
       <div className="px-5 py-5">
         <SectionHeading>Difusión</SectionHeading>
-        {/* Difusión channel mounts here (next task).
-            Use <BroadcastChannel communityId={community.id} /> from
-            src/features/communities/components/broadcast-channel.tsx
-            Wire to useBroadcasts(community.id) hook already implemented. */}
-        <div className="py-4 rounded-xl border border-cave-ash/20 flex items-center justify-center">
-          <p className="text-xs text-cave-ash font-[family-name:var(--font-space-mono)]">
-            Difusión — próximamente
-          </p>
-        </div>
+        {/* Admin-gating is handled inside BroadcastChannel via the role prop.
+            role is derived from community.myMembership — null for anonymous/
+            non-members, 'member' for regular members, 'owner'/'admin' for admins.
+            Only owner/admin see the composer; everyone sees the read-only list. */}
+        <BroadcastChannel
+          communityId={community.id}
+          role={(community.myMembership?.role as MemberRole) ?? null}
+        />
       </div>
 
-      {/* ── Recaps — mount point (next task) ─────────────────────────── */}
+      {/* ── Recaps ────────────────────────────────────────────────────── */}
+      {/* DECISION: The community-level Recaps stub is NOT wired to RecapsGallery.
+          RecapsGallery requires a flyerId (per-event media), not a communityId.
+          Showing recaps from "the most recent past event" would require picking
+          a single flyerId heuristically, which is fragile and confusing (which
+          event? what if there are none?). The clean pattern is: recaps live on
+          each event detail (FlyerDetailModal). This stub shows a short note
+          directing users to individual events. If a community-level recap feed
+          is needed in the future, a dedicated service/hook that aggregates
+          event_media by community_id should be built. */}
       <div className="h-px bg-cave-ash/20 mx-5" />
       <div className="px-5 py-5">
         <SectionHeading>Recaps</SectionHeading>
-        {/* Recaps (event media / photo recap gallery) mounts here (next task).
-            Use <RecapsGallery communityId={community.id} /> from
-            src/features/recaps/components/recaps-gallery.tsx
-            Wire to useRecaps(flyerId) hook already implemented. */}
-        <div className="py-4 rounded-xl border border-cave-ash/20 flex items-center justify-center">
-          <p className="text-xs text-cave-ash font-[family-name:var(--font-space-mono)]">
-            Recaps — próximamente
+        <div className="py-5 flex flex-col items-center gap-3 rounded-2xl border border-cave-ash/20 bg-cave-stone/20">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-cave-ash"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+          </svg>
+          <p className="text-xs text-cave-ash font-[family-name:var(--font-space-mono)] text-center px-4">
+            Los recaps de cada evento están en su detalle
           </p>
+          {pastEvents.length > 0 && (
+            <p className="text-[10px] text-cave-ash/60 font-[family-name:var(--font-space-mono)] text-center px-4">
+              Abrí un evento pasado para ver y subir fotos
+            </p>
+          )}
         </div>
       </div>
 
