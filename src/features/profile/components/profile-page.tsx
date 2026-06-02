@@ -14,6 +14,11 @@ import {
 import { ProfileEditModal } from "@/features/profile/components/profile-edit-modal";
 import { MyFlyerCard } from "@/features/profile/components/my-flyer-card";
 import { AttendeeList } from "@/features/invitations/components/attendee-list";
+import { MyCommunityList } from "@/features/profile/components/my-communities-list";
+import { MyEventsList } from "@/features/profile/components/my-events-list";
+import { MyConversationsList } from "@/features/profile/components/my-conversations-list";
+import { ActivityFeed } from "@/features/profile/components/activity-feed";
+import { useMyActivity } from "@/features/profile/hooks/use-my-activity";
 import { getMyFlyers } from "@/features/profile/services/my-flyers.service";
 import { getSavedFlyers } from "@/features/canvas/services/favorites.service";
 import type { Tables } from "@/shared/types/database.types";
@@ -31,7 +36,7 @@ interface UserStats {
   total_saves: number;
 }
 
-type Tab = "flyers" | "my-flyers" | "saved";
+type Tab = "flyers" | "my-flyers" | "saved" | "communities" | "events" | "conversations" | "activity";
 
 interface ProfilePageProps {
   username: string;
@@ -55,6 +60,9 @@ export function ProfilePage({ username }: ProfilePageProps) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const isOwnProfile = user?.id === profile?.id;
+
+  // ── Community retention data — loaded only for own profile ────────────────
+  const activityData = useMyActivity(isOwnProfile ? user?.id : undefined);
 
   useEffect(() => {
     if (!user) return;
@@ -336,40 +344,103 @@ export function ProfilePage({ username }: ProfilePageProps) {
         </div>
       )}
 
-      {/* Stats as tabs — clickable to switch content */}
+      {/* Tabs — own profile only */}
       {isOwnProfile && (
-        <div className="grid grid-cols-2 border-y border-cave-ash mx-4 mb-4">
-          <button
-            onClick={() => setActiveTab("my-flyers")}
-            className={`flex flex-col items-center py-4 transition-colors ${
-              activeTab === "my-flyers" ? "text-cave-white" : "text-cave-smoke hover:text-cave-fog"
-            }`}
-          >
-            <span className="text-lg font-[family-name:var(--font-space-mono)] font-bold">
-              {myFlyers.length}
-            </span>
-            <span className="text-xs font-[family-name:var(--font-space-mono)]">
-              Flyers
-            </span>
-            {activeTab === "my-flyers" && <div className="w-8 h-[2px] bg-cave-white rounded-full mt-2" />}
-          </button>
-          <button
-            onClick={() => setActiveTab("saved")}
-            className={`flex flex-col items-center py-4 border-l border-cave-ash transition-colors ${
-              activeTab === "saved" ? "text-cave-white" : "text-cave-smoke hover:text-cave-fog"
-            }`}
-          >
-            <span className="text-lg font-[family-name:var(--font-space-mono)] font-bold">
-              {savedFlyers.length}
-            </span>
-            <span className="text-xs font-[family-name:var(--font-space-mono)]">
-              Saved
-            </span>
-            {activeTab === "saved" && <div className="w-8 h-[2px] bg-cave-white rounded-full mt-2" />}
-          </button>
-        </div>
+        <>
+          {/* Row 1: Flyers + Saved (original stats) */}
+          <div className="grid grid-cols-2 border-y border-cave-ash mx-4 mb-0">
+            <button
+              onClick={() => setActiveTab("my-flyers")}
+              className={`flex flex-col items-center py-4 transition-colors ${
+                activeTab === "my-flyers" ? "text-cave-white" : "text-cave-smoke hover:text-cave-fog"
+              }`}
+            >
+              <span className="text-lg font-[family-name:var(--font-space-mono)] font-bold">
+                {myFlyers.length}
+              </span>
+              <span className="text-xs font-[family-name:var(--font-space-mono)]">
+                Flyers
+              </span>
+              {activeTab === "my-flyers" && <div className="w-8 h-[2px] bg-cave-white rounded-full mt-2" />}
+            </button>
+            <button
+              onClick={() => setActiveTab("saved")}
+              className={`flex flex-col items-center py-4 border-l border-cave-ash transition-colors ${
+                activeTab === "saved" ? "text-cave-white" : "text-cave-smoke hover:text-cave-fog"
+              }`}
+            >
+              <span className="text-lg font-[family-name:var(--font-space-mono)] font-bold">
+                {savedFlyers.length}
+              </span>
+              <span className="text-xs font-[family-name:var(--font-space-mono)]">
+                Guardados
+              </span>
+              {activeTab === "saved" && <div className="w-8 h-[2px] bg-cave-white rounded-full mt-2" />}
+            </button>
+          </div>
+
+          {/* Row 2: Community retention tabs — horizontal scroll */}
+          <div className="flex items-center gap-0 border-b border-cave-ash mx-4 mb-4 overflow-x-auto scrollbar-none">
+            {(
+              [
+                { id: "communities", label: "Comunidades", count: activityData.communities.length },
+                { id: "events", label: "Eventos", count: activityData.events.upcoming.length + activityData.events.past.length },
+                { id: "conversations", label: "Chats", count: activityData.conversations.length },
+                { id: "activity", label: "Actividad", count: null },
+              ] as const
+            ).map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`
+                    relative flex items-center gap-1.5 flex-shrink-0 px-3 py-3.5 text-xs font-[family-name:var(--font-space-mono)] transition-colors whitespace-nowrap
+                    ${isActive ? "text-[#39FF14]" : "text-cave-smoke hover:text-cave-fog"}
+                  `}
+                >
+                  {tab.label}
+                  {tab.count !== null && tab.count > 0 && (
+                    <span className={`text-[10px] px-1 py-0.5 rounded ${isActive ? "bg-[#39FF14]/15 text-[#39FF14]" : "bg-cave-ash/40 text-cave-smoke"}`}>
+                      {tab.count}
+                    </span>
+                  )}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#39FF14] rounded-t-full" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </>
       )}
 
+
+      {/* Community retention sections — own profile only */}
+      {isOwnProfile && activeTab === "communities" && (
+        <MyCommunityList
+          communities={activityData.communities}
+          loading={activityData.loading}
+        />
+      )}
+      {isOwnProfile && activeTab === "events" && (
+        <MyEventsList
+          events={activityData.events}
+          loading={activityData.loading}
+        />
+      )}
+      {isOwnProfile && activeTab === "conversations" && (
+        <MyConversationsList
+          conversations={activityData.conversations}
+          loading={activityData.loading}
+        />
+      )}
+      {isOwnProfile && activeTab === "activity" && (
+        <ActivityFeed
+          items={activityData.recentActivity}
+          loading={activityData.loading}
+        />
+      )}
 
       {/* Flyer grid / list */}
       {!isOwnProfile ? (
