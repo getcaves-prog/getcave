@@ -13,11 +13,20 @@ import { trackFlyerView, getFlyerViewCount } from "../services/views.service";
 import { ReportModal } from "./report-modal";
 import { EventInfoLine } from "./event-info-line";
 import { MasHoyCarousel } from "./mas-hoy-carousel";
+import { AttendanceControls } from "./attendance-controls";
 import { useMasHoy } from "../hooks/use-mas-hoy";
 import { QrPasscodeModal } from "@/features/invitations/components/qr-passcode-modal";
 import { QrDisplayModal } from "@/features/invitations/components/qr-display-modal";
 import { getInvitationStatus, getMyInviteForFlyer, verifyAndGetInvite } from "@/features/invitations/services/invitation.service";
 import type { GenerateInviteResult, QrInvite } from "@/features/invitations/types/invitation.types";
+// Cross-feature import: EventThread lives in conversations/; this is the minimal
+// surface (one import, no shared state). Alternative (route-based) would require
+// significant routing changes — not justified at MVP scale. See engram note.
+import { EventThread } from "@/features/conversations/components/event-thread";
+// Cross-feature import: RecapsGallery lives in recaps/. Same minimal-surface
+// pattern as EventThread — one named import, no shared state. isOwner is
+// derived locally from user?.id === flyer.user_id (already computed as isOwner).
+import { RecapsGallery } from "@/features/recaps/components/recaps-gallery";
 import type { LayoutFlyer, NearbyFlyer } from "../types/canvas.types";
 
 // Bookmark icon — filled when saved
@@ -67,6 +76,8 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
   const [showQrPasscode, setShowQrPasscode] = useState(false);
   const [showQrDisplay, setShowQrDisplay] = useState(false);
   const [qrResult, setQrResult] = useState<GenerateInviteResult | null>(null);
+  const [showThread, setShowThread] = useState(false);
+  const [showRecaps, setShowRecaps] = useState(false);
   const viewTrackedRef = useRef(false);
 
   const masHoyFlyers = useMasHoy(flyer.id, allFlyers, flyer.event_date ?? null);
@@ -132,6 +143,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
   useEffect(() => {
     getInvitationStatus(flyer.id)
       .then((s) => {
+        if (!s) return;
         setInvitationEnabled(s.enabled);
         if (s.enabled && user) {
           getMyInviteForFlyer(flyer.id).then(setMyInvite).catch(() => {});
@@ -157,11 +169,11 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
 
   const handleQrVerify = useCallback(async (passcode: string, displayName: string, phone: string | null) => {
     const result = await verifyAndGetInvite(flyer.id, passcode, displayName, phone);
-    setMyInvite({ id: "", flyer_id: flyer.id, user_id: user?.id ?? "", qr_token: result.qr_token, display_name: result.display_name, phone: result.phone, checked_in: false, checked_in_at: null, created_at: "" });
-    setQrResult(result);
+    setMyInvite({ id: "", flyer_id: flyer.id, user_id: user?.id ?? "", qr_token: result.qr_token, display_name: result.display_name, phone, checked_in: false, checked_in_at: null, created_at: "" });
+    setQrResult({ ...result, phone, flyer_title: flyer.title ?? "" });
     setShowQrPasscode(false);
     setShowQrDisplay(true);
-  }, [flyer.id, user]);
+  }, [flyer.id, flyer.title, user]);
 
   const isOwner = user?.id === flyer.user_id;
 
@@ -419,6 +431,17 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
               </div>
             )}
 
+            {/* ── Attendance controls ─────────────────────── */}
+            <div className="mt-4">
+              <AttendanceControls
+                flyerId={flyer.id}
+                userId={user?.id}
+                onSignInRequest={() => {
+                  usePendingActionStore.getState().setPending({ kind: "save-flyer", flyerId: flyer.id });
+                }}
+              />
+            </div>
+
             {/* ── QR Invitation button ────────────────────── */}
             {invitationEnabled && !isOwner && (
               <div className="mt-3">
@@ -481,6 +504,122 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
               </div>
             )}
 
+            {/* ── Conversación ────────────────────────────── */}
+            <div className="mt-5">
+              <button
+                type="button"
+                onClick={() => setShowThread((prev) => !prev)}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cave-fog">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-cave-fog font-[family-name:var(--font-space-mono)]">
+                    Conversación
+                  </span>
+                </div>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`text-cave-smoke transition-transform duration-200 ${showThread ? "rotate-180" : ""}`}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+
+              <AnimatePresence>
+                {showThread && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ type: "spring", stiffness: 280, damping: 28 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-3 px-1">
+                      <EventThread
+                        subjectType="flyer"
+                        subjectId={flyer.id}
+                        currentUserId={user?.id}
+                        onSignInRequest={() => {
+                          usePendingActionStore.getState().setPending({ kind: "save-flyer", flyerId: flyer.id });
+                        }}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* ── Recaps ──────────────────────────────────────── */}
+            {/* Cross-feature import: RecapsGallery from recaps/. isOwner
+                allows the flyer creator to delete any recap; regular users
+                can only delete their own uploads (enforced by RLS + UI). */}
+            <div className="mt-5">
+              <button
+                type="button"
+                onClick={() => setShowRecaps((prev) => !prev)}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-cave-fog"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-cave-fog font-[family-name:var(--font-space-mono)]">
+                    Recaps
+                  </span>
+                </div>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`text-cave-smoke transition-transform duration-200 ${showRecaps ? "rotate-180" : ""}`}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+
+              <AnimatePresence>
+                {showRecaps && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ type: "spring", stiffness: 280, damping: 28 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-3 px-1">
+                      <RecapsGallery flyerId={flyer.id} isOwner={isOwner} />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* Más hoy carousel */}
             <MasHoyCarousel
               flyers={masHoyFlyers}
@@ -506,7 +645,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
           <QrDisplayModal
             qrToken={qrResult.qr_token}
             displayName={qrResult.display_name}
-            flyerTitle={qrResult.flyer_title}
+            flyerTitle={qrResult.flyer_title ?? null}
             alreadyExisted={qrResult.already_existed}
             onClose={() => setShowQrDisplay(false)}
           />

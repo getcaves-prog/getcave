@@ -3,8 +3,12 @@
 import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import { InterestSelector } from "@/features/onboarding/components/interest-selector";
 
 const STORAGE_KEY = "onboarding_seen";
+
+// Step index for the interests screen (appended after the regular steps)
+const INTERESTS_STEP_INDEX = 3;
 
 interface OnboardingStep {
   title: string;
@@ -50,6 +54,9 @@ const STEPS: OnboardingStep[] = [
   },
 ];
 
+// Total steps including the interests step
+const TOTAL_STEPS = STEPS.length + 1;
+
 interface OnboardingOverlayProps {
   onComplete: () => void;
 }
@@ -61,32 +68,38 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
   useEffect(() => {
     const seen = localStorage.getItem(STORAGE_KEY);
     if (!seen) {
+      // Reading localStorage must happen inside an effect (client-only API).
+      // The setState here is the initial sync from external storage — not a
+      // cascading render trigger — so the lint warning is a false positive.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisible(true);
     } else {
       onComplete();
     }
   }, [onComplete]);
 
-  const handleNext = useCallback(() => {
-    if (currentStep < STEPS.length - 1) {
-      setCurrentStep((prev) => prev + 1);
-    } else {
-      localStorage.setItem(STORAGE_KEY, "true");
-      setVisible(false);
-      onComplete();
-    }
-  }, [currentStep, onComplete]);
-
-  const handleSkip = useCallback(() => {
+  const finish = useCallback(() => {
     localStorage.setItem(STORAGE_KEY, "true");
     setVisible(false);
     onComplete();
   }, [onComplete]);
 
+  const handleNext = useCallback(() => {
+    if (currentStep < TOTAL_STEPS - 1) {
+      setCurrentStep((prev) => prev + 1);
+    } else {
+      finish();
+    }
+  }, [currentStep, finish]);
+
+  const handleSkip = useCallback(() => {
+    finish();
+  }, [finish]);
+
   if (!visible) return null;
 
-  const step = STEPS[currentStep];
-  const isLastStep = currentStep === STEPS.length - 1;
+  const isInterestsStep = currentStep === INTERESTS_STEP_INDEX;
+  const isLastStep = currentStep === TOTAL_STEPS - 1;
 
   return (
     <AnimatePresence>
@@ -103,8 +116,8 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
             backdropFilter: "blur(40px)",
           }}
         >
-          {/* Skip button */}
-          {!isLastStep && (
+          {/* Skip button — visible on all steps except interests (has its own CTA) */}
+          {!isInterestsStep && (
             <button
               onClick={handleSkip}
               className="absolute top-6 right-6 safe-area-top text-xs text-cave-smoke hover:text-cave-fog transition-colors font-[family-name:var(--font-space-mono)]"
@@ -115,50 +128,79 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
 
           {/* Step content */}
           <AnimatePresence mode="wait">
-            <motion.div
-              key={currentStep}
-              className="flex flex-col items-center text-center max-w-[300px]"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {/* Icon */}
-              <div className="mb-8 flex items-center justify-center w-24 h-24">
-                {step.icon}
-              </div>
+            {isInterestsStep ? (
+              <motion.div
+                key="interests"
+                className="w-full max-w-[340px] overflow-y-auto max-h-[70dvh]"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <h2 className="text-xl text-cave-white font-[family-name:var(--font-space-mono)] mb-2 text-center">
+                  Tus intereses
+                </h2>
+                <InterestSelector
+                  ctaLabel="Empezar"
+                  onSave={finish}
+                />
+                <button
+                  onClick={finish}
+                  className="mt-3 w-full text-xs text-cave-smoke hover:text-cave-fog transition-colors font-[family-name:var(--font-space-mono)] text-center"
+                >
+                  Saltar por ahora
+                </button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={currentStep}
+                className="flex flex-col items-center text-center max-w-[300px]"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Icon */}
+                <div className="mb-8 flex items-center justify-center w-24 h-24">
+                  {STEPS[currentStep].icon}
+                </div>
 
-              {/* Title */}
-              <h2 className="text-xl text-cave-white font-[family-name:var(--font-space-mono)] mb-3">
-                {step.title}
-              </h2>
+                {/* Title */}
+                <h2 className="text-xl text-cave-white font-[family-name:var(--font-space-mono)] mb-3">
+                  {STEPS[currentStep].title}
+                </h2>
 
-              {/* Description */}
-              <p className="text-sm text-cave-fog leading-relaxed">
-                {step.description}
-              </p>
-            </motion.div>
+                {/* Description */}
+                <p className="text-sm text-cave-fog leading-relaxed">
+                  {STEPS[currentStep].description}
+                </p>
+              </motion.div>
+            )}
           </AnimatePresence>
 
-          {/* Progress dots */}
-          <div className="flex items-center gap-2 mt-12 mb-8">
-            {STEPS.map((_, i) => (
-              <div
-                key={i}
-                className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                  i === currentStep ? "bg-cave-white" : "bg-cave-ash"
-                }`}
-              />
-            ))}
-          </div>
+          {/* Progress dots — always visible */}
+          {!isInterestsStep && (
+            <div className="flex items-center gap-2 mt-12 mb-8">
+              {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                    i === currentStep ? "bg-cave-white" : "bg-cave-ash"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
 
-          {/* CTA button */}
-          <button
-            onClick={handleNext}
-            className="min-h-[44px] px-8 py-3 rounded-full bg-cave-white text-cave-black text-sm font-medium font-[family-name:var(--font-space-mono)] hover:bg-cave-light transition-colors"
-          >
-            {isLastStep ? "Get Started" : "Next"}
-          </button>
+          {/* CTA button — only for info steps */}
+          {!isInterestsStep && (
+            <button
+              onClick={handleNext}
+              className="min-h-[44px] px-8 py-3 rounded-full bg-cave-white text-cave-black text-sm font-medium font-[family-name:var(--font-space-mono)] hover:bg-cave-light transition-colors"
+            >
+              {isLastStep ? "Get Started" : "Next"}
+            </button>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

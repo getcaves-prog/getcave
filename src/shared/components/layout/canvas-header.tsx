@@ -6,6 +6,7 @@ import { useAuth } from "@/features/auth/hooks/use-auth";
 import Link from "next/link";
 import { LocationSearch } from "@/shared/components/layout/location-search";
 import { ActionModal } from "@/shared/components/layout/action-modal";
+import { SearchOverlay } from "@/features/search/components/search-overlay";
 import { useLocationStore } from "@/shared/stores/location.store";
 import { useActionModalStore } from "@/shared/stores/action-modal.store";
 
@@ -20,6 +21,7 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
   const openActionModal = useActionModalStore((s) => s.open);
   const closeActionModal = useActionModalStore((s) => s.close);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [textSearchOpen, setTextSearchOpen] = useState(false);
   const [locked, setLocked] = useState(false);
   const [active, setActive] = useState(false);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -117,23 +119,41 @@ export function CanvasHeader({ hidelogo }: CanvasHeaderProps) {
         onInteraction={handleSearchInteraction}
       />
 
-      {/* Right: Upload button */}
-      <button
-        onClick={handleUploadClick}
-        className="flex items-center justify-center w-11 h-11 text-cave-fog hover:text-cave-white transition-colors"
-        aria-label="Upload flyer"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      </button>
+      {/* Right: Search + Upload buttons */}
+      <div className="flex items-center">
+        <button
+          onClick={() => setTextSearchOpen(true)}
+          className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
+          aria-label="Search flyers"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </button>
+
+        <button
+          onClick={handleUploadClick}
+          className="flex items-center justify-center w-11 h-11 text-cave-fog hover:text-cave-white transition-colors"
+          aria-label="Upload flyer"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+      </div>
 
       <ActionModal
         isOpen={actionModalOpen}
         onClose={closeActionModal}
       />
     </header>
+
+    <SearchOverlay
+      isOpen={textSearchOpen}
+      onClose={() => setTextSearchOpen(false)}
+    />
 
     {/* Location pill — centered below logo */}
     {locationName && (

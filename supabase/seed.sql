@@ -8,4 +8,5 @@ INSERT INTO public.categories (name, slug, icon) VALUES
   ('Festival', 'festival', '🎪'),
   ('Market', 'market', '🛍️'),
   ('Workshop', 'workshop', '🔧'),
-  ('Other', 'other', '📌');
+  ('Other', 'other', '📌')
+ON CONFLICT DO NOTHING;

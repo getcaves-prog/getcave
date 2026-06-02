@@ -33,7 +33,7 @@ export async function saveInvitationConfig(
     p_flyer_id: flyerId,
     p_passcode: passcode,
     p_enabled: enabled,
-    p_max_capacity: maxCapacity,
+    p_max_capacity: maxCapacity ?? undefined,
   });
   if (error) throw new Error(error.message);
 }
@@ -49,7 +49,7 @@ export async function verifyAndGetInvite(
     p_flyer_id: flyerId,
     p_passcode: passcode,
     p_display_name: displayName,
-    p_phone: phone,
+    p_phone: phone ?? undefined,
   });
   if (error) throw new Error(error.message);
   const row = data[0];
