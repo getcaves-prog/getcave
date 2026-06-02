@@ -540,7 +540,8 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                   >
                     <div className="mt-3 px-1">
                       <EventThread
-                        flyerId={flyer.id}
+                        subjectType="flyer"
+                        subjectId={flyer.id}
                         currentUserId={user?.id}
                         onSignInRequest={() => {
                           usePendingActionStore.getState().setPending({ kind: "save-flyer", flyerId: flyer.id });

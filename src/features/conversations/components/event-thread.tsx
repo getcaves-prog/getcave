@@ -262,15 +262,20 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
 }
 
 // ─── EventThread — public API ──────────────────────────────────────────────
+// Parameterized to support both flyer and community conversations.
+// Pass subjectType='flyer' + subjectId={flyerId} for event threads.
+// Pass subjectType='community' + subjectId={communityId} for community chat.
+// The underlying useConversation hook already accepts subjectType + subjectId.
 export interface EventThreadProps {
-  flyerId: string;
+  subjectType: "flyer" | "community";
+  subjectId: string;
   currentUserId: string | undefined;
   /** Called when logged-out user taps the sign-in affordance */
   onSignInRequest?: () => void;
 }
 
-export function EventThread({ flyerId, currentUserId, onSignInRequest }: EventThreadProps) {
-  const { messages, loading, error, post, reply, remove } = useConversation("flyer", flyerId);
+export function EventThread({ subjectType, subjectId, currentUserId, onSignInRequest }: EventThreadProps) {
+  const { messages, loading, error, post, reply, remove } = useConversation(subjectType, subjectId);
   const [replyTo, setReplyTo] = useState<{ id: string; author: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
