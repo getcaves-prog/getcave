@@ -39,6 +39,371 @@ export type Database = {
   }
   public: {
     Tables: {
+      broadcast_poll_options: {
+        Row: {
+          broadcast_id: string
+          id: string
+          label: string
+          position: number
+        }
+        Insert: {
+          broadcast_id: string
+          id?: string
+          label: string
+          position?: number
+        }
+        Update: {
+          broadcast_id?: string
+          id?: string
+          label?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_poll_options_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "broadcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      broadcast_poll_votes: {
+        Row: {
+          broadcast_id: string
+          created_at: string
+          id: string
+          option_id: string
+          user_id: string
+        }
+        Insert: {
+          broadcast_id: string
+          created_at?: string
+          id?: string
+          option_id: string
+          user_id: string
+        }
+        Update: {
+          broadcast_id?: string
+          created_at?: string
+          id?: string
+          option_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_poll_votes_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "broadcasts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broadcast_poll_votes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "broadcast_poll_options"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      broadcasts: {
+        Row: {
+          author_id: string | null
+          body: string
+          community_id: string
+          created_at: string
+          id: string
+          kind: string
+          metadata: Json | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          community_id: string
+          created_at?: string
+          id?: string
+          kind?: string
+          metadata?: Json | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          community_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          metadata?: Json | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcasts_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communities: {
+        Row: {
+          avatar_url: string | null
+          city: string | null
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          member_count: number
+          name: string
+          slug: string
+          updated_at: string
+          zone_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          city?: string | null
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          member_count?: number
+          name: string
+          slug: string
+          updated_at?: string
+          zone_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          city?: string | null
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          member_count?: number
+          name?: string
+          slug?: string
+          updated_at?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communities_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_members: {
+        Row: {
+          community_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          community_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          subject_id: string
+          subject_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          subject_id: string
+          subject_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          subject_id?: string
+          subject_type?: string
+        }
+        Relationships: []
+      }
+      event_attendance: {
+        Row: {
+          created_at: string
+          flyer_id: string
+          going_solo: boolean
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          flyer_id: string
+          going_solo?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          flyer_id?: string
+          going_solo?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendance_flyer_id_fkey"
+            columns: ["flyer_id"]
+            isOneToOne: false
+            referencedRelation: "flyers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_media: {
+        Row: {
+          created_at: string
+          flyer_id: string
+          id: string
+          media_type: string
+          media_url: string
+          thumbnail_url: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          flyer_id: string
+          id?: string
+          media_type: string
+          media_url: string
+          thumbnail_url?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          flyer_id?: string
+          id?: string
+          media_type?: string
+          media_url?: string
+          thumbnail_url?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_media_flyer_id_fkey"
+            columns: ["flyer_id"]
+            isOneToOne: false
+            referencedRelation: "flyers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          author_id: string | null
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          is_deleted: boolean
+          parent_message_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          parent_message_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          parent_message_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_interests: {
+        Row: {
+          category_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_interests_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           color: string | null
@@ -313,6 +678,7 @@ export type Database = {
           address: string | null
           canvas_x: number
           canvas_y: number
+          community_id: string | null
           created_at: string
           description: string | null
           duration_days: number | null
@@ -336,6 +702,7 @@ export type Database = {
           address?: string | null
           canvas_x?: number
           canvas_y?: number
+          community_id?: string | null
           created_at?: string
           description?: string | null
           duration_days?: number | null
@@ -359,6 +726,7 @@ export type Database = {
           address?: string | null
           canvas_x?: number
           canvas_y?: number
+          community_id?: string | null
           created_at?: string
           description?: string | null
           duration_days?: number | null
@@ -378,7 +746,15 @@ export type Database = {
           user_id?: string | null
           width?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "flyers_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -503,6 +879,57 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_community: {
+        Args: {
+          p_avatar_url?: string
+          p_city?: string
+          p_cover_url?: string
+          p_description?: string
+          p_name: string
+          p_slug: string
+          p_zone_id?: string
+        }
+        Returns: {
+          avatar_url: string | null
+          city: string | null
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          member_count: number
+          name: string
+          slug: string
+          updated_at: string
+          zone_id: string | null
+        }
+      }
+      flyer_attendance_counts: {
+        Args: { p_flyer_id: string }
+        Returns: {
+          solo_count: number
+          total_count: number
+        }[]
+      }
+      get_or_create_conversation: {
+        Args: { p_subject_id: string; p_subject_type: string }
+        Returns: {
+          created_at: string
+          id: string
+          subject_id: string
+          subject_type: string
+        }
+      }
+      promote_community_member: {
+        Args: { p_community_id: string; p_role: string; p_user_id: string }
+        Returns: {
+          community_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+      }
       get_nearby_events: {
         Args: {
           category_filter?: string
