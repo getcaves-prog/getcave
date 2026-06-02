@@ -1,0 +1,257 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  listEventMedia,
+  uploadRecapMedia,
+  deleteRecapMedia,
+} from "./recaps.service";
+
+// ─── Mock Supabase client ──────────────────────────────────────────────────
+const mockFrom = vi.fn();
+const mockSelect = vi.fn();
+const mockEq = vi.fn();
+const mockOrder = vi.fn();
+const mockInsert = vi.fn();
+const mockDelete = vi.fn();
+const mockSingle = vi.fn();
+const mockGetUser = vi.fn();
+
+// Storage mocks
+const mockStorageUpload = vi.fn();
+const mockStorageGetPublicUrl = vi.fn();
+const mockStorageFrom = vi.fn();
+
+vi.mock("@/shared/lib/supabase/client", () => ({
+  createClient: () => ({
+    from: mockFrom,
+    auth: { getUser: mockGetUser },
+    storage: {
+      from: mockStorageFrom,
+    },
+  }),
+}));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+
+  // Default storage chain: storage.from("recaps").upload(...) → storage.from("recaps").getPublicUrl(...)
+  mockStorageUpload.mockResolvedValue({ data: { path: "user-1/flyer-1/abc.jpg" }, error: null });
+  mockStorageGetPublicUrl.mockReturnValue({
+    data: { publicUrl: "https://cdn.example.com/recaps/user-1/flyer-1/abc.jpg" },
+  });
+  mockStorageFrom.mockReturnValue({
+    upload: mockStorageUpload,
+    getPublicUrl: mockStorageGetPublicUrl,
+  });
+});
+
+// ─── Helper: create a mock File ────────────────────────────────────────────
+function makeFile(
+  name: string,
+  type: string,
+  sizeBytes: number = 1024
+): File {
+  const content = new Uint8Array(sizeBytes);
+  return new File([content], name, { type });
+}
+
+// ─── listEventMedia ────────────────────────────────────────────────────────
+describe("listEventMedia", () => {
+  const mockMedia = [
+    {
+      id: "m1",
+      flyer_id: "flyer-1",
+      uploaded_by: "user-1",
+      media_url: "https://cdn.example.com/recaps/img1.jpg",
+      media_type: "image",
+      thumbnail_url: null,
+      created_at: "2026-06-01T10:00:00Z",
+    },
+    {
+      id: "m2",
+      flyer_id: "flyer-1",
+      uploaded_by: "user-2",
+      media_url: "https://cdn.example.com/recaps/vid1.mp4",
+      media_type: "video",
+      thumbnail_url: "https://cdn.example.com/recaps/vid1-thumb.jpg",
+      created_at: "2026-06-01T09:00:00Z",
+    },
+  ];
+
+  beforeEach(() => {
+    mockOrder.mockResolvedValue({ data: mockMedia, error: null });
+    mockEq.mockReturnValue({ order: mockOrder });
+    mockSelect.mockReturnValue({ eq: mockEq });
+    mockFrom.mockReturnValue({ select: mockSelect });
+  });
+
+  it("queries event_media by flyer_id ordered by created_at desc", async () => {
+    const result = await listEventMedia("flyer-1");
+
+    expect(mockFrom).toHaveBeenCalledWith("event_media");
+    expect(mockEq).toHaveBeenCalledWith("flyer_id", "flyer-1");
+    expect(mockOrder).toHaveBeenCalledWith("created_at", { ascending: false });
+    expect(result).toHaveLength(2);
+    expect(result[0].media_type).toBe("image");
+  });
+
+  it("returns empty array when data is null without error", async () => {
+    mockOrder.mockResolvedValue({ data: null, error: null });
+
+    const result = await listEventMedia("flyer-1");
+
+    expect(result).toEqual([]);
+  });
+
+  it("throws on Supabase error", async () => {
+    mockOrder.mockResolvedValue({ data: null, error: { message: "DB error" } });
+
+    await expect(listEventMedia("flyer-1")).rejects.toThrow(
+      "Failed to list event media: DB error"
+    );
+  });
+});
+
+// ─── uploadRecapMedia ──────────────────────────────────────────────────────
+describe("uploadRecapMedia", () => {
+  const mockInsertedRow = {
+    id: "m-new",
+    flyer_id: "flyer-1",
+    uploaded_by: "user-1",
+    media_url: "https://cdn.example.com/recaps/user-1/flyer-1/abc.jpg",
+    media_type: "image",
+    thumbnail_url: null,
+    created_at: "2026-06-01T12:00:00Z",
+  };
+
+  beforeEach(() => {
+    mockSingle.mockResolvedValue({ data: mockInsertedRow, error: null });
+    mockSelect.mockReturnValue({ single: mockSingle });
+    mockInsert.mockReturnValue({ select: mockSelect });
+    mockFrom.mockReturnValue({ insert: mockInsert });
+  });
+
+  it("uploads to storage with path prefix uid/flyerId/uuid.ext", async () => {
+    const file = makeFile("party.jpg", "image/jpeg");
+
+    await uploadRecapMedia("flyer-1", file);
+
+    expect(mockStorageFrom).toHaveBeenCalledWith("recaps");
+    const uploadCall = mockStorageUpload.mock.calls[0];
+    const uploadedPath: string = uploadCall[0];
+    // Must start with userId segment
+    expect(uploadedPath.startsWith("user-1/flyer-1/")).toBe(true);
+    // Must end with .jpg extension
+    expect(uploadedPath.endsWith(".jpg")).toBe(true);
+  });
+
+  it("derives media_type='image' from image/* mime", async () => {
+    const file = makeFile("photo.png", "image/png");
+
+    await uploadRecapMedia("flyer-1", file);
+
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ media_type: "image" })
+    );
+  });
+
+  it("derives media_type='video' from video/* mime", async () => {
+    const file = makeFile("clip.mp4", "video/mp4");
+
+    await uploadRecapMedia("flyer-1", file);
+
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ media_type: "video" })
+    );
+  });
+
+  it("rejects file exceeding 10MB WITHOUT uploading to storage", async () => {
+    const oversizedFile = makeFile("huge.jpg", "image/jpeg", 11 * 1024 * 1024);
+
+    await expect(uploadRecapMedia("flyer-1", oversizedFile)).rejects.toThrow(
+      "10MB"
+    );
+    expect(mockStorageUpload).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid MIME type WITHOUT uploading to storage", async () => {
+    const pdfFile = makeFile("doc.pdf", "application/pdf");
+
+    await expect(uploadRecapMedia("flyer-1", pdfFile)).rejects.toThrow(
+      "imagen o video"
+    );
+    expect(mockStorageUpload).not.toHaveBeenCalled();
+  });
+
+  it("throws when user is not authenticated", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null } });
+    const file = makeFile("photo.jpg", "image/jpeg");
+
+    await expect(uploadRecapMedia("flyer-1", file)).rejects.toThrow(
+      "Tenés que iniciar sesión"
+    );
+    expect(mockStorageUpload).not.toHaveBeenCalled();
+  });
+
+  it("inserts event_media row with correct fields after upload", async () => {
+    const file = makeFile("photo.jpg", "image/jpeg");
+
+    const result = await uploadRecapMedia("flyer-1", file);
+
+    expect(mockFrom).toHaveBeenCalledWith("event_media");
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        flyer_id: "flyer-1",
+        uploaded_by: "user-1",
+        media_type: "image",
+      })
+    );
+    expect(result.id).toBe("m-new");
+  });
+
+  it("throws on storage upload error WITHOUT inserting DB row", async () => {
+    mockStorageUpload.mockResolvedValue({ data: null, error: { message: "Storage limit reached" } });
+    const file = makeFile("photo.jpg", "image/jpeg");
+
+    await expect(uploadRecapMedia("flyer-1", file)).rejects.toThrow(
+      "Failed to upload media: Storage limit reached"
+    );
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it("throws on DB insert error", async () => {
+    mockSingle.mockResolvedValue({ data: null, error: { message: "RLS denied" } });
+    const file = makeFile("photo.jpg", "image/jpeg");
+
+    await expect(uploadRecapMedia("flyer-1", file)).rejects.toThrow(
+      "Failed to save media record: RLS denied"
+    );
+  });
+});
+
+// ─── deleteRecapMedia ──────────────────────────────────────────────────────
+describe("deleteRecapMedia", () => {
+  const mockDeleteEq = vi.fn();
+
+  beforeEach(() => {
+    mockDeleteEq.mockResolvedValue({ error: null });
+    mockDelete.mockReturnValue({ eq: mockDeleteEq });
+    mockFrom.mockReturnValue({ delete: mockDelete });
+  });
+
+  it("deletes the event_media row by id", async () => {
+    await deleteRecapMedia("m-1");
+
+    expect(mockFrom).toHaveBeenCalledWith("event_media");
+    expect(mockDelete).toHaveBeenCalled();
+    expect(mockDeleteEq).toHaveBeenCalledWith("id", "m-1");
+  });
+
+  it("throws on Supabase error", async () => {
+    mockDeleteEq.mockResolvedValue({ error: { message: "RLS denied" } });
+
+    await expect(deleteRecapMedia("m-1")).rejects.toThrow(
+      "Failed to delete media: RLS denied"
+    );
+  });
+});
