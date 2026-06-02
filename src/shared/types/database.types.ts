@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -150,6 +145,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
       }
       communities: {
         Row: {
@@ -292,6 +314,38 @@ export type Database = {
           },
         ]
       }
+      event_heat: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_heat_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_media: {
         Row: {
           created_at: string
@@ -330,135 +384,46 @@ export type Database = {
           },
         ]
       }
-      messages: {
+      event_qr_invites: {
         Row: {
-          author_id: string | null
-          body: string
-          conversation_id: string
+          checked_in: boolean
+          checked_in_at: string | null
           created_at: string
+          display_name: string
+          flyer_id: string
           id: string
-          is_deleted: boolean
-          parent_message_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          author_id?: string | null
-          body: string
-          conversation_id: string
-          created_at?: string
-          id?: string
-          is_deleted?: boolean
-          parent_message_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          author_id?: string | null
-          body?: string
-          conversation_id?: string
-          created_at?: string
-          id?: string
-          is_deleted?: boolean
-          parent_message_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_parent_message_id_fkey"
-            columns: ["parent_message_id"]
-            isOneToOne: false
-            referencedRelation: "messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_interests: {
-        Row: {
-          category_id: string
-          created_at: string
+          phone: string | null
+          qr_token: string
           user_id: string
         }
         Insert: {
-          category_id: string
+          checked_in?: boolean
+          checked_in_at?: string | null
           created_at?: string
+          display_name: string
+          flyer_id: string
+          id?: string
+          phone?: string | null
+          qr_token?: string
           user_id: string
         }
         Update: {
-          category_id?: string
+          checked_in?: boolean
+          checked_in_at?: string | null
           created_at?: string
+          display_name?: string
+          flyer_id?: string
+          id?: string
+          phone?: string | null
+          qr_token?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "user_interests_category_id_fkey"
-            columns: ["category_id"]
+            foreignKeyName: "event_qr_invites_flyer_id_fkey"
+            columns: ["flyer_id"]
             isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      categories: {
-        Row: {
-          color: string | null
-          created_at: string
-          icon: string | null
-          id: string
-          name: string
-          slug: string
-        }
-        Insert: {
-          color?: string | null
-          created_at?: string
-          icon?: string | null
-          id?: string
-          name: string
-          slug: string
-        }
-        Update: {
-          color?: string | null
-          created_at?: string
-          icon?: string | null
-          id?: string
-          name?: string
-          slug?: string
-        }
-        Relationships: []
-      }
-      event_heat: {
-        Row: {
-          created_at: string
-          event_id: string
-          id: string
-          session_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          event_id: string
-          id?: string
-          session_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          event_id?: string
-          id?: string
-          session_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "event_heat_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
+            referencedRelation: "flyers"
             referencedColumns: ["id"]
           },
         ]
@@ -756,6 +721,89 @@ export type Database = {
           },
         ]
       }
+      invitation_configs: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          flyer_id: string
+          id: string
+          max_capacity: number | null
+          passcode_hash: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          flyer_id: string
+          id?: string
+          max_capacity?: number | null
+          passcode_hash: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          flyer_id?: string
+          id?: string
+          max_capacity?: number | null
+          passcode_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitation_configs_flyer_id_fkey"
+            columns: ["flyer_id"]
+            isOneToOne: true
+            referencedRelation: "flyers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          author_id: string | null
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          is_deleted: boolean
+          parent_message_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          parent_message_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_deleted?: boolean
+          parent_message_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -853,6 +901,32 @@ export type Database = {
           },
         ]
       }
+      user_interests: {
+        Row: {
+          category_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_interests_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       zones: {
         Row: {
           geom: unknown
@@ -879,6 +953,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      checkin_qr_invite: {
+        Args: { p_qr_token: string }
+        Returns: {
+          already_checked_in: boolean
+          checked_in_at: string
+          display_name: string
+          flyer_title: string
+          phone: string
+        }[]
+      }
       create_community: {
         Args: {
           p_avatar_url?: string
@@ -903,6 +987,12 @@ export type Database = {
           updated_at: string
           zone_id: string | null
         }
+        SetofOptions: {
+          from: "*"
+          to: "communities"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       flyer_attendance_counts: {
         Args: { p_flyer_id: string }
@@ -911,24 +1001,13 @@ export type Database = {
           total_count: number
         }[]
       }
-      get_or_create_conversation: {
-        Args: { p_subject_id: string; p_subject_type: string }
+      get_invitation_status: {
+        Args: { p_flyer_id: string }
         Returns: {
-          created_at: string
-          id: string
-          subject_id: string
-          subject_type: string
-        }
-      }
-      promote_community_member: {
-        Args: { p_community_id: string; p_role: string; p_user_id: string }
-        Returns: {
-          community_id: string
-          id: string
-          joined_at: string
-          role: string
-          user_id: string
-        }
+          current_count: number
+          enabled: boolean
+          max_capacity: number
+        }[]
       }
       get_nearby_events: {
         Args: {
@@ -965,6 +1044,21 @@ export type Database = {
           venue_name: string
           views_count: number
         }[]
+      }
+      get_or_create_conversation: {
+        Args: { p_subject_id: string; p_subject_type: string }
+        Returns: {
+          created_at: string
+          id: string
+          subject_id: string
+          subject_type: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       get_user_stats: { Args: { target_user_id: string }; Returns: Json }
       get_zone_name: { Args: { lat: number; lng: number }; Returns: string }
@@ -1034,7 +1128,45 @@ export type Database = {
           zone_name: string
         }[]
       }
+      promote_community_member: {
+        Args: { p_community_id: string; p_role: string; p_user_id: string }
+        Returns: {
+          community_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "community_members"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_invitation_config: {
+        Args: {
+          p_enabled?: boolean
+          p_flyer_id: string
+          p_max_capacity?: number
+          p_passcode: string
+        }
+        Returns: undefined
+      }
       toggle_event_heat: { Args: { p_event_id: string }; Returns: Json }
+      verify_and_get_invite: {
+        Args: {
+          p_display_name: string
+          p_flyer_id: string
+          p_passcode: string
+          p_phone?: string
+        }
+        Returns: {
+          already_existed: boolean
+          display_name: string
+          qr_token: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
@@ -1170,3 +1302,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

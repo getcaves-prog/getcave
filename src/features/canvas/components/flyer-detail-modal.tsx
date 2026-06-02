@@ -132,6 +132,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
   useEffect(() => {
     getInvitationStatus(flyer.id)
       .then((s) => {
+        if (!s) return;
         setInvitationEnabled(s.enabled);
         if (s.enabled && user) {
           getMyInviteForFlyer(flyer.id).then(setMyInvite).catch(() => {});
@@ -157,11 +158,11 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
 
   const handleQrVerify = useCallback(async (passcode: string, displayName: string, phone: string | null) => {
     const result = await verifyAndGetInvite(flyer.id, passcode, displayName, phone);
-    setMyInvite({ id: "", flyer_id: flyer.id, user_id: user?.id ?? "", qr_token: result.qr_token, display_name: result.display_name, phone: result.phone, checked_in: false, checked_in_at: null, created_at: "" });
-    setQrResult(result);
+    setMyInvite({ id: "", flyer_id: flyer.id, user_id: user?.id ?? "", qr_token: result.qr_token, display_name: result.display_name, phone, checked_in: false, checked_in_at: null, created_at: "" });
+    setQrResult({ ...result, phone, flyer_title: flyer.title ?? "" });
     setShowQrPasscode(false);
     setShowQrDisplay(true);
-  }, [flyer.id, user]);
+  }, [flyer.id, flyer.title, user]);
 
   const isOwner = user?.id === flyer.user_id;
 
@@ -506,7 +507,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
           <QrDisplayModal
             qrToken={qrResult.qr_token}
             displayName={qrResult.display_name}
-            flyerTitle={qrResult.flyer_title}
+            flyerTitle={qrResult.flyer_title ?? null}
             alreadyExisted={qrResult.already_existed}
             onClose={() => setShowQrDisplay(false)}
           />

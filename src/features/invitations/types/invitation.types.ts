@@ -20,6 +20,8 @@ export interface GenerateInviteResult {
   qr_token: string;
   display_name: string;
   already_existed: boolean;
+  phone?: string | null;
+  flyer_title?: string | null;
 }
 
 export interface CheckinResult {
