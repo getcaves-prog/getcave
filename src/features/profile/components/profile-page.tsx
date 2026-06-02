@@ -21,6 +21,7 @@ import { ActivityFeed } from "@/features/profile/components/activity-feed";
 import { useMyActivity } from "@/features/profile/hooks/use-my-activity";
 import { getMyFlyers } from "@/features/profile/services/my-flyers.service";
 import { getSavedFlyers } from "@/features/canvas/services/favorites.service";
+import { InterestSelector } from "@/features/onboarding/components/interest-selector";
 import type { Tables } from "@/shared/types/database.types";
 
 type Profile = Pick<
@@ -36,7 +37,7 @@ interface UserStats {
   total_saves: number;
 }
 
-type Tab = "flyers" | "my-flyers" | "saved" | "communities" | "events" | "conversations" | "activity";
+type Tab = "flyers" | "my-flyers" | "saved" | "communities" | "events" | "conversations" | "activity" | "interests";
 
 interface ProfilePageProps {
   username: string;
@@ -387,6 +388,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
                 { id: "events", label: "Eventos", count: activityData.events.upcoming.length + activityData.events.past.length },
                 { id: "conversations", label: "Chats", count: activityData.conversations.length },
                 { id: "activity", label: "Actividad", count: null },
+                { id: "interests", label: "Intereses", count: null },
               ] as const
             ).map((tab) => {
               const isActive = activeTab === tab.id;
@@ -440,6 +442,14 @@ export function ProfilePage({ username }: ProfilePageProps) {
           items={activityData.recentActivity}
           loading={activityData.loading}
         />
+      )}
+      {isOwnProfile && activeTab === "interests" && (
+        <div className="px-4 pb-8">
+          <p className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)] uppercase tracking-widest mb-4 text-center">
+            Mis intereses
+          </p>
+          <InterestSelector ctaLabel="Guardar intereses" />
+        </div>
       )}
 
       {/* Flyer grid / list */}
