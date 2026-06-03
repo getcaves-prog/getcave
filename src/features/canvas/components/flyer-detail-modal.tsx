@@ -27,6 +27,7 @@ import { EventThread } from "@/features/conversations/components/event-thread";
 // pattern as EventThread — one named import, no shared state. isOwner is
 // derived locally from user?.id === flyer.user_id (already computed as isOwner).
 import { RecapsGallery } from "@/features/recaps/components/recaps-gallery";
+import { SectionHeading } from "@/shared/components/ui/section-heading";
 import type { LayoutFlyer, NearbyFlyer } from "../types/canvas.types";
 
 // Bookmark icon — filled when saved
@@ -380,7 +381,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
             </div>
 
             {/* Info line — zona y fecha, sin username */}
-            <div className="mt-2 px-1">
+            <div className="mt-5 px-1">
               <EventInfoLine
                 zoneName={flyer.zone_name}
                 eventDate={flyer.event_date}
@@ -388,7 +389,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
             </div>
 
             {/* ── GUARDAR — grande, centrado ──────────────── */}
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-5 flex items-center gap-2">
               <motion.button
                 onClick={handleToggleSave}
                 disabled={savingInProgress}
@@ -411,7 +412,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                 className="w-[52px] h-[52px] flex items-center justify-center rounded-full border-2 border-cave-ash text-cave-smoke hover:text-cave-white hover:border-cave-fog transition-colors"
                 aria-label="Compartir"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
                   <polyline points="16 6 12 2 8 6" />
                   <line x1="12" y1="2" x2="12" y2="15" />
@@ -421,7 +422,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
 
             {/* Creator link */}
             {creator && (
-              <div className="mt-3 px-1">
+              <div className="mt-5 px-1">
                 <Link
                   href={`/profile/${creator.username}`}
                   className="text-sm text-cave-white hover:text-[#39FF14] transition-colors font-[family-name:var(--font-space-mono)]"
@@ -432,7 +433,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
             )}
 
             {/* ── Attendance controls ─────────────────────── */}
-            <div className="mt-4">
+            <div className="mt-5">
               <AttendanceControls
                 flyerId={flyer.id}
                 userId={user?.id}
@@ -444,7 +445,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
 
             {/* ── QR Invitation button ────────────────────── */}
             {invitationEnabled && !isOwner && (
-              <div className="mt-3">
+              <div className="mt-5">
                 <motion.button
                   type="button"
                   onClick={handleQrButtonClick}
@@ -469,10 +470,8 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
             {hasExtraContent && (
               <div className="mt-5 flex flex-col gap-5">
                 {flyer.description && (
-                  <div className="rounded-2xl bg-cave-stone/60 border border-cave-ash/40 px-4 py-4">
-                    <p className="text-[10px] tracking-[0.2em] text-cave-smoke uppercase mb-2 font-[family-name:var(--font-space-mono)]">
-                      Acerca del evento
-                    </p>
+                  <div className="rounded-2xl bg-cave-stone/60 border border-cave-ash/40 p-5">
+                    <SectionHeading>Acerca del evento</SectionHeading>
                     <p className="text-sm leading-6 text-cave-fog font-[family-name:var(--font-inter)] line-clamp-3">
                       {flyer.description}
                     </p>
@@ -480,11 +479,11 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                 )}
 
                 {flyer.social_copy && (
-                  <div className="rounded-2xl bg-cave-stone/60 border border-cave-ash/40 px-4 py-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-[10px] tracking-[0.2em] text-cave-smoke uppercase font-[family-name:var(--font-space-mono)]">
+                  <div className="rounded-2xl bg-cave-stone/60 border border-cave-ash/40 p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="border-l-2 border-[#39FF14]/50 pl-2.5 text-[10px] uppercase tracking-[0.2em] text-cave-fog font-[family-name:var(--font-space-mono)]">
                         Copy para compartir
-                      </p>
+                      </span>
                       <button
                         onClick={handleCopySocialCopy}
                         className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cave-ash/60 hover:bg-cave-ash text-[10px] text-cave-fog hover:text-cave-white transition-colors font-[family-name:var(--font-space-mono)]"
@@ -509,7 +508,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
               <button
                 type="button"
                 onClick={() => setShowThread((prev) => !prev)}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
+                className="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cave-fog">
@@ -543,7 +542,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                     transition={{ type: "spring", stiffness: 280, damping: 28 }}
                     className="overflow-hidden"
                   >
-                    <div className="mt-3 px-1">
+                    <div className="mt-4 px-1 pb-2">
                       <EventThread
                         subjectType="flyer"
                         subjectId={flyer.id}
@@ -566,7 +565,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
               <button
                 type="button"
                 onClick={() => setShowRecaps((prev) => !prev)}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
+                className="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <svg
@@ -612,7 +611,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                     transition={{ type: "spring", stiffness: 280, damping: 28 }}
                     className="overflow-hidden"
                   >
-                    <div className="mt-3 px-1">
+                    <div className="mt-4 px-1 pb-2">
                       <RecapsGallery flyerId={flyer.id} isOwner={isOwner} />
                     </div>
                   </motion.div>

@@ -208,7 +208,7 @@ function PollCard({ broadcast, onVote, userId }: PollCardProps) {
                 disabled={!userId || hasVoted || voting}
                 className={`relative w-full text-left rounded-xl px-4 py-3 overflow-hidden border transition-colors min-h-[44px] ${
                   isMyVote
-                    ? "border-[#39FF14]/60 bg-[#39FF14]/8"
+                    ? "border-[#39FF14]/60 bg-[#39FF14]/8 shadow-[0_0_12px_rgba(57,255,20,0.15)]"
                     : hasVoted
                     ? "border-cave-ash/30 bg-cave-ash/5 cursor-default"
                     : "border-cave-ash/40 bg-cave-stone/40 hover:border-cave-ash/70 active:scale-[0.98]"
@@ -282,10 +282,10 @@ function BroadcastItem({ broadcast, onVote, userId }: BroadcastItemProps) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
-      className="rounded-2xl bg-cave-stone/60 border border-cave-ash/30 px-4 py-4"
+      className="rounded-2xl bg-cave-stone/60 border border-cave-ash/30 p-5"
     >
       {/* Header row */}
-      <div className="flex items-start justify-between gap-3 mb-2">
+      <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2 flex-wrap">
           <KindChip kind={broadcast.kind} />
           {broadcast.title && (
@@ -739,7 +739,7 @@ export function BroadcastChannel({ communityId, role }: BroadcastChannelProps) {
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3 mt-1">
+        <div className="flex flex-col gap-4 mt-1">
           <AnimatePresence initial={false}>
             {broadcasts.map((b) => (
               <BroadcastItem

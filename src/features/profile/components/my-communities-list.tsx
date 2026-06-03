@@ -165,7 +165,7 @@ export function MyCommunityList({ communities, loading }: MyCommunitiesListProps
   }
 
   return (
-    <div className="flex flex-col gap-2 px-4 pb-8">
+    <div className="flex flex-col gap-3 px-4 pb-8">
       {communities.map((community) => (
         <CommunityRow key={community.id} community={community} />
       ))}
