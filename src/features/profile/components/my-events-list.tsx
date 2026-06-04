@@ -203,7 +203,7 @@ export function MyEventsList({ events, loading }: MyEventsListProps) {
       {displayList.length === 0 ? (
         <EmptyEventsState bucket={bucket} />
       ) : (
-        <div className="flex flex-col gap-2 px-4">
+        <div className="flex flex-col gap-3 px-4">
           {displayList.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}

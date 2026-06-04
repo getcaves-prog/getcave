@@ -21,6 +21,7 @@ import { useMyActivity } from "@/features/profile/hooks/use-my-activity";
 import { getMyFlyers } from "@/features/profile/services/my-flyers.service";
 import { getSavedFlyers } from "@/features/canvas/services/favorites.service";
 import { InterestSelector } from "@/features/onboarding/components/interest-selector";
+import { SectionHeading } from "@/shared/components/ui/section-heading";
 import type { Tables } from "@/shared/types/database.types";
 
 type Profile = Pick<
@@ -427,9 +428,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
       )}
       {isOwnProfile && activeTab === "interests" && (
         <div className="px-4 pb-8">
-          <p className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)] uppercase tracking-widest mb-4 text-center">
-            Mis intereses
-          </p>
+          <SectionHeading className="mb-4">Mis intereses</SectionHeading>
           <InterestSelector ctaLabel="Guardar intereses" />
         </div>
       )}
@@ -464,7 +463,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
             </div>
           ) : (
             myFlyers.map((flyer) => (
-              <div key={flyer.id} className="flex flex-col gap-2">
+              <div key={flyer.id} className="flex flex-col gap-3">
                 <MyFlyerCard
                   flyer={flyer}
                   onChange={handleMyFlyerChange}

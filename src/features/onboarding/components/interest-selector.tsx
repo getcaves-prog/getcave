@@ -59,7 +59,7 @@ export function InterestSelector({
                 text-sm font-[family-name:var(--font-space-mono)] transition-colors
                 ${
                   isSelected
-                    ? "bg-[#39FF14]/10 border-[#39FF14] text-[#39FF14]"
+                    ? "bg-[#39FF14]/10 border-[#39FF14] text-[#39FF14] shadow-[0_0_12px_rgba(57,255,20,0.15)]"
                     : "bg-cave-rock/60 border-cave-ash text-cave-fog hover:border-cave-fog hover:text-cave-white"
                 }
               `}

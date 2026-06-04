@@ -76,7 +76,7 @@ function MessageBubble({ message, currentUserId, onReply, onDelete, isReply }: M
   }, [deleting, onDelete, message.id]);
 
   return (
-    <div className={`flex gap-2 ${isReply ? "pl-6" : ""}`}>
+    <div className={`flex gap-2 ${isReply ? "" : ""}`}>
       {/* Avatar */}
       <Avatar url={message.author?.avatar_url ?? null} username={authorName} />
 
@@ -84,28 +84,28 @@ function MessageBubble({ message, currentUserId, onReply, onDelete, isReply }: M
       <div className="flex-1 min-w-0">
         {/* Header row */}
         <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-[11px] font-bold text-cave-fog font-[family-name:var(--font-space-mono)] truncate max-w-[140px]">
+          <span className="text-[11px] font-bold text-cave-white font-[family-name:var(--font-space-mono)] truncate max-w-[140px]">
             @{authorName}
           </span>
-          <span className="text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)]">
+          <span className="text-[10px] text-cave-fog font-[family-name:var(--font-space-mono)]">
             {relativeTime(message.created_at)}
           </span>
         </div>
 
         {/* Body */}
         {message.is_deleted ? (
-          <p className="text-xs text-cave-smoke italic mt-0.5 font-[family-name:var(--font-inter)]">
+          <p className="text-xs text-cave-smoke italic mt-1 font-[family-name:var(--font-inter)]">
             mensaje eliminado
           </p>
         ) : (
-          <p className="text-sm text-cave-white leading-5 mt-0.5 font-[family-name:var(--font-inter)] break-words">
+          <p className="text-sm text-cave-white leading-5 mt-1 font-[family-name:var(--font-inter)] break-words">
             {message.body}
           </p>
         )}
 
         {/* Actions — only on non-deleted messages */}
         {!message.is_deleted && (
-          <div className="flex items-center gap-3 mt-1.5">
+          <div className="flex items-center gap-3 mt-2">
             {/* Reply — only available on top-level messages (not on replies themselves) */}
             {!isReply && currentUserId && (
               <button
@@ -182,7 +182,7 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       {/* Reply banner */}
       <AnimatePresence>
         {replyTo && (
@@ -191,7 +191,7 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.15 }}
-            className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#39FF14]/10 border border-[#39FF14]/20"
+            className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#39FF14]/10 border border-[#39FF14]/20"
           >
             <span className="text-[10px] text-[#39FF14] font-[family-name:var(--font-space-mono)]">
               Respondiendo a @{replyTo.author}
@@ -208,7 +208,7 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
       </AnimatePresence>
 
       {/* Input row */}
-      <div className="flex items-end gap-2">
+      <div className="flex items-end gap-3">
         <div className="flex-1 relative">
           <label className="sr-only">
             {replyTo ? `Responder a @${replyTo.author}` : "Escribí un mensaje"}
@@ -356,7 +356,7 @@ export function EventThread({ subjectType, subjectId, currentUserId, onSignInReq
 
               {/* Replies — one level only */}
               {thread.replies.length > 0 && (
-                <div className="flex flex-col gap-3 border-l border-cave-ash/30 ml-4">
+                <div className="flex flex-col gap-3 border-l border-cave-rock ml-4 pl-3">
                   {thread.replies.map((r) => (
                     <MessageBubble
                       key={r.id}
