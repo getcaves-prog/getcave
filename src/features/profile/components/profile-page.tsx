@@ -20,8 +20,8 @@ import { ActivityFeed } from "@/features/profile/components/activity-feed";
 import { useMyActivity } from "@/features/profile/hooks/use-my-activity";
 import { getMyFlyers } from "@/features/profile/services/my-flyers.service";
 import { getSavedFlyers } from "@/features/canvas/services/favorites.service";
-import { InterestSelector } from "@/features/onboarding/components/interest-selector";
 import { SectionHeading } from "@/shared/components/ui/section-heading";
+import { ForYouEditor } from "@/features/profile/components/for-you-editor";
 import type { Tables } from "@/shared/types/database.types";
 
 type Profile = Pick<
@@ -31,7 +31,7 @@ type Profile = Pick<
 
 type Flyer = Tables<"flyers">;
 
-type Tab = "flyers" | "my-flyers" | "saved" | "communities" | "events" | "conversations" | "activity" | "interests";
+type Tab = "flyers" | "my-flyers" | "saved" | "communities" | "events" | "conversations" | "activity" | "for-you";
 
 interface ProfilePageProps {
   username: string;
@@ -371,7 +371,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
                 { id: "events", label: "Eventos", count: activityData.events.upcoming.length + activityData.events.past.length },
                 { id: "conversations", label: "Chats", count: activityData.conversations.length },
                 { id: "activity", label: "Actividad", count: null },
-                { id: "interests", label: "Intereses", count: null },
+                { id: "for-you", label: "For You", count: null },
               ] as const
             ).map((tab) => {
               const isActive = activeTab === tab.id;
@@ -426,10 +426,10 @@ export function ProfilePage({ username }: ProfilePageProps) {
           loading={activityData.loading}
         />
       )}
-      {isOwnProfile && activeTab === "interests" && (
+      {isOwnProfile && activeTab === "for-you" && (
         <div className="px-4 pb-8">
-          <SectionHeading className="mb-4">Mis intereses</SectionHeading>
-          <InterestSelector ctaLabel="Guardar intereses" />
+          <SectionHeading className="mb-4">For You</SectionHeading>
+          <ForYouEditor />
         </div>
       )}
 

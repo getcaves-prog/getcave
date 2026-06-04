@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { getFlyers, getNearbyFlyers, getNearbyFlyersScored } from "../services/canvas.service";
+import { getForYouFlyers } from "../services/for-you.service";
 import { useLocationStore } from "@/shared/stores/location.store";
 import { useCanvasReadyStore } from "../stores/canvas-ready.store";
 import { useCategoryFilterStore } from "../stores/category-filter.store";
 import { useDisplayModeStore } from "../stores/display-mode.store";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 import type { NearbyFlyer, DisplayMode } from "../types/canvas.types";
 
 const SCORED_FEED_ENABLED =
@@ -40,6 +42,7 @@ export function useFlyers() {
   const longitude = useLocationStore((s) => s.longitude);
   const locationLoading = useLocationStore((s) => s.loading);
   const selectedCategoryId = useCategoryFilterStore((s) => s.selectedCategoryId);
+  const { user } = useAuth();
 
   useEffect(() => {
     // Wait for geolocation to resolve before fetching
@@ -51,12 +54,18 @@ export function useFlyers() {
     useCanvasReadyStore.getState().reset();
 
     async function fetchFlyersOnce(): Promise<NearbyFlyer[]> {
-      // If category filter is active, use getFlyers with category
+      // If category filter is active, use getFlyers with category (applies to all users)
       if (selectedCategoryId) {
         return getFlyers(selectedCategoryId) as Promise<NearbyFlyer[]>;
       }
 
       if (latitude !== null && longitude !== null) {
+        // Logged-in users without a category filter → personalized "For You" feed
+        if (user) {
+          return getForYouFlyers(latitude, longitude, 25) as Promise<NearbyFlyer[]>;
+        }
+
+        // Logged-out users: keep existing behavior unchanged
         // Scored feed: single RPC call, ordered by weighted score
         if (SCORED_FEED_ENABLED) {
           return getNearbyFlyersScored(latitude, longitude, 25);
@@ -132,7 +141,7 @@ export function useFlyers() {
     return () => {
       cancelled = true;
     };
-  }, [latitude, longitude, locationLoading, selectedCategoryId]);
+  }, [latitude, longitude, locationLoading, selectedCategoryId, user]);
 
   return { flyers, loading, error, mode };
 }
