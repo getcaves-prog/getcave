@@ -15,7 +15,7 @@ interface SectionHeadingProps {
 export function SectionHeading({ children, className = "", trailing }: SectionHeadingProps) {
   return (
     <div className={`flex items-center justify-between mb-3 ${className}`}>
-      <span className="border-l-2 border-[#39FF14]/50 pl-2.5 text-[10px] uppercase tracking-[0.2em] text-cave-fog font-[family-name:var(--font-space-mono)]">
+      <span className="border-l-2 border-[#FFFFFF]/50 pl-2.5 text-[10px] uppercase tracking-[0.2em] text-cave-fog font-[family-name:var(--font-space-mono)]">
         {children}
       </span>
       {trailing && (

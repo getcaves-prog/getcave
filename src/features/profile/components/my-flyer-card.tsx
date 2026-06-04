@@ -28,7 +28,7 @@ function getStatusStyle(status: string | null): StatusStyle {
     case "approved":
       return {
         label: "Activo",
-        badgeClass: "border-[#39FF14] text-[#39FF14]",
+        badgeClass: "border-[#FFFFFF] text-[#FFFFFF]",
       };
     case "pending":
       return {

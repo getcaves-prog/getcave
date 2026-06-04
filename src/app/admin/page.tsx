@@ -179,6 +179,21 @@ export default function AdminDashboardPage() {
         )}
       </div>
 
+      {/* Quick actions */}
+      <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+        <a
+          href="/admin/seed"
+          className="flex flex-col gap-1 rounded-xl border border-cave-ash bg-cave-stone p-4 transition-colors hover:border-cave-fog hover:bg-cave-rock"
+        >
+          <span className="font-[family-name:var(--font-space-mono)] text-sm font-bold text-cave-white">
+            Sembrar comunidad
+          </span>
+          <span className="text-xs text-cave-fog">
+            Crear y popular una comunidad desde una plataforma externa
+          </span>
+        </a>
+      </div>
+
       {/* Recent flyers */}
       <div className="rounded-xl border border-cave-ash bg-cave-stone p-4 sm:p-6">
         <h2 className="mb-4 font-[family-name:var(--font-space-mono)] text-sm text-cave-fog uppercase tracking-wider">

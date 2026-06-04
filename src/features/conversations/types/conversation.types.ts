@@ -5,7 +5,7 @@ export type Conversation = Tables<"conversations">;
 export type MessageRow = Tables<"messages">;
 
 // ─── Subject type (polymorphic key) ────────────────────────────────────────
-export type SubjectType = "flyer" | "community";
+export type SubjectType = "flyer" | "community" | "channel";
 
 // ─── Author summary joined from profiles ───────────────────────────────────
 export interface MessageAuthor {
@@ -23,6 +23,7 @@ export interface MessageWithAuthor {
   parent_message_id: string | null;
   body: string | null; // null when is_deleted === true
   is_deleted: boolean;
+  is_official: boolean; // true = CAVES-authored seeded message
   created_at: string;
   updated_at: string;
   author: MessageAuthor | null; // null when author was deleted from auth.users

@@ -33,13 +33,13 @@ function JoinedCommunityItem({ item }: { item: JoinedCommunityActivity }) {
   return (
     <div className="flex items-start gap-3">
       {/* Icon dot */}
-      <div className="mt-1 w-7 h-7 rounded-full bg-[#39FF14]/15 flex items-center justify-center flex-shrink-0">
+      <div className="mt-1 w-7 h-7 rounded-full bg-[#FFFFFF]/15 flex items-center justify-center flex-shrink-0">
         <svg
           width="13"
           height="13"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#39FF14"
+          stroke="#FFFFFF"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -209,7 +209,7 @@ export function ActivityFeed({ items, loading }: ActivityFeedProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="w-6 h-6 border-2 border-cave-fog border-t-[#39FF14] rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-cave-fog border-t-[#FFFFFF] rounded-full animate-spin" />
       </div>
     );
   }

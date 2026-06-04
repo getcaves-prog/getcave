@@ -20,7 +20,7 @@ function RoleBadge({ role }: { role: string }) {
     <span
       className={`
         inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-[family-name:var(--font-space-mono)] uppercase tracking-wide
-        ${isOwner ? "bg-[#39FF14]/15 text-[#39FF14]" : isAdmin ? "bg-cave-fog/15 text-cave-fog" : "bg-cave-ash/40 text-cave-smoke"}
+        ${isOwner ? "bg-[#FFFFFF]/15 text-[#FFFFFF]" : isAdmin ? "bg-cave-fog/15 text-cave-fog" : "bg-cave-ash/40 text-cave-smoke"}
       `}
     >
       {label}
@@ -155,7 +155,7 @@ export function MyCommunityList({ communities, loading }: MyCommunitiesListProps
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="w-6 h-6 border-2 border-cave-fog border-t-[#39FF14] rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-cave-fog border-t-[#FFFFFF] rounded-full animate-spin" />
       </div>
     );
   }
