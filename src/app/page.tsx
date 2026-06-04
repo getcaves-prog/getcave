@@ -13,6 +13,7 @@ import { useDisplayModeStore } from "@/features/canvas/stores/display-mode.store
 import { usePendingActionStore } from "@/features/auth/stores/pending-action.store";
 import { reverseGeocode } from "@/shared/lib/geocoding/geocoding.service";
 import { registerPushNotifications } from "@/shared/lib/notifications/push.service";
+import { ForYouGate } from "@/features/onboarding/components/for-you-gate";
 
 /** Max time to wait for canvas readiness before forcing the intro exit */
 const MAX_WAIT_MS = 800;
@@ -125,6 +126,9 @@ export default function HomePage() {
       <AnimatePresence>
         {authModalOpen && <InlineAuthModal />}
       </AnimatePresence>
+
+      {/* For You onboarding gate — shows once per authenticated user (DB-backed) */}
+      <ForYouGate />
 
       {/* Intro overlay — fades out to reveal canvas underneath */}
       <AnimatePresence>
