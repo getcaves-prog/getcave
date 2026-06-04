@@ -4,6 +4,7 @@ import type {
   Community,
   CommunityWithMeta,
   CreateCommunityInput,
+  UpdateCommunityInput,
   Flyer,
   MemberRole,
   MemberWithProfile,
@@ -278,4 +279,29 @@ export async function promoteMember(
   if (error) {
     throw new Error(`Failed to promote member: ${error.message}`);
   }
+}
+
+// ─── updateCommunity ───────────────────────────────────────────────────────
+// Calls the SECURITY DEFINER RPC update_community which validates the caller
+// is an owner/admin. COALESCE logic in the RPC means undefined args leave
+// existing values unchanged (only provided fields are updated).
+export async function updateCommunity(
+  communityId: string,
+  input: UpdateCommunityInput
+): Promise<Community> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("update_community", {
+    p_community_id: communityId,
+    p_name: input.name,
+    p_description: input.description,
+    p_avatar_url: input.avatarUrl,
+    p_cover_url: input.coverUrl,
+  });
+
+  if (error) {
+    throw new Error(`Failed to update community: ${error.message}`);
+  }
+
+  return data as Community;
 }

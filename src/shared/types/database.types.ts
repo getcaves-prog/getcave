@@ -226,6 +226,53 @@ export type Database = {
           },
         ]
       }
+      community_channels: {
+        Row: {
+          community_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_default: boolean
+          name: string
+          position: number
+          updated_at: string
+          write_permission: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          position?: number
+          updated_at?: string
+          write_permission?: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
+          position?: number
+          updated_at?: string
+          write_permission?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_channels_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_members: {
         Row: {
           community_id: string
@@ -1198,6 +1245,35 @@ export type Database = {
         Returns: undefined
       }
       toggle_event_heat: { Args: { p_event_id: string }; Returns: Json }
+      update_community: {
+        Args: {
+          p_avatar_url?: string
+          p_community_id: string
+          p_cover_url?: string
+          p_description?: string
+          p_name?: string
+        }
+        Returns: {
+          avatar_url: string | null
+          city: string | null
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          member_count: number
+          name: string
+          slug: string
+          updated_at: string
+          zone_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communities"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       verify_and_get_invite: {
         Args: {
           p_display_name: string
