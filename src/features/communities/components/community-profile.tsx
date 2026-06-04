@@ -3,19 +3,15 @@
 import { useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useCommunity } from "../hooks/use-community";
 import { listMembers } from "../services/community.service";
-// Cross-feature import: EventThread lives in conversations/; same pattern as
-// flyer-detail-modal.tsx. Minimal surface — one named import.
-import { EventThread } from "@/features/conversations/components/event-thread";
-// Cross-feature import: RecapsGallery lives in recaps/; same minimal-surface
-// pattern as EventThread. isOwner not applicable in community context — gallery
-// is read-only for non-uploaders; community admins cannot delete others' recaps
-// at the community level (delete is per-flyer). See decision note below.
+// Cross-feature import: ChannelManager uses EventThread (conversations/) internally.
+// Same documented pattern as flyer-detail-modal.tsx. Minimal surface.
 import { SectionHeading } from "@/shared/components/ui/section-heading";
 import { BroadcastChannel } from "./broadcast-channel";
+import { ChannelManager } from "./channel-manager";
 import { CommunityEditModal } from "./community-edit-modal";
 import type { MemberWithProfile, Flyer, MemberRole } from "../types/community.types";
 
@@ -153,8 +149,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
   // Event tab state
   const [eventTab, setEventTab] = useState<"upcoming" | "past">("upcoming");
 
-  // Conversation accordion
-  const [showThread, setShowThread] = useState(false);
+  // Channels section — managed by ChannelManager component
 
   // Load members once community is available
   const loadMembers = useCallback(async (communityId: string) => {
@@ -491,71 +486,16 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
       {/* ── Divider ──────────────────────────────────────────────────── */}
       <div className="h-px bg-cave-ash/20 mx-5" />
 
-      {/* ── Conversación ─────────────────────────────────────────────── */}
+      {/* ── Canales ──────────────────────────────────────────────────── */}
       <div className="px-5 py-6">
-        <button
-          type="button"
-          onClick={() => setShowThread((prev) => !prev)}
-          className="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-cave-fog"
-            >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-cave-fog font-[family-name:var(--font-space-mono)]">
-              Conversación
-            </span>
-          </div>
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`text-cave-smoke transition-transform duration-200 ${showThread ? "rotate-180" : ""}`}
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
-
-        <AnimatePresence>
-          {showThread && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ type: "spring", stiffness: 280, damping: 28 }}
-              className="overflow-hidden"
-            >
-              <div className="mt-4 pb-2">
-                {/* Cross-feature import: EventThread (conversations/) reused here
-                    with subjectType='community'. Same documented pattern as
-                    flyer-detail-modal.tsx. See engram: getcave / phase3 feature boundary. */}
-                <EventThread
-                  subjectType="community"
-                  subjectId={community.id}
-                  currentUserId={user?.id}
-                  onSignInRequest={() => {
-                    window.location.href = "/auth/login";
-                  }}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <ChannelManager
+          communityId={community.id}
+          currentUserId={user?.id}
+          isAdmin={isAdmin}
+          onSignInRequest={() => {
+            window.location.href = "/auth/login";
+          }}
+        />
       </div>
 
       {/* ── Difusión ──────────────────────────────────────────────────── */}

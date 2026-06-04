@@ -5,7 +5,7 @@ export type Conversation = Tables<"conversations">;
 export type MessageRow = Tables<"messages">;
 
 // ─── Subject type (polymorphic key) ────────────────────────────────────────
-export type SubjectType = "flyer" | "community";
+export type SubjectType = "flyer" | "community" | "channel";
 
 // ─── Author summary joined from profiles ───────────────────────────────────
 export interface MessageAuthor {

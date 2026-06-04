@@ -262,19 +262,25 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
 }
 
 // ─── EventThread — public API ──────────────────────────────────────────────
-// Parameterized to support both flyer and community conversations.
+// Parameterized to support flyer, community, and channel conversations.
 // Pass subjectType='flyer' + subjectId={flyerId} for event threads.
 // Pass subjectType='community' + subjectId={communityId} for community chat.
+// Pass subjectType='channel' + subjectId={channelId} for channel threads.
 // The underlying useConversation hook already accepts subjectType + subjectId.
 export interface EventThreadProps {
-  subjectType: "flyer" | "community";
+  subjectType: "flyer" | "community" | "channel";
   subjectId: string;
   currentUserId: string | undefined;
   /** Called when logged-out user taps the sign-in affordance */
   onSignInRequest?: () => void;
+  /**
+   * When false, hides the composer and shows a read-only notice instead of
+   * the message input. Defaults to true. Use to gate admins_only channels.
+   */
+  canWrite?: boolean;
 }
 
-export function EventThread({ subjectType, subjectId, currentUserId, onSignInRequest }: EventThreadProps) {
+export function EventThread({ subjectType, subjectId, currentUserId, onSignInRequest, canWrite = true }: EventThreadProps) {
   const { messages, loading, error, post, reply, remove } = useConversation(subjectType, subjectId);
   const [replyTo, setReplyTo] = useState<{ id: string; author: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -375,13 +381,36 @@ export function EventThread({ subjectType, subjectId, currentUserId, onSignInReq
         <div ref={bottomRef} />
       </div>
 
-      {/* Composer — logged-in users only */}
+      {/* Composer — logged-in users only, and only when canWrite is true */}
       {currentUserId ? (
-        <Composer
-          replyTo={replyTo}
-          onCancelReply={handleCancelReply}
-          onSubmit={handleSubmit}
-        />
+        canWrite ? (
+          <Composer
+            replyTo={replyTo}
+            onCancelReply={handleCancelReply}
+            onSubmit={handleSubmit}
+          />
+        ) : (
+          /* Read-only notice for admins_only channels when user is not admin */
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-cave-stone/60 border border-cave-ash/40">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-cave-fog flex-shrink-0"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <p className="text-xs text-cave-fog font-[family-name:var(--font-space-mono)]">
+              Solo administradores pueden escribir
+            </p>
+          </div>
+        )
       ) : (
         /* Logged-out sign-in affordance */
         <div className="flex flex-col items-center gap-3 py-4">
