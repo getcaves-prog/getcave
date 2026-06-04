@@ -170,16 +170,16 @@ export default function CommunitiesPage() {
           <motion.div
             whileTap={{ scale: 0.98 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-[#39FF14]/40 hover:border-[#39FF14]/70 transition-colors mb-5"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-cave-smoke hover:border-cave-light transition-colors mb-5"
           >
-            <div className="w-12 h-12 rounded-full bg-[#39FF14]/10 border border-[#39FF14]/30 flex items-center justify-center flex-shrink-0">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="w-12 h-12 rounded-full bg-white/5 border border-cave-smoke flex items-center justify-center flex-shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cave-light">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </div>
             <div>
-              <p className="text-sm font-bold text-[#39FF14] font-[family-name:var(--font-space-mono)]">
+              <p className="text-sm font-bold text-cave-light font-[family-name:var(--font-space-mono)]">
                 Crear comunidad
               </p>
               <p className="text-xs text-cave-fog font-[family-name:var(--font-inter)]">

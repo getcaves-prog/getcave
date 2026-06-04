@@ -28,7 +28,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               variant === "primary",
             "bg-cave-ash text-cave-light border border-cave-rock hover:bg-cave-rock":
               variant === "secondary",
-            "bg-transparent text-cave-fog hover:text-neon-green":
+            "bg-transparent text-cave-fog hover:text-cave-white":
               variant === "ghost",
             "bg-neon-pink text-white hover:brightness-110":
               variant === "danger",

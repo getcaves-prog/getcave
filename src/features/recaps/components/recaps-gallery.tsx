@@ -307,7 +307,7 @@ function UploadButton({ onUpload, uploading, uploadError }: UploadButtonProps) {
         className={`flex items-center justify-center gap-2 h-[44px] rounded-full border transition-colors cursor-pointer font-[family-name:var(--font-space-mono)] text-[11px] uppercase tracking-[0.12em] ${
           uploading
             ? "border-cave-ash/30 text-cave-ash cursor-not-allowed opacity-60"
-            : "border-[#39FF14]/40 text-[#39FF14] hover:bg-[#39FF14]/8"
+            : "border-cave-smoke text-cave-light hover:bg-white/10 hover:text-cave-white"
         }`}
       >
         {uploading ? (

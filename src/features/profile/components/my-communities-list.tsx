@@ -124,7 +124,7 @@ function EmptyCommunitiesState() {
       </div>
       <Link
         href="/communities"
-        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#39FF14]/40 text-[#39FF14] text-xs font-[family-name:var(--font-space-mono)] hover:bg-[#39FF14]/10 transition-colors"
+        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-cave-smoke text-cave-light text-xs font-[family-name:var(--font-space-mono)] hover:bg-white/10 hover:border-cave-light hover:text-cave-white transition-colors"
       >
         Explorar comunidades
         <svg
