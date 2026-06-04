@@ -654,7 +654,7 @@ export function BroadcastChannel({ communityId, role }: BroadcastChannelProps) {
             onClick={() => setComposerMode("announcement")}
             whileTap={{ scale: 0.96 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            className="flex-1 h-[44px] flex items-center justify-center gap-2 rounded-full border border-[#39FF14]/40 text-[#39FF14] text-[11px] uppercase tracking-[0.12em] font-[family-name:var(--font-space-mono)] hover:bg-[#39FF14]/8 transition-colors"
+            className="flex-1 h-[44px] flex items-center justify-center gap-2 rounded-full border border-cave-smoke text-cave-light text-[11px] uppercase tracking-[0.12em] font-[family-name:var(--font-space-mono)] hover:bg-white/10 hover:border-cave-light hover:text-cave-white transition-colors"
           >
             <svg
               width="12"

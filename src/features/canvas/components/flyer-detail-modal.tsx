@@ -425,7 +425,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
               <div className="mt-5 px-1">
                 <Link
                   href={`/profile/${creator.username}`}
-                  className="text-sm text-cave-white hover:text-[#39FF14] transition-colors font-[family-name:var(--font-space-mono)]"
+                  className="text-sm text-cave-light hover:text-cave-white transition-colors font-[family-name:var(--font-space-mono)]"
                 >
                   @{creator.username}
                 </Link>
