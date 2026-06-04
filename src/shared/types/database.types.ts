@@ -811,7 +811,9 @@ export type Database = {
           city: string | null
           created_at: string
           id: string
+          onboarding_completed_at: string | null
           phone: string | null
+          preferences: Json
           push_token: string | null
           role: string
           updated_at: string
@@ -823,7 +825,9 @@ export type Database = {
           city?: string | null
           created_at?: string
           id: string
+          onboarding_completed_at?: string | null
           phone?: string | null
+          preferences?: Json
           push_token?: string | null
           role?: string
           updated_at?: string
@@ -835,7 +839,9 @@ export type Database = {
           city?: string | null
           created_at?: string
           id?: string
+          onboarding_completed_at?: string | null
           phone?: string | null
+          preferences?: Json
           push_token?: string | null
           role?: string
           updated_at?: string
@@ -1086,6 +1092,44 @@ export type Database = {
           social_copy: string
           status: string
           title: string
+          user_id: string
+          width: number
+          zone_name: string
+        }[]
+      }
+      nearby_flyers_for_you: {
+        Args: {
+          radius_km?: number
+          result_limit?: number
+          user_lat: number
+          user_lng: number
+        }
+        Returns: {
+          address: string
+          canvas_x: number
+          canvas_y: number
+          created_at: string
+          description: string
+          distance_m: number
+          distance_score: number
+          duration_days: number
+          event_date: string
+          event_time: string
+          expires_at: string
+          height: number
+          id: string
+          image_url: string
+          interaction_score: number
+          interest_score: number
+          is_promoted: boolean
+          location: unknown
+          promoted_until: string
+          rotation: number
+          social_copy: string
+          status: string
+          time_score: number
+          title: string
+          total_score: number
           user_id: string
           width: number
           zone_name: string
