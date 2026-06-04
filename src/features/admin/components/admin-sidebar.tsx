@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/admin/flyers", label: "Flyers" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/seed", label: "Sembrar comunidad" },
+  { href: "/admin/communities", label: "Transferir propiedad" },
 ];
 
 export function AdminSidebar() {

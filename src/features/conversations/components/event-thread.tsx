@@ -75,6 +75,53 @@ function MessageBubble({ message, currentUserId, onReply, onDelete, isReply }: M
     }
   }, [deleting, onDelete, message.id]);
 
+  // Official CAVES-authored messages get a dedicated identity
+  if (message.is_official) {
+    return (
+      <div className="flex gap-2">
+        {/* CAVES logo avatar */}
+        <div className="w-8 h-8 rounded-full flex-shrink-0 bg-cave-white flex items-center justify-center ring-1 ring-white/30">
+          <span className="text-[8px] font-bold text-cave-black font-[family-name:var(--font-space-mono)] leading-none">
+            CAV
+          </span>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          {/* Identity row */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-bold text-cave-white font-[family-name:var(--font-space-mono)]">
+              CAVES
+            </span>
+            {/* Official badge */}
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-cave-white/10 border border-cave-white/30">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span className="text-[9px] text-cave-white font-bold uppercase tracking-[0.1em] font-[family-name:var(--font-space-mono)] leading-none">
+                oficial
+              </span>
+            </span>
+            <span className="text-[10px] text-cave-fog font-[family-name:var(--font-space-mono)]">
+              {relativeTime(message.created_at)}
+            </span>
+          </div>
+
+          {/* Body */}
+          {message.is_deleted ? (
+            <p className="text-xs text-cave-smoke italic mt-1 font-[family-name:var(--font-inter)]">
+              mensaje eliminado
+            </p>
+          ) : (
+            <p className="text-sm text-cave-white leading-5 mt-1 font-[family-name:var(--font-inter)] break-words">
+              {message.body}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`flex gap-2 ${isReply ? "" : ""}`}>
       {/* Avatar */}

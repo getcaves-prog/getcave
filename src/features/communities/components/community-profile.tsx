@@ -357,6 +357,38 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
           {community.name}
         </h1>
 
+        {/* Seeded badge — shown when is_seeded=true, sets honest expectations */}
+        {community.is_seeded && (
+          <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-cave-ash/60 bg-cave-stone/60">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-cave-fog flex-shrink-0"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span className="text-[10px] text-cave-fog font-[family-name:var(--font-space-mono)] leading-none">
+              No oficial · Gestionada por CAVES
+            </span>
+            {community.source_platform && (
+              <>
+                <span className="text-cave-ash/40 text-[10px]">·</span>
+                <span className="text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)] leading-none capitalize">
+                  desde {community.source_platform}
+                </span>
+              </>
+            )}
+          </div>
+        )}
+
         {/* Meta row: city + member count */}
         <div className="flex items-center gap-3 mt-3 flex-wrap">
           {community.city && (

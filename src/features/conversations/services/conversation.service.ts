@@ -55,7 +55,7 @@ export async function listMessages(
   const { data: rows, error } = await supabase
     .from("messages")
     .select(
-      "id, conversation_id, parent_message_id, body, is_deleted, created_at, updated_at, author_id"
+      "id, conversation_id, parent_message_id, body, is_deleted, is_official, created_at, updated_at, author_id"
     )
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true })
@@ -108,6 +108,7 @@ function mapMessages(
       // Null out body for soft-deleted messages so the UI can show placeholder
       body: row.is_deleted ? null : row.body,
       is_deleted: row.is_deleted,
+      is_official: row.is_official ?? false,
       created_at: row.created_at,
       updated_at: row.updated_at,
       author: profile

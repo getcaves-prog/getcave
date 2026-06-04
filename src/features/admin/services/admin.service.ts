@@ -248,3 +248,43 @@ export async function getReportCount(): Promise<number> {
   if (error) return 0;
   return count ?? 0;
 }
+
+// ─── listSeededCommunities ─────────────────────────────────────────────────
+// Returns all communities currently flagged as is_seeded=true, ordered by
+// creation date desc. Used by the ownership-transfer admin page.
+export async function listSeededCommunities() {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("communities")
+    .select("id, name, slug, source_platform, source_url, claimed_at, member_count, avatar_url")
+    .eq("is_seeded", true)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to list seeded communities: ${error.message}`);
+  }
+
+  return data ?? [];
+}
+
+// ─── findUserByUsername ────────────────────────────────────────────────────
+// Searches profiles by username (case-insensitive ilike). Returns partial
+// match list so the admin can pick the target new owner. Limit: 10.
+// NOTE: profiles does not expose email (lives in auth.users — server-only).
+// Username search is the practical alternative for the admin tool.
+export async function findUserByUsername(query: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, username, avatar_url")
+    .ilike("username", `%${query.trim()}%`)
+    .limit(10);
+
+  if (error) {
+    throw new Error(`Failed to find user: ${error.message}`);
+  }
+
+  return data ?? [];
+}
