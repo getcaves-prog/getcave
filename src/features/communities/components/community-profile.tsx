@@ -124,6 +124,16 @@ function EventCard({ event }: { event: Flyer }) {
   );
 }
 
+// ─── SectionCard — elevated block wrapper for each section ───────────────────
+
+function SectionCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-cave-rock border border-cave-ash/50 rounded-2xl p-5">
+      {children}
+    </div>
+  );
+}
+
 // ─── CommunityProfile — main component ───────────────────────────────────────
 
 interface CommunityProfileProps {
@@ -253,49 +263,51 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
       {/* Grain overlay */}
       <div className="grain-overlay" />
 
-      {/* ── Sticky header ─────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-[#050505]/80 backdrop-blur-md safe-area-top border-b border-cave-ash/20">
-        <Link
-          href="/communities"
-          className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
-          aria-label="Volver a comunidades"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </Link>
-        <span className="font-[family-name:var(--font-space-mono)] text-sm text-cave-white truncate max-w-[200px]">
-          {community.name}
-        </span>
-        {/* Editar — visible only to owner/admin */}
-        {isAdmin ? (
-          <button
-            type="button"
-            onClick={() => setEditOpen(true)}
+      {/* ── Sticky header — full width, inner content centered ────────────── */}
+      <header className="sticky top-0 z-40 bg-[#050505]/80 backdrop-blur-md safe-area-top border-b border-cave-ash/20">
+        <div className="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
+          <Link
+            href="/communities"
             className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
-            aria-label="Editar comunidad"
+            aria-label="Volver a comunidades"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
             </svg>
-          </button>
-        ) : (
-          <div className="w-10" />
-        )}
+          </Link>
+          <span className="font-[family-name:var(--font-space-mono)] text-sm text-cave-white truncate max-w-[200px]">
+            {community.name}
+          </span>
+          {/* Editar — visible only to owner/admin */}
+          {isAdmin ? (
+            <button
+              type="button"
+              onClick={() => setEditOpen(true)}
+              className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
+              aria-label="Editar comunidad"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </button>
+          ) : (
+            <div className="w-10" />
+          )}
+        </div>
       </header>
 
-      {/* ── Cover banner ──────────────────────────────────────────────── */}
-      <div className="relative w-full h-40 bg-cave-stone overflow-hidden">
+      {/* ── Hero: cover banner (full bleed) ───────────────────────────────── */}
+      <div className="relative w-full h-44 bg-cave-stone overflow-hidden">
         {community.cover_url ? (
           <Image
             src={community.cover_url}
@@ -310,143 +322,197 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(135deg, #0A0A0A 0%, #111 50%, #0A0A0A 100%)",
+                "linear-gradient(135deg, #111116 0%, #1a1a22 40%, #0e0e12 100%)",
             }}
           />
         )}
-        {/* Gradient overlay so avatar reads on top */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#050505]/90" />
+        {/* Gradient fade to cave-black at the bottom */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050505]/30 to-[#050505]" />
       </div>
 
-      {/* ── Avatar + identity ─────────────────────────────────────────── */}
-      <div className="relative px-5 pb-5 -mt-10">
-        {/* Avatar */}
-        <div className="relative w-20 h-20 rounded-full overflow-hidden border-3 border-[#050505] bg-cave-stone mb-3 ring-2 ring-cave-ash/40">
-          {community.avatar_url ? (
-            <Image
-              src={community.avatar_url}
-              alt={community.name}
-              fill
-              className="object-cover"
-              unoptimized
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
+      {/* ── Centered content column ────────────────────────────────────────── */}
+      <div className="max-w-2xl mx-auto px-4 sm:px-5">
+
+        {/* ── Avatar overlapping banner ─────────────────────────────────── */}
+        {/* Negative margin pulls avatar up to overlap the banner bottom edge */}
+        <div className="relative -mt-12 mb-4">
+          <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-[#050505] bg-cave-stone ring-2 ring-cave-ash/40">
+            {community.avatar_url ? (
+              <Image
+                src={community.avatar_url}
+                alt={community.name}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <svg
+                  width="36"
+                  height="36"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-cave-smoke"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Identity block: name, badge, meta, description ───────────── */}
+        <div className="mb-5">
+          {/* Name */}
+          <h1 className="text-2xl font-bold text-cave-white font-[family-name:var(--font-space-mono)] tracking-tight leading-tight mb-2">
+            {community.name}
+          </h1>
+
+          {/* Seeded badge — shown when is_seeded=true, sets honest expectations */}
+          {community.is_seeded && (
+            <div className="mb-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-cave-ash/60 bg-cave-stone/60">
               <svg
-                width="32"
-                height="32"
+                width="10"
+                height="10"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.5"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-cave-smoke"
+                className="text-cave-fog flex-shrink-0"
               >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span className="text-[10px] text-cave-fog font-[family-name:var(--font-space-mono)] leading-none">
+                No oficial · Gestionada por CAVES
+              </span>
+              {community.source_platform && (
+                <>
+                  <span className="text-cave-ash/40 text-[10px]">·</span>
+                  <span className="text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)] leading-none capitalize">
+                    desde {community.source_platform}
+                  </span>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Meta row: city + member count */}
+          <div className="flex items-center gap-4 mb-3 flex-wrap">
+            {community.city && (
+              <span className="flex items-center gap-1.5 text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                {community.city}
+              </span>
+            )}
+            <span className="flex items-center gap-1.5 text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                 <circle cx="9" cy="7" r="4" />
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
-            </div>
-          )}
-        </div>
-
-        {/* Name */}
-        <h1 className="text-2xl font-bold text-cave-white font-[family-name:var(--font-space-mono)] tracking-tight leading-tight">
-          {community.name}
-        </h1>
-
-        {/* Seeded badge — shown when is_seeded=true, sets honest expectations */}
-        {community.is_seeded && (
-          <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-cave-ash/60 bg-cave-stone/60">
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-cave-fog flex-shrink-0"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            <span className="text-[10px] text-cave-fog font-[family-name:var(--font-space-mono)] leading-none">
-              No oficial · Gestionada por CAVES
+              {formatMemberCount(community.member_count ?? 0)} miembros
             </span>
-            {community.source_platform && (
+          </div>
+
+          {/* Description */}
+          {community.description && (
+            <p className="text-sm text-cave-fog leading-6 font-[family-name:var(--font-inter)] mb-4">
+              {community.description}
+            </p>
+          )}
+
+          {/* ── Join / Leave + Admin actions ────────────────────────────── */}
+          <div className="flex flex-wrap items-center gap-2">
+            {isMember ? (
               <>
-                <span className="text-cave-ash/40 text-[10px]">·</span>
-                <span className="text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)] leading-none capitalize">
-                  desde {community.source_platform}
-                </span>
+                {/* Joined pill */}
+                <div className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#FFFFFF]/50 bg-[#FFFFFF]/10">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span className="text-xs text-[#FFFFFF] font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)]">
+                    Unido
+                  </span>
+                </div>
+                {/* Leave button */}
+                <motion.button
+                  type="button"
+                  onClick={handleLeave}
+                  disabled={leaving}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className="h-[38px] px-4 rounded-full border border-cave-ash text-cave-smoke text-xs font-[family-name:var(--font-space-mono)] uppercase tracking-[0.1em] hover:border-[#FF2D7B]/60 hover:text-[#FF2D7B] transition-colors disabled:opacity-40"
+                >
+                  {leaving ? "Saliendo..." : "Salir"}
+                </motion.button>
+              </>
+            ) : (
+              <motion.button
+                type="button"
+                onClick={handleJoin}
+                disabled={joining}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                className="h-[48px] px-8 rounded-full bg-[#FFFFFF] text-cave-black font-bold uppercase tracking-[0.15em] text-sm font-[family-name:var(--font-space-mono)] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {joining ? "Uniéndose..." : "Unirse"}
+              </motion.button>
+            )}
+
+            {/* Admin actions — grouped inline with join/leave row */}
+            {isAdmin && (
+              <>
+                <div className="w-px h-6 bg-cave-ash/40 mx-1" aria-hidden="true" />
+                {/* Manage members */}
+                <motion.button
+                  type="button"
+                  onClick={() => setMembersManagerOpen(true)}
+                  whileTap={{ scale: 0.93 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className="flex items-center gap-1.5 h-[38px] px-3.5 rounded-full border border-cave-ash/60 text-cave-fog text-[11px] uppercase tracking-[0.1em] font-[family-name:var(--font-space-mono)] hover:border-cave-fog/60 hover:text-cave-light transition-colors"
+                  aria-label="Gestionar miembros"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <line x1="19" y1="8" x2="19" y2="14" />
+                    <line x1="22" y1="11" x2="16" y2="11" />
+                  </svg>
+                  Miembros
+                </motion.button>
+                {/* Edit community */}
+                <motion.button
+                  type="button"
+                  onClick={() => setEditOpen(true)}
+                  whileTap={{ scale: 0.93 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className="flex items-center gap-1.5 h-[38px] px-3.5 rounded-full border border-cave-ash/60 text-cave-fog text-[11px] uppercase tracking-[0.1em] font-[family-name:var(--font-space-mono)] hover:border-cave-fog/60 hover:text-cave-light transition-colors"
+                  aria-label="Editar comunidad"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Editar
+                </motion.button>
               </>
             )}
           </div>
-        )}
-
-        {/* Meta row: city + member count */}
-        <div className="flex items-center gap-3 mt-3 flex-wrap">
-          {community.city && (
-            <span className="flex items-center gap-1 text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              {community.city}
-            </span>
-          )}
-          <span className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
-            {formatMemberCount(community.member_count ?? 0)} miembros
-          </span>
-        </div>
-
-        {/* Description */}
-        {community.description && (
-          <p className="mt-3 text-sm text-cave-fog leading-6 font-[family-name:var(--font-inter)]">
-            {community.description}
-          </p>
-        )}
-
-        {/* ── Join / Leave ────────────────────────────────────────────── */}
-        <div className="mt-4">
-          {isMember ? (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#FFFFFF]/50 bg-[#FFFFFF]/10">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <span className="text-xs text-[#FFFFFF] font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)]">
-                  Unido
-                </span>
-              </div>
-              <motion.button
-                type="button"
-                onClick={handleLeave}
-                disabled={leaving}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                className="h-[40px] px-4 rounded-full border border-cave-ash text-cave-smoke text-xs font-[family-name:var(--font-space-mono)] uppercase tracking-[0.1em] hover:border-cave-fog hover:text-cave-white transition-colors disabled:opacity-40"
-              >
-                {leaving ? "Saliendo..." : "Salir"}
-              </motion.button>
-            </div>
-          ) : (
-            <motion.button
-              type="button"
-              onClick={handleJoin}
-              disabled={joining}
-              whileTap={{ scale: 0.96 }}
-              transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="h-[48px] px-8 rounded-full bg-[#FFFFFF] text-cave-black font-bold uppercase tracking-[0.15em] text-sm font-[family-name:var(--font-space-mono)] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {joining ? "Uniéndose..." : "Unirse"}
-            </motion.button>
-          )}
 
           {actionError && (
             <p className="mt-2 text-xs text-[#FF2D7B] font-[family-name:var(--font-space-mono)]">
@@ -454,165 +520,158 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
             </p>
           )}
         </div>
-      </div>
 
-      {/* ── Divider ──────────────────────────────────────────────────── */}
-      <div className="h-px bg-cave-ash/20 mx-5" />
+        {/* ── Section blocks — space-y-5 ────────────────────────────────── */}
+        <div className="space-y-5 pb-10 safe-area-bottom">
 
-      {/* ── Members preview ──────────────────────────────────────────── */}
-      <div className="px-5 py-6">
-        <SectionHeading
-          trailing={
-            isAdmin ? (
-              <motion.button
-                type="button"
-                onClick={() => setMembersManagerOpen(true)}
-                whileTap={{ scale: 0.93 }}
-                transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                className="flex items-center gap-1 h-[32px] px-3 rounded-full border border-[#FFFFFF]/30 text-[#FFFFFF]/80 text-[10px] uppercase tracking-[0.1em] font-[family-name:var(--font-space-mono)] hover:border-[#FFFFFF]/60 hover:text-[#FFFFFF] transition-colors"
-                aria-label="Gestionar miembros"
-              >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <line x1="19" y1="8" x2="19" y2="14" />
-                  <line x1="22" y1="11" x2="16" y2="11" />
-                </svg>
-                Gestionar
-              </motion.button>
-            ) : undefined
-          }
-        >
-          Miembros
-        </SectionHeading>
-        {members.length > 0 ? (
-          <div className="flex items-center gap-3">
-            <div className="flex -space-x-2">
-              <MemberAvatarRow members={members} />
-            </div>
-            {(community.member_count ?? 0) > 6 && (
-              <span className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
-                +{formatMemberCount((community.member_count ?? 0) - 6)} más
-              </span>
-            )}
-          </div>
-        ) : (
-          <p className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
-            Sé el primero en unirte
-          </p>
-        )}
-      </div>
-
-      {/* ── Divider ──────────────────────────────────────────────────── */}
-      <div className="h-px bg-cave-ash/20 mx-5" />
-
-      {/* ── Eventos ──────────────────────────────────────────────────── */}
-      <div className="px-5 py-6">
-        <SectionHeading>Eventos</SectionHeading>
-
-        {/* Tab switcher */}
-        <div className="flex gap-0 mb-4 rounded-xl overflow-hidden border border-cave-ash/40 w-fit">
-          {(["upcoming", "past"] as const).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setEventTab(tab)}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)] transition-colors min-h-[40px] ${
-                eventTab === tab
-                  ? "bg-[#FFFFFF] text-cave-black"
-                  : "text-cave-smoke hover:text-cave-white"
-              }`}
+          {/* Miembros */}
+          <SectionCard>
+            <SectionHeading
+              trailing={
+                isAdmin ? (
+                  <motion.button
+                    type="button"
+                    onClick={() => setMembersManagerOpen(true)}
+                    whileTap={{ scale: 0.93 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                    className="flex items-center gap-1 h-[32px] px-3 rounded-full border border-[#FFFFFF]/30 text-[#FFFFFF]/80 text-[10px] uppercase tracking-[0.1em] font-[family-name:var(--font-space-mono)] hover:border-[#FFFFFF]/60 hover:text-[#FFFFFF] transition-colors"
+                    aria-label="Gestionar miembros"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <line x1="19" y1="8" x2="19" y2="14" />
+                      <line x1="22" y1="11" x2="16" y2="11" />
+                    </svg>
+                    Gestionar
+                  </motion.button>
+                ) : undefined
+              }
             >
-              {tab === "upcoming" ? "Próximos" : "Pasados"}
-            </button>
-          ))}
+              Miembros
+            </SectionHeading>
+            {members.length > 0 ? (
+              <div className="flex items-center gap-3 mt-3">
+                <div className="flex -space-x-2">
+                  <MemberAvatarRow members={members} />
+                </div>
+                {(community.member_count ?? 0) > 6 && (
+                  <span className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
+                    +{formatMemberCount((community.member_count ?? 0) - 6)} más
+                  </span>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)] mt-3">
+                Sé el primero en unirte
+              </p>
+            )}
+          </SectionCard>
+
+          {/* Eventos */}
+          <SectionCard>
+            <SectionHeading>Eventos</SectionHeading>
+
+            {/* Tab switcher */}
+            <div className="flex gap-0 my-4 rounded-xl overflow-hidden border border-cave-ash/40 w-fit">
+              {(["upcoming", "past"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setEventTab(tab)}
+                  className={`px-4 py-2 text-xs font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)] transition-colors min-h-[40px] ${
+                    eventTab === tab
+                      ? "bg-[#FFFFFF] text-cave-black"
+                      : "text-cave-smoke hover:text-cave-white"
+                  }`}
+                >
+                  {tab === "upcoming" ? "Próximos" : "Pasados"}
+                </button>
+              ))}
+            </div>
+
+            {/* Event list */}
+            <div className="flex flex-col gap-3">
+              {displayEvents.length === 0 ? (
+                <p className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)] py-4 text-center">
+                  {eventTab === "upcoming"
+                    ? "No hay eventos próximos"
+                    : "No hay eventos pasados"}
+                </p>
+              ) : (
+                displayEvents.map((event) => <EventCard key={event.id} event={event} />)
+              )}
+            </div>
+          </SectionCard>
+
+          {/* Canales — panel contained within the card */}
+          <SectionCard>
+            <ChannelManager
+              communityId={community.id}
+              currentUserId={user?.id}
+              isAdmin={isAdmin}
+              onSignInRequest={() => {
+                window.location.href = "/auth/login";
+              }}
+            />
+          </SectionCard>
+
+          {/* Difusión */}
+          <SectionCard>
+            <SectionHeading>Difusión</SectionHeading>
+            {/* Admin-gating is handled inside BroadcastChannel via the role prop.
+                role is derived from community.myMembership — null for anonymous/
+                non-members, 'member' for regular members, 'owner'/'admin' for admins.
+                Only owner/admin see the composer; everyone sees the read-only list. */}
+            <div className="mt-3">
+              <BroadcastChannel
+                communityId={community.id}
+                role={(community.myMembership?.role as MemberRole) ?? null}
+              />
+            </div>
+          </SectionCard>
+
+          {/* Recaps */}
+          {/* DECISION: The community-level Recaps stub is NOT wired to RecapsGallery.
+              RecapsGallery requires a flyerId (per-event media), not a communityId.
+              Showing recaps from "the most recent past event" would require picking
+              a single flyerId heuristically, which is fragile and confusing (which
+              event? what if there are none?). The clean pattern is: recaps live on
+              each event detail (FlyerDetailModal). This stub shows a short note
+              directing users to individual events. If a community-level recap feed
+              is needed in the future, a dedicated service/hook that aggregates
+              event_media by community_id should be built. */}
+          <SectionCard>
+            <SectionHeading>Recaps</SectionHeading>
+            <div className="mt-3 py-5 flex flex-col items-center gap-3 rounded-xl border border-cave-ash/20 bg-cave-stone/30">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-cave-ash"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+              <p className="text-xs text-cave-ash font-[family-name:var(--font-space-mono)] text-center px-4">
+                Los recaps de cada evento están en su detalle
+              </p>
+              {pastEvents.length > 0 && (
+                <p className="text-[10px] text-cave-ash/60 font-[family-name:var(--font-space-mono)] text-center px-4">
+                  Abrí un evento pasado para ver y subir fotos
+                </p>
+              )}
+            </div>
+          </SectionCard>
+
         </div>
-
-        {/* Event list */}
-        <div className="flex flex-col gap-3">
-          {displayEvents.length === 0 ? (
-            <p className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)] py-4 text-center">
-              {eventTab === "upcoming"
-                ? "No hay eventos próximos"
-                : "No hay eventos pasados"}
-            </p>
-          ) : (
-            displayEvents.map((event) => <EventCard key={event.id} event={event} />)
-          )}
-        </div>
       </div>
-
-      {/* ── Divider ──────────────────────────────────────────────────── */}
-      <div className="h-px bg-cave-ash/20 mx-5" />
-
-      {/* ── Canales ──────────────────────────────────────────────────── */}
-      <div className="px-5 py-6">
-        <ChannelManager
-          communityId={community.id}
-          currentUserId={user?.id}
-          isAdmin={isAdmin}
-          onSignInRequest={() => {
-            window.location.href = "/auth/login";
-          }}
-        />
-      </div>
-
-      {/* ── Difusión ──────────────────────────────────────────────────── */}
-      <div className="h-px bg-cave-ash/20 mx-5" />
-      <div className="px-5 py-6">
-        <SectionHeading>Difusión</SectionHeading>
-        {/* Admin-gating is handled inside BroadcastChannel via the role prop.
-            role is derived from community.myMembership — null for anonymous/
-            non-members, 'member' for regular members, 'owner'/'admin' for admins.
-            Only owner/admin see the composer; everyone sees the read-only list. */}
-        <BroadcastChannel
-          communityId={community.id}
-          role={(community.myMembership?.role as MemberRole) ?? null}
-        />
-      </div>
-
-      {/* ── Recaps ────────────────────────────────────────────────────── */}
-      {/* DECISION: The community-level Recaps stub is NOT wired to RecapsGallery.
-          RecapsGallery requires a flyerId (per-event media), not a communityId.
-          Showing recaps from "the most recent past event" would require picking
-          a single flyerId heuristically, which is fragile and confusing (which
-          event? what if there are none?). The clean pattern is: recaps live on
-          each event detail (FlyerDetailModal). This stub shows a short note
-          directing users to individual events. If a community-level recap feed
-          is needed in the future, a dedicated service/hook that aggregates
-          event_media by community_id should be built. */}
-      <div className="h-px bg-cave-ash/20 mx-5" />
-      <div className="px-5 py-6">
-        <SectionHeading>Recaps</SectionHeading>
-        <div className="py-5 flex flex-col items-center gap-3 rounded-2xl border border-cave-ash/20 bg-cave-stone/20">
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-cave-ash"
-          >
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <polyline points="21 15 16 10 5 21" />
-          </svg>
-          <p className="text-xs text-cave-ash font-[family-name:var(--font-space-mono)] text-center px-4">
-            Los recaps de cada evento están en su detalle
-          </p>
-          {pastEvents.length > 0 && (
-            <p className="text-[10px] text-cave-ash/60 font-[family-name:var(--font-space-mono)] text-center px-4">
-              Abrí un evento pasado para ver y subir fotos
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Footer spacer for safe area */}
-      <div className="h-8 safe-area-bottom" />
 
       {/* ── Edit modal ── rendered at top of DOM stack via AnimatePresence ── */}
       {isAdmin && editOpen && community && (
