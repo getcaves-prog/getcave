@@ -9,6 +9,8 @@ import {
   listMembers,
   listCommunityEvents,
   promoteMember,
+  removeMember,
+  updateCommunity,
 } from "./community.service";
 
 // ─── Mock Supabase client ──────────────────────────────────────────────────
@@ -524,6 +526,119 @@ describe("promoteMember", () => {
 
     await expect(promoteMember("comm-1", "user-2", "admin")).rejects.toThrow(
       "Failed to promote member: Not authorized"
+    );
+  });
+});
+
+// ─── removeMember ──────────────────────────────────────────────────────────
+describe("removeMember", () => {
+  const mockDeleteEq = vi.fn();
+  const mockDeleteNestedEq = vi.fn();
+
+  beforeEach(() => {
+    // Chain: from().delete().eq("community_id").eq("user_id")
+    mockDeleteNestedEq.mockResolvedValue({ error: null });
+    mockDeleteEq.mockReturnValue({ eq: mockDeleteNestedEq });
+    mockDelete.mockReturnValue({ eq: mockDeleteEq });
+    mockFrom.mockReturnValue({ delete: mockDelete });
+  });
+
+  it("deletes the community_members row for the given communityId + userId", async () => {
+    await removeMember("comm-1", "user-2");
+
+    expect(mockFrom).toHaveBeenCalledWith("community_members");
+    expect(mockDeleteEq).toHaveBeenCalledWith("community_id", "comm-1");
+    expect(mockDeleteNestedEq).toHaveBeenCalledWith("user_id", "user-2");
+  });
+
+  it("throws descriptive error when Supabase returns an error", async () => {
+    mockDeleteNestedEq.mockResolvedValue({ error: { message: "RLS denied" } });
+
+    await expect(removeMember("comm-1", "user-2")).rejects.toThrow(
+      "Failed to remove member: RLS denied"
+    );
+  });
+});
+
+// ─── updateCommunity ───────────────────────────────────────────────────────
+describe("updateCommunity", () => {
+  const mockUpdatedCommunity = {
+    id: "comm-1",
+    slug: "tulum-party",
+    name: "Tulum Party Updated",
+    description: "Updated description",
+    avatar_url: "https://cdn.example.com/new-avatar.jpg",
+    cover_url: null,
+    city: null,
+    zone_id: null,
+    created_by: "user-1",
+    member_count: 5,
+    created_at: "2026-06-01T00:00:00Z",
+    updated_at: "2026-06-04T12:00:00Z",
+  };
+
+  beforeEach(() => {
+    mockRpc.mockResolvedValue({ data: mockUpdatedCommunity, error: null });
+  });
+
+  it("calls update_community RPC with correct params", async () => {
+    const result = await updateCommunity("comm-1", {
+      name: "Tulum Party Updated",
+      description: "Updated description",
+      avatarUrl: "https://cdn.example.com/new-avatar.jpg",
+    });
+
+    expect(mockRpc).toHaveBeenCalledWith("update_community", {
+      p_community_id: "comm-1",
+      p_name: "Tulum Party Updated",
+      p_description: "Updated description",
+      p_avatar_url: "https://cdn.example.com/new-avatar.jpg",
+      p_cover_url: undefined,
+    });
+    expect(result.name).toBe("Tulum Party Updated");
+    expect(result.updated_at).toBe("2026-06-04T12:00:00Z");
+  });
+
+  it("passes only provided fields — undefined for omitted ones", async () => {
+    await updateCommunity("comm-1", { name: "New Name" });
+
+    expect(mockRpc).toHaveBeenCalledWith("update_community", {
+      p_community_id: "comm-1",
+      p_name: "New Name",
+      p_description: undefined,
+      p_avatar_url: undefined,
+      p_cover_url: undefined,
+    });
+  });
+
+  it("supports updating coverUrl", async () => {
+    await updateCommunity("comm-1", { coverUrl: "https://cdn.example.com/cover.jpg" });
+
+    expect(mockRpc).toHaveBeenCalledWith("update_community", {
+      p_community_id: "comm-1",
+      p_name: undefined,
+      p_description: undefined,
+      p_avatar_url: undefined,
+      p_cover_url: "https://cdn.example.com/cover.jpg",
+    });
+  });
+
+  it("throws on RPC error (not_authorized)", async () => {
+    mockRpc.mockResolvedValue({ data: null, error: { message: "not_authorized" } });
+
+    await expect(updateCommunity("comm-1", { name: "X" })).rejects.toThrow(
+      "Failed to update community: not_authorized"
+    );
+  });
+
+  it("throws on RPC error (community_not_found)", async () => {
+    mockRpc.mockResolvedValue({
+      data: null,
+      error: { message: "community_not_found" },
+    });
+
+    await expect(updateCommunity("nonexistent", { name: "Y" })).rejects.toThrow(
+      "Failed to update community: community_not_found"
     );
   });
 });

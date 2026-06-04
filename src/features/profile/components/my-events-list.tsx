@@ -157,7 +157,7 @@ export function MyEventsList({ events, loading }: MyEventsListProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="w-6 h-6 border-2 border-cave-fog border-t-[#39FF14] rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-cave-fog border-t-[#FFFFFF] rounded-full animate-spin" />
       </div>
     );
   }
@@ -172,12 +172,12 @@ export function MyEventsList({ events, loading }: MyEventsListProps) {
           onClick={() => setBucket("upcoming")}
           className={`
             flex items-center gap-1.5 px-4 py-2 text-xs font-[family-name:var(--font-space-mono)] transition-colors
-            ${bucket === "upcoming" ? "bg-[#39FF14]/15 text-[#39FF14]" : "text-cave-smoke hover:text-cave-fog"}
+            ${bucket === "upcoming" ? "bg-[#FFFFFF]/15 text-[#FFFFFF]" : "text-cave-smoke hover:text-cave-fog"}
           `}
         >
           Próximos
           {events.upcoming.length > 0 && (
-            <span className={`text-[10px] px-1 py-0.5 rounded ${bucket === "upcoming" ? "bg-[#39FF14]/20 text-[#39FF14]" : "bg-cave-ash/40 text-cave-smoke"}`}>
+            <span className={`text-[10px] px-1 py-0.5 rounded ${bucket === "upcoming" ? "bg-[#FFFFFF]/20 text-[#FFFFFF]" : "bg-cave-ash/40 text-cave-smoke"}`}>
               {events.upcoming.length}
             </span>
           )}

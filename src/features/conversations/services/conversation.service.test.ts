@@ -99,6 +99,7 @@ describe("listMessages", () => {
       parent_message_id: null,
       body: "Hola!",
       is_deleted: false,
+      is_official: false,
       created_at: "2026-06-01T10:00:00Z",
       updated_at: "2026-06-01T10:00:00Z",
       author_id: "user-1",
@@ -109,6 +110,7 @@ describe("listMessages", () => {
       parent_message_id: "msg-1",
       body: "Qué onda",
       is_deleted: false,
+      is_official: false,
       created_at: "2026-06-01T10:05:00Z",
       updated_at: "2026-06-01T10:05:00Z",
       author_id: "user-2",
@@ -163,6 +165,7 @@ describe("listMessages", () => {
     expect(result[0].id).toBe("msg-1");
     expect(result[0].body).toBe("Hola!");
     expect(result[0].is_deleted).toBe(false);
+    expect(result[0].is_official).toBe(false);
     expect(result[0].author).toEqual({
       id: "user-1",
       username: "juan",
@@ -170,6 +173,28 @@ describe("listMessages", () => {
     });
     expect(result[1].parent_message_id).toBe("msg-1");
     expect(result[1].author?.username).toBe("maria");
+  });
+
+  it("sets is_official=true for official seeded messages", async () => {
+    const officialRows = [
+      {
+        id: "msg-off-1",
+        conversation_id: "conv-1",
+        parent_message_id: null,
+        body: "Mensaje oficial de CAVES",
+        is_deleted: false,
+        is_official: true,
+        created_at: "2026-06-01T10:00:00Z",
+        updated_at: "2026-06-01T10:00:00Z",
+        author_id: null,
+      },
+    ];
+    setupMessagesChain({ data: officialRows, error: null }, { data: [], error: null });
+
+    const result = await listMessages("conv-1");
+
+    expect(result[0].is_official).toBe(true);
+    expect(result[0].author).toBeNull();
   });
 
   it("nulls the body for soft-deleted messages", async () => {
@@ -180,6 +205,7 @@ describe("listMessages", () => {
         parent_message_id: null,
         body: "contenido eliminado",
         is_deleted: true,
+        is_official: false,
         created_at: "2026-06-01T11:00:00Z",
         updated_at: "2026-06-01T11:30:00Z",
         author_id: "user-1",
@@ -204,6 +230,7 @@ describe("listMessages", () => {
         parent_message_id: null,
         body: "mensaje de usuario eliminado",
         is_deleted: false,
+        is_official: false,
         created_at: "2026-06-01T12:00:00Z",
         updated_at: "2026-06-01T12:00:00Z",
         author_id: null,
@@ -242,6 +269,7 @@ describe("postMessage", () => {
     parent_message_id: null,
     body: "Nuevo mensaje",
     is_deleted: false,
+    is_official: false,
     created_at: "2026-06-01T13:00:00Z",
     updated_at: "2026-06-01T13:00:00Z",
     author_id: "user-1",
@@ -366,6 +394,7 @@ describe("groupByThread", () => {
     parent_message_id: parent,
     body: "msg",
     is_deleted: false,
+    is_official: false,
     created_at: "2026-06-01T10:00:00Z",
     updated_at: "2026-06-01T10:00:00Z",
     author: null,

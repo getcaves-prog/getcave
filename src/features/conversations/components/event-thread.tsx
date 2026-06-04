@@ -75,6 +75,53 @@ function MessageBubble({ message, currentUserId, onReply, onDelete, isReply }: M
     }
   }, [deleting, onDelete, message.id]);
 
+  // Official CAVES-authored messages get a dedicated identity
+  if (message.is_official) {
+    return (
+      <div className="flex gap-2">
+        {/* CAVES logo avatar */}
+        <div className="w-8 h-8 rounded-full flex-shrink-0 bg-cave-white flex items-center justify-center ring-1 ring-white/30">
+          <span className="text-[8px] font-bold text-cave-black font-[family-name:var(--font-space-mono)] leading-none">
+            CAV
+          </span>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          {/* Identity row */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-bold text-cave-white font-[family-name:var(--font-space-mono)]">
+              CAVES
+            </span>
+            {/* Official badge */}
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-cave-white/10 border border-cave-white/30">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span className="text-[9px] text-cave-white font-bold uppercase tracking-[0.1em] font-[family-name:var(--font-space-mono)] leading-none">
+                oficial
+              </span>
+            </span>
+            <span className="text-[10px] text-cave-fog font-[family-name:var(--font-space-mono)]">
+              {relativeTime(message.created_at)}
+            </span>
+          </div>
+
+          {/* Body */}
+          {message.is_deleted ? (
+            <p className="text-xs text-cave-smoke italic mt-1 font-[family-name:var(--font-inter)]">
+              mensaje eliminado
+            </p>
+          ) : (
+            <p className="text-sm text-cave-white leading-5 mt-1 font-[family-name:var(--font-inter)] break-words">
+              {message.body}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`flex gap-2 ${isReply ? "" : ""}`}>
       {/* Avatar */}
@@ -191,9 +238,9 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.15 }}
-            className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#39FF14]/10 border border-[#39FF14]/20"
+            className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#FFFFFF]/10 border border-[#FFFFFF]/20"
           >
-            <span className="text-[10px] text-[#39FF14] font-[family-name:var(--font-space-mono)]">
+            <span className="text-[10px] text-[#FFFFFF] font-[family-name:var(--font-space-mono)]">
               Respondiendo a @{replyTo.author}
             </span>
             <button
@@ -220,7 +267,7 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
             placeholder={replyTo ? `Responder a @${replyTo.author}...` : "Escribí un mensaje..."}
             rows={1}
             maxLength={2000}
-            className="w-full min-h-[44px] px-4 py-3 rounded-xl bg-cave-rock border border-cave-ash text-cave-white placeholder:text-cave-smoke focus:outline-none focus:border-[#39FF14] transition-colors resize-none font-[family-name:var(--font-inter)] text-sm leading-5"
+            className="w-full min-h-[44px] px-4 py-3 rounded-xl bg-cave-rock border border-cave-ash text-cave-white placeholder:text-cave-smoke focus:outline-none focus:border-[#FFFFFF] transition-colors resize-none font-[family-name:var(--font-inter)] text-sm leading-5"
             style={{ height: "44px" }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -236,7 +283,7 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
           disabled={!text.trim() || posting}
           whileTap={{ scale: 0.93 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
-          className="w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-full bg-[#39FF14] text-cave-black disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
+          className="w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-full bg-[#FFFFFF] text-cave-black disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
           aria-label="Enviar mensaje"
         >
           {posting ? (
@@ -262,19 +309,25 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
 }
 
 // ─── EventThread — public API ──────────────────────────────────────────────
-// Parameterized to support both flyer and community conversations.
+// Parameterized to support flyer, community, and channel conversations.
 // Pass subjectType='flyer' + subjectId={flyerId} for event threads.
 // Pass subjectType='community' + subjectId={communityId} for community chat.
+// Pass subjectType='channel' + subjectId={channelId} for channel threads.
 // The underlying useConversation hook already accepts subjectType + subjectId.
 export interface EventThreadProps {
-  subjectType: "flyer" | "community";
+  subjectType: "flyer" | "community" | "channel";
   subjectId: string;
   currentUserId: string | undefined;
   /** Called when logged-out user taps the sign-in affordance */
   onSignInRequest?: () => void;
+  /**
+   * When false, hides the composer and shows a read-only notice instead of
+   * the message input. Defaults to true. Use to gate admins_only channels.
+   */
+  canWrite?: boolean;
 }
 
-export function EventThread({ subjectType, subjectId, currentUserId, onSignInRequest }: EventThreadProps) {
+export function EventThread({ subjectType, subjectId, currentUserId, onSignInRequest, canWrite = true }: EventThreadProps) {
   const { messages, loading, error, post, reply, remove } = useConversation(subjectType, subjectId);
   const [replyTo, setReplyTo] = useState<{ id: string; author: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -375,13 +428,36 @@ export function EventThread({ subjectType, subjectId, currentUserId, onSignInReq
         <div ref={bottomRef} />
       </div>
 
-      {/* Composer — logged-in users only */}
+      {/* Composer — logged-in users only, and only when canWrite is true */}
       {currentUserId ? (
-        <Composer
-          replyTo={replyTo}
-          onCancelReply={handleCancelReply}
-          onSubmit={handleSubmit}
-        />
+        canWrite ? (
+          <Composer
+            replyTo={replyTo}
+            onCancelReply={handleCancelReply}
+            onSubmit={handleSubmit}
+          />
+        ) : (
+          /* Read-only notice for admins_only channels when user is not admin */
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-cave-stone/60 border border-cave-ash/40">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-cave-fog flex-shrink-0"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <p className="text-xs text-cave-fog font-[family-name:var(--font-space-mono)]">
+              Solo administradores pueden escribir
+            </p>
+          </div>
+        )
       ) : (
         /* Logged-out sign-in affordance */
         <div className="flex flex-col items-center gap-3 py-4">

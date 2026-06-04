@@ -36,7 +36,7 @@ function resolveHref(conv: MyConversation): string {
 // ─── Subject type chip ─────────────────────────────────────────────────────
 
 const SUBJECT_CHIP: Record<string, { label: string; color: string }> = {
-  flyer: { label: "Evento", color: "bg-[#39FF14]/10 text-[#39FF14]" },
+  flyer: { label: "Evento", color: "bg-[#FFFFFF]/10 text-[#FFFFFF]" },
   community: { label: "Comunidad", color: "bg-cave-fog/10 text-cave-fog" },
 };
 
@@ -152,7 +152,7 @@ export function MyConversationsList({ conversations, loading }: MyConversationsL
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="w-6 h-6 border-2 border-cave-fog border-t-[#39FF14] rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-cave-fog border-t-[#FFFFFF] rounded-full animate-spin" />
       </div>
     );
   }

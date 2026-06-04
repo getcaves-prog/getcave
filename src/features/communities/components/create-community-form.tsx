@@ -45,7 +45,7 @@ function TextInput({ id, error, className = "", ...rest }: TextInputProps) {
         id={id}
         className={`w-full h-[48px] px-4 rounded-xl bg-cave-rock border ${
           error ? "border-[#FF2D7B]" : "border-cave-ash"
-        } text-cave-white placeholder:text-cave-smoke focus:outline-none focus:border-[#39FF14] transition-colors font-[family-name:var(--font-inter)] text-sm ${className}`}
+        } text-cave-white placeholder:text-cave-smoke focus:outline-none focus:border-[#FFFFFF] transition-colors font-[family-name:var(--font-inter)] text-sm ${className}`}
         {...rest}
       />
       {error && (
@@ -72,7 +72,7 @@ function TextArea({ id, error, className = "", ...rest }: TextAreaProps) {
         rows={3}
         className={`w-full px-4 py-3 rounded-xl bg-cave-rock border ${
           error ? "border-[#FF2D7B]" : "border-cave-ash"
-        } text-cave-white placeholder:text-cave-smoke focus:outline-none focus:border-[#39FF14] transition-colors resize-none font-[family-name:var(--font-inter)] text-sm leading-5 ${className}`}
+        } text-cave-white placeholder:text-cave-smoke focus:outline-none focus:border-[#FFFFFF] transition-colors resize-none font-[family-name:var(--font-inter)] text-sm leading-5 ${className}`}
         {...rest}
       />
       {error && (
@@ -302,8 +302,8 @@ export function CreateCommunityForm() {
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
           className={`h-[52px] rounded-full font-bold uppercase tracking-[0.15em] text-sm font-[family-name:var(--font-space-mono)] transition-colors disabled:cursor-not-allowed ${
             success
-              ? "bg-[#39FF14]/80 text-cave-black"
-              : "bg-[#39FF14] text-cave-black disabled:opacity-50"
+              ? "bg-[#FFFFFF]/80 text-cave-black"
+              : "bg-[#FFFFFF] text-cave-black disabled:opacity-50"
           }`}
         >
           {success

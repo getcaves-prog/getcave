@@ -24,7 +24,7 @@ function CommunityCard({ community }: { community: Community }) {
       <motion.div
         whileTap={{ scale: 0.98 }}
         transition={{ type: "spring", stiffness: 400, damping: 20 }}
-        className="flex items-center gap-3 px-4 py-3 rounded-xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 active:border-[#39FF14]/30 transition-colors"
+        className="flex items-center gap-3 px-4 py-3 rounded-xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 active:border-[#FFFFFF]/30 transition-colors"
       >
         {/* Avatar */}
         <div className="relative w-12 h-12 rounded-full overflow-hidden bg-cave-stone flex-shrink-0 ring-1 ring-cave-ash/40">

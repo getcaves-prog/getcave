@@ -381,17 +381,17 @@ export function ProfilePage({ username }: ProfilePageProps) {
                   onClick={() => setActiveTab(tab.id)}
                   className={`
                     relative flex items-center gap-1.5 flex-shrink-0 px-3 py-3.5 text-xs font-[family-name:var(--font-space-mono)] transition-colors whitespace-nowrap
-                    ${isActive ? "text-[#39FF14]" : "text-cave-smoke hover:text-cave-fog"}
+                    ${isActive ? "text-[#FFFFFF]" : "text-cave-smoke hover:text-cave-fog"}
                   `}
                 >
                   {tab.label}
                   {tab.count !== null && tab.count > 0 && (
-                    <span className={`text-[10px] px-1 py-0.5 rounded ${isActive ? "bg-[#39FF14]/15 text-[#39FF14]" : "bg-cave-ash/40 text-cave-smoke"}`}>
+                    <span className={`text-[10px] px-1 py-0.5 rounded ${isActive ? "bg-[#FFFFFF]/15 text-[#FFFFFF]" : "bg-cave-ash/40 text-cave-smoke"}`}>
                       {tab.count}
                     </span>
                   )}
                   {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#39FF14] rounded-t-full" />
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#FFFFFF] rounded-t-full" />
                   )}
                 </button>
               );

@@ -3,19 +3,17 @@
 import { useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useCommunity } from "../hooks/use-community";
 import { listMembers } from "../services/community.service";
-// Cross-feature import: EventThread lives in conversations/; same pattern as
-// flyer-detail-modal.tsx. Minimal surface — one named import.
-import { EventThread } from "@/features/conversations/components/event-thread";
-// Cross-feature import: RecapsGallery lives in recaps/; same minimal-surface
-// pattern as EventThread. isOwner not applicable in community context — gallery
-// is read-only for non-uploaders; community admins cannot delete others' recaps
-// at the community level (delete is per-flyer). See decision note below.
+// Cross-feature import: ChannelManager uses EventThread (conversations/) internally.
+// Same documented pattern as flyer-detail-modal.tsx. Minimal surface.
 import { SectionHeading } from "@/shared/components/ui/section-heading";
 import { BroadcastChannel } from "./broadcast-channel";
+import { ChannelManager } from "./channel-manager";
+import { CommunityEditModal } from "./community-edit-modal";
+import { MembersManager } from "./members-manager";
 import type { MemberWithProfile, Flyer, MemberRole } from "../types/community.types";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -134,7 +132,7 @@ interface CommunityProfileProps {
 
 export function CommunityProfile({ slug }: CommunityProfileProps) {
   const { user } = useAuth();
-  const { community, upcomingEvents, pastEvents, loading, error, join, leave } = useCommunity(
+  const { community, upcomingEvents, pastEvents, loading, error, join, leave, refresh } = useCommunity(
     slug,
     user?.id
   );
@@ -143,14 +141,19 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
   const [leaving, setLeaving] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
+  // Edit modal — visible only to owner/admin
+  const [editOpen, setEditOpen] = useState(false);
+
+  // Members manager — visible only to owner/admin
+  const [membersManagerOpen, setMembersManagerOpen] = useState(false);
+
   const [members, setMembers] = useState<MemberWithProfile[]>([]);
   const [membersLoaded, setMembersLoaded] = useState(false);
 
   // Event tab state
   const [eventTab, setEventTab] = useState<"upcoming" | "past">("upcoming");
 
-  // Conversation accordion
-  const [showThread, setShowThread] = useState(false);
+  // Channels section — managed by ChannelManager component
 
   // Load members once community is available
   const loadMembers = useCallback(async (communityId: string) => {
@@ -202,7 +205,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
   if (loading) {
     return (
       <div className="min-h-dvh bg-cave-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-cave-fog border-t-[#39FF14] rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-cave-fog border-t-[#FFFFFF] rounded-full animate-spin" />
       </div>
     );
   }
@@ -240,6 +243,9 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
   }
 
   const isMember = !!community.myMembership;
+  const isAdmin =
+    community.myMembership?.role === "owner" ||
+    community.myMembership?.role === "admin";
   const displayEvents = eventTab === "upcoming" ? upcomingEvents : pastEvents;
 
   return (
@@ -261,7 +267,31 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
         <span className="font-[family-name:var(--font-space-mono)] text-sm text-cave-white truncate max-w-[200px]">
           {community.name}
         </span>
-        <div className="w-10" />
+        {/* Editar — visible only to owner/admin */}
+        {isAdmin ? (
+          <button
+            type="button"
+            onClick={() => setEditOpen(true)}
+            className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
+            aria-label="Editar comunidad"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </button>
+        ) : (
+          <div className="w-10" />
+        )}
       </header>
 
       {/* ── Cover banner ──────────────────────────────────────────────── */}
@@ -327,6 +357,38 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
           {community.name}
         </h1>
 
+        {/* Seeded badge — shown when is_seeded=true, sets honest expectations */}
+        {community.is_seeded && (
+          <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-cave-ash/60 bg-cave-stone/60">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-cave-fog flex-shrink-0"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span className="text-[10px] text-cave-fog font-[family-name:var(--font-space-mono)] leading-none">
+              No oficial · Gestionada por CAVES
+            </span>
+            {community.source_platform && (
+              <>
+                <span className="text-cave-ash/40 text-[10px]">·</span>
+                <span className="text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)] leading-none capitalize">
+                  desde {community.source_platform}
+                </span>
+              </>
+            )}
+          </div>
+        )}
+
         {/* Meta row: city + member count */}
         <div className="flex items-center gap-3 mt-3 flex-wrap">
           {community.city && (
@@ -354,11 +416,11 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
         <div className="mt-4">
           {isMember ? (
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#39FF14]/50 bg-[#39FF14]/10">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <div className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#FFFFFF]/50 bg-[#FFFFFF]/10">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                <span className="text-xs text-[#39FF14] font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)]">
+                <span className="text-xs text-[#FFFFFF] font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)]">
                   Unido
                 </span>
               </div>
@@ -380,7 +442,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
               disabled={joining}
               whileTap={{ scale: 0.96 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="h-[48px] px-8 rounded-full bg-[#39FF14] text-cave-black font-bold uppercase tracking-[0.15em] text-sm font-[family-name:var(--font-space-mono)] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-[48px] px-8 rounded-full bg-[#FFFFFF] text-cave-black font-bold uppercase tracking-[0.15em] text-sm font-[family-name:var(--font-space-mono)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {joining ? "Uniéndose..." : "Unirse"}
             </motion.button>
@@ -399,7 +461,30 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
 
       {/* ── Members preview ──────────────────────────────────────────── */}
       <div className="px-5 py-6">
-        <SectionHeading>Miembros</SectionHeading>
+        <SectionHeading
+          trailing={
+            isAdmin ? (
+              <motion.button
+                type="button"
+                onClick={() => setMembersManagerOpen(true)}
+                whileTap={{ scale: 0.93 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                className="flex items-center gap-1 h-[32px] px-3 rounded-full border border-[#FFFFFF]/30 text-[#FFFFFF]/80 text-[10px] uppercase tracking-[0.1em] font-[family-name:var(--font-space-mono)] hover:border-[#FFFFFF]/60 hover:text-[#FFFFFF] transition-colors"
+                aria-label="Gestionar miembros"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <line x1="19" y1="8" x2="19" y2="14" />
+                  <line x1="22" y1="11" x2="16" y2="11" />
+                </svg>
+                Gestionar
+              </motion.button>
+            ) : undefined
+          }
+        >
+          Miembros
+        </SectionHeading>
         {members.length > 0 ? (
           <div className="flex items-center gap-3">
             <div className="flex -space-x-2">
@@ -434,7 +519,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
               onClick={() => setEventTab(tab)}
               className={`px-4 py-2 text-xs font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)] transition-colors min-h-[40px] ${
                 eventTab === tab
-                  ? "bg-[#39FF14] text-cave-black"
+                  ? "bg-[#FFFFFF] text-cave-black"
                   : "text-cave-smoke hover:text-cave-white"
               }`}
             >
@@ -460,71 +545,16 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
       {/* ── Divider ──────────────────────────────────────────────────── */}
       <div className="h-px bg-cave-ash/20 mx-5" />
 
-      {/* ── Conversación ─────────────────────────────────────────────── */}
+      {/* ── Canales ──────────────────────────────────────────────────── */}
       <div className="px-5 py-6">
-        <button
-          type="button"
-          onClick={() => setShowThread((prev) => !prev)}
-          className="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-cave-fog"
-            >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-cave-fog font-[family-name:var(--font-space-mono)]">
-              Conversación
-            </span>
-          </div>
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`text-cave-smoke transition-transform duration-200 ${showThread ? "rotate-180" : ""}`}
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
-
-        <AnimatePresence>
-          {showThread && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ type: "spring", stiffness: 280, damping: 28 }}
-              className="overflow-hidden"
-            >
-              <div className="mt-4 pb-2">
-                {/* Cross-feature import: EventThread (conversations/) reused here
-                    with subjectType='community'. Same documented pattern as
-                    flyer-detail-modal.tsx. See engram: getcave / phase3 feature boundary. */}
-                <EventThread
-                  subjectType="community"
-                  subjectId={community.id}
-                  currentUserId={user?.id}
-                  onSignInRequest={() => {
-                    window.location.href = "/auth/login";
-                  }}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <ChannelManager
+          communityId={community.id}
+          currentUserId={user?.id}
+          isAdmin={isAdmin}
+          onSignInRequest={() => {
+            window.location.href = "/auth/login";
+          }}
+        />
       </div>
 
       {/* ── Difusión ──────────────────────────────────────────────────── */}
@@ -583,6 +613,30 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
 
       {/* Footer spacer for safe area */}
       <div className="h-8 safe-area-bottom" />
+
+      {/* ── Edit modal ── rendered at top of DOM stack via AnimatePresence ── */}
+      {isAdmin && editOpen && community && (
+        <CommunityEditModal
+          community={community}
+          onClose={() => setEditOpen(false)}
+          onSuccess={refresh}
+        />
+      )}
+
+      {/* ── Members manager ── owner/admin only ── */}
+      {isAdmin && membersManagerOpen && community && user && (
+        <MembersManager
+          communityId={community.id}
+          currentUserRole={community.myMembership!.role as MemberRole}
+          currentUserId={user.id}
+          onClose={() => setMembersManagerOpen(false)}
+          onChanged={() => {
+            // Reload the members preview and community counts
+            setMembersLoaded(false);
+            refresh();
+          }}
+        />
+      )}
     </div>
   );
 }

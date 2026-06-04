@@ -65,7 +65,7 @@ export function InlineAuthModal() {
             onClick={handleSignup}
             className="w-full min-h-[44px] rounded-xl px-5 py-3 text-sm font-bold uppercase tracking-wider text-[#050505] transition-opacity active:opacity-80"
             style={{
-              backgroundColor: "#39FF14",
+              backgroundColor: "#FFFFFF",
               fontFamily: "var(--font-space-mono)",
             }}
           >
