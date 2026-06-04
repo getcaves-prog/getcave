@@ -68,7 +68,7 @@ function LookingForChip({
         "min-h-[48px] flex items-center justify-center px-4 py-3 rounded-xl border",
         "text-sm font-[family-name:var(--font-space-mono)] transition-colors",
         active
-          ? "bg-[#39FF14]/10 border-[#39FF14] text-[#39FF14] shadow-[0_0_12px_rgba(57,255,20,0.15)]"
+          ? "bg-[#FFFFFF]/10 border-[#FFFFFF] text-[#FFFFFF] shadow-[0_0_12px_rgba(255,255,255,0.15)]"
           : "bg-cave-rock/60 border-cave-ash text-cave-fog hover:border-cave-fog hover:text-cave-white",
       ].join(" ")}
     >
@@ -89,9 +89,9 @@ function ProgressBar({ step }: { step: number }) {
           style={{
             backgroundColor:
               i < step
-                ? "#39FF14"
+                ? "#FFFFFF"
                 : i === step
-                  ? "rgba(57,255,20,0.4)"
+                  ? "rgba(255,255,255,0.4)"
                   : "rgba(255,255,255,0.12)",
           }}
         />
@@ -213,7 +213,7 @@ export function ForYouOnboarding({ onComplete }: ForYouOnboardingProps) {
 
       {/* Header */}
       <div className="px-5 pb-4 flex-shrink-0">
-        <div className="border-l-2 border-[#39FF14]/60 pl-3 mb-1">
+        <div className="border-l-2 border-[#FFFFFF]/60 pl-3 mb-1">
           <h1 className="text-xl font-[family-name:var(--font-space-mono)] font-bold text-cave-white leading-tight tracking-tight">
             Armá tu For You
           </h1>
@@ -290,7 +290,7 @@ export function ForYouOnboarding({ onComplete }: ForYouOnboardingProps) {
                     px-4 py-3 text-sm text-cave-white
                     font-[family-name:var(--font-space-mono)]
                     placeholder:text-cave-smoke
-                    focus:outline-none focus:border-[#39FF14]/50 focus:shadow-[0_0_12px_rgba(57,255,20,0.08)]
+                    focus:outline-none focus:border-[#FFFFFF]/50 focus:shadow-[0_0_12px_rgba(255,255,255,0.08)]
                     resize-none transition-colors leading-relaxed
                   "
                 />
@@ -315,9 +315,9 @@ export function ForYouOnboarding({ onComplete }: ForYouOnboardingProps) {
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className="
               min-h-[48px] w-full rounded-full
-              bg-[#39FF14] text-cave-black text-sm font-medium
+              bg-[#FFFFFF] text-cave-black text-sm font-medium
               font-[family-name:var(--font-space-mono)]
-              shadow-[0_0_16px_rgba(57,255,20,0.2)]
+              shadow-[0_0_16px_rgba(255,255,255,0.2)]
               disabled:opacity-50 transition-opacity
               hover:brightness-110 active:brightness-95
             "

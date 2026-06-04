@@ -191,9 +191,9 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.15 }}
-            className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#39FF14]/10 border border-[#39FF14]/20"
+            className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#FFFFFF]/10 border border-[#FFFFFF]/20"
           >
-            <span className="text-[10px] text-[#39FF14] font-[family-name:var(--font-space-mono)]">
+            <span className="text-[10px] text-[#FFFFFF] font-[family-name:var(--font-space-mono)]">
               Respondiendo a @{replyTo.author}
             </span>
             <button
@@ -220,7 +220,7 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
             placeholder={replyTo ? `Responder a @${replyTo.author}...` : "Escribí un mensaje..."}
             rows={1}
             maxLength={2000}
-            className="w-full min-h-[44px] px-4 py-3 rounded-xl bg-cave-rock border border-cave-ash text-cave-white placeholder:text-cave-smoke focus:outline-none focus:border-[#39FF14] transition-colors resize-none font-[family-name:var(--font-inter)] text-sm leading-5"
+            className="w-full min-h-[44px] px-4 py-3 rounded-xl bg-cave-rock border border-cave-ash text-cave-white placeholder:text-cave-smoke focus:outline-none focus:border-[#FFFFFF] transition-colors resize-none font-[family-name:var(--font-inter)] text-sm leading-5"
             style={{ height: "44px" }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -236,7 +236,7 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
           disabled={!text.trim() || posting}
           whileTap={{ scale: 0.93 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
-          className="w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-full bg-[#39FF14] text-cave-black disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
+          className="w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-full bg-[#FFFFFF] text-cave-black disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
           aria-label="Enviar mensaje"
         >
           {posting ? (

@@ -25,7 +25,7 @@ export function InterestSelector({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="w-6 h-6 border-2 border-cave-fog border-t-[#39FF14] rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-cave-fog border-t-[#FFFFFF] rounded-full animate-spin" />
       </div>
     );
   }
@@ -59,7 +59,7 @@ export function InterestSelector({
                 text-sm font-[family-name:var(--font-space-mono)] transition-colors
                 ${
                   isSelected
-                    ? "bg-[#39FF14]/10 border-[#39FF14] text-[#39FF14] shadow-[0_0_12px_rgba(57,255,20,0.15)]"
+                    ? "bg-[#FFFFFF]/10 border-[#FFFFFF] text-[#FFFFFF] shadow-[0_0_12px_rgba(255,255,255,0.15)]"
                     : "bg-cave-rock/60 border-cave-ash text-cave-fog hover:border-cave-fog hover:text-cave-white"
                 }
               `}
@@ -82,7 +82,7 @@ export function InterestSelector({
         disabled={saving}
         className="
           mt-2 min-h-[48px] w-full rounded-full
-          bg-[#39FF14] text-cave-black text-sm font-medium
+          bg-[#FFFFFF] text-cave-black text-sm font-medium
           font-[family-name:var(--font-space-mono)]
           disabled:opacity-50 transition-opacity
           hover:brightness-110 active:brightness-95

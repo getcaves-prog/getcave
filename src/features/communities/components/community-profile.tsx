@@ -206,7 +206,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
   if (loading) {
     return (
       <div className="min-h-dvh bg-cave-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-cave-fog border-t-[#39FF14] rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-cave-fog border-t-[#FFFFFF] rounded-full animate-spin" />
       </div>
     );
   }
@@ -385,11 +385,11 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
         <div className="mt-4">
           {isMember ? (
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#39FF14]/50 bg-[#39FF14]/10">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <div className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#FFFFFF]/50 bg-[#FFFFFF]/10">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                <span className="text-xs text-[#39FF14] font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)]">
+                <span className="text-xs text-[#FFFFFF] font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)]">
                   Unido
                 </span>
               </div>
@@ -411,7 +411,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
               disabled={joining}
               whileTap={{ scale: 0.96 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="h-[48px] px-8 rounded-full bg-[#39FF14] text-cave-black font-bold uppercase tracking-[0.15em] text-sm font-[family-name:var(--font-space-mono)] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-[48px] px-8 rounded-full bg-[#FFFFFF] text-cave-black font-bold uppercase tracking-[0.15em] text-sm font-[family-name:var(--font-space-mono)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {joining ? "Uniéndose..." : "Unirse"}
             </motion.button>
@@ -465,7 +465,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
               onClick={() => setEventTab(tab)}
               className={`px-4 py-2 text-xs font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)] transition-colors min-h-[40px] ${
                 eventTab === tab
-                  ? "bg-[#39FF14] text-cave-black"
+                  ? "bg-[#FFFFFF] text-cave-black"
                   : "text-cave-smoke hover:text-cave-white"
               }`}
             >

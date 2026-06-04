@@ -312,7 +312,7 @@ function UploadButton({ onUpload, uploading, uploadError }: UploadButtonProps) {
       >
         {uploading ? (
           <>
-            <div className="w-4 h-4 border-2 border-[#39FF14]/40 border-t-[#39FF14] rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-[#FFFFFF]/40 border-t-[#FFFFFF] rounded-full animate-spin" />
             Subiendo…
           </>
         ) : (
@@ -413,7 +413,7 @@ export function RecapsGallery({ flyerId, isOwner = false }: RecapsGalleryProps) 
   if (loading) {
     return (
       <div className="flex justify-center py-6">
-        <div className="w-6 h-6 border-2 border-cave-ash border-t-[#39FF14] rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-cave-ash border-t-[#FFFFFF] rounded-full animate-spin" />
       </div>
     );
   }

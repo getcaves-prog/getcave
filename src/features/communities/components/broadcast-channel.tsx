@@ -48,7 +48,7 @@ const KIND_META: Record<
 > = {
   announcement: {
     label: "Anuncio",
-    color: "text-[#39FF14] border-[#39FF14]/40 bg-[#39FF14]/10",
+    color: "text-[#FFFFFF] border-[#FFFFFF]/40 bg-[#FFFFFF]/10",
     icon: (
       <svg
         width="10"
@@ -189,7 +189,7 @@ function PollCard({ broadcast, onVote, userId }: PollCardProps) {
     <div className="mt-3 flex flex-col gap-2">
       {loadingResults ? (
         <div className="flex justify-center py-3">
-          <div className="w-5 h-5 border-2 border-cave-ash border-t-[#39FF14] rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-cave-ash border-t-[#FFFFFF] rounded-full animate-spin" />
         </div>
       ) : results && results.options.length > 0 ? (
         <>
@@ -208,7 +208,7 @@ function PollCard({ broadcast, onVote, userId }: PollCardProps) {
                 disabled={!userId || hasVoted || voting}
                 className={`relative w-full text-left rounded-xl px-4 py-3 overflow-hidden border transition-colors min-h-[44px] ${
                   isMyVote
-                    ? "border-[#39FF14]/60 bg-[#39FF14]/8 shadow-[0_0_12px_rgba(57,255,20,0.15)]"
+                    ? "border-[#FFFFFF]/60 bg-[#FFFFFF]/8 shadow-[0_0_12px_rgba(255,255,255,0.15)]"
                     : hasVoted
                     ? "border-cave-ash/30 bg-cave-ash/5 cursor-default"
                     : "border-cave-ash/40 bg-cave-stone/40 hover:border-cave-ash/70 active:scale-[0.98]"
@@ -218,7 +218,7 @@ function PollCard({ broadcast, onVote, userId }: PollCardProps) {
                 {hasVoted && (
                   <div
                     className={`absolute inset-y-0 left-0 rounded-xl transition-all duration-700 ${
-                      isMyVote ? "bg-[#39FF14]/15" : "bg-cave-ash/10"
+                      isMyVote ? "bg-[#FFFFFF]/15" : "bg-cave-ash/10"
                     }`}
                     style={{ width: `${pct}%` }}
                   />
@@ -227,12 +227,12 @@ function PollCard({ broadcast, onVote, userId }: PollCardProps) {
                 <div className="relative flex items-center justify-between gap-2">
                   <span
                     className={`text-sm font-[family-name:var(--font-inter)] leading-5 ${
-                      isMyVote ? "text-[#39FF14]" : "text-cave-white"
+                      isMyVote ? "text-[#FFFFFF]" : "text-cave-white"
                     }`}
                   >
                     {opt.label}
                     {isMyVote && (
-                      <span className="ml-2 text-[9px] text-[#39FF14] font-[family-name:var(--font-space-mono)] uppercase tracking-[0.1em]">
+                      <span className="ml-2 text-[9px] text-[#FFFFFF] font-[family-name:var(--font-space-mono)] uppercase tracking-[0.1em]">
                         tu voto
                       </span>
                     )}
@@ -358,7 +358,7 @@ function AnnouncementForm({ onPost, onCancel }: AnnouncementFormProps) {
       transition={{ type: "spring", stiffness: 280, damping: 28 }}
       className="overflow-hidden"
     >
-      <div className="mt-3 rounded-2xl border border-[#39FF14]/30 bg-[#39FF14]/5 px-4 py-4 flex flex-col gap-3">
+      <div className="mt-3 rounded-2xl border border-[#FFFFFF]/30 bg-[#FFFFFF]/5 px-4 py-4 flex flex-col gap-3">
         {/* Kind selector */}
         <div className="flex gap-2 flex-wrap">
           {kinds.map((k) => (
@@ -368,7 +368,7 @@ function AnnouncementForm({ onPost, onCancel }: AnnouncementFormProps) {
               onClick={() => setKind(k.value)}
               className={`px-3 py-1.5 rounded-full text-[10px] uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)] border transition-colors min-h-[36px] ${
                 kind === k.value
-                  ? "bg-[#39FF14] text-cave-black border-[#39FF14]"
+                  ? "bg-[#FFFFFF] text-cave-black border-[#FFFFFF]"
                   : "border-cave-ash/40 text-cave-smoke hover:border-cave-ash"
               }`}
             >
@@ -384,7 +384,7 @@ function AnnouncementForm({ onPost, onCancel }: AnnouncementFormProps) {
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Título (opcional)"
           maxLength={100}
-          className="w-full bg-cave-stone/60 border border-cave-ash/40 rounded-xl px-3 py-2.5 text-sm text-cave-white placeholder-cave-ash font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#39FF14]/60 min-h-[44px]"
+          className="w-full bg-cave-stone/60 border border-cave-ash/40 rounded-xl px-3 py-2.5 text-sm text-cave-white placeholder-cave-ash font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#FFFFFF]/60 min-h-[44px]"
         />
 
         {/* Body */}
@@ -394,7 +394,7 @@ function AnnouncementForm({ onPost, onCancel }: AnnouncementFormProps) {
           placeholder="Escribí tu mensaje…"
           maxLength={1000}
           rows={3}
-          className="w-full bg-cave-stone/60 border border-cave-ash/40 rounded-xl px-3 py-2.5 text-sm text-cave-white placeholder-cave-ash font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#39FF14]/60 resize-none"
+          className="w-full bg-cave-stone/60 border border-cave-ash/40 rounded-xl px-3 py-2.5 text-sm text-cave-white placeholder-cave-ash font-[family-name:var(--font-inter)] focus:outline-none focus:border-[#FFFFFF]/60 resize-none"
         />
 
         {error && (
@@ -418,7 +418,7 @@ function AnnouncementForm({ onPost, onCancel }: AnnouncementFormProps) {
             disabled={posting || !body.trim()}
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            className="px-5 py-2 rounded-full bg-[#39FF14] text-cave-black text-xs font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)] disabled:opacity-50 min-h-[40px]"
+            className="px-5 py-2 rounded-full bg-[#FFFFFF] text-cave-black text-xs font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)] disabled:opacity-50 min-h-[40px]"
           >
             {posting ? "Publicando…" : "Publicar"}
           </motion.button>
@@ -627,7 +627,7 @@ export function BroadcastChannel({ communityId, role }: BroadcastChannelProps) {
   if (loading) {
     return (
       <div className="flex justify-center py-6">
-        <div className="w-6 h-6 border-2 border-cave-ash border-t-[#39FF14] rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-cave-ash border-t-[#FFFFFF] rounded-full animate-spin" />
       </div>
     );
   }

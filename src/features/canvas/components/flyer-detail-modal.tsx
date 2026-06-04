@@ -397,7 +397,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 className={`flex-1 h-[52px] flex items-center justify-center gap-2.5 rounded-full border-2 font-bold tracking-[0.2em] uppercase text-sm transition-colors disabled:opacity-50 ${
                   saved
-                    ? "border-[#39FF14] text-[#39FF14] bg-[#39FF14]/8"
+                    ? "border-[#FFFFFF] text-[#FFFFFF] bg-[#FFFFFF]/8"
                     : "border-cave-ash text-cave-white hover:border-cave-fog"
                 }`}
                 style={{ fontFamily: "var(--font-space-mono)" }}
@@ -481,7 +481,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                 {flyer.social_copy && (
                   <div className="rounded-2xl bg-cave-stone/60 border border-cave-ash/40 p-5">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="border-l-2 border-[#39FF14]/50 pl-2.5 text-[10px] uppercase tracking-[0.2em] text-cave-fog font-[family-name:var(--font-space-mono)]">
+                      <span className="border-l-2 border-[#FFFFFF]/50 pl-2.5 text-[10px] uppercase tracking-[0.2em] text-cave-fog font-[family-name:var(--font-space-mono)]">
                         Copy para compartir
                       </span>
                       <button
