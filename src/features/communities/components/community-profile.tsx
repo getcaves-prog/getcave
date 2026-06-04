@@ -13,6 +13,7 @@ import { SectionHeading } from "@/shared/components/ui/section-heading";
 import { BroadcastChannel } from "./broadcast-channel";
 import { ChannelManager } from "./channel-manager";
 import { CommunityEditModal } from "./community-edit-modal";
+import { MembersManager } from "./members-manager";
 import type { MemberWithProfile, Flyer, MemberRole } from "../types/community.types";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -142,6 +143,9 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
 
   // Edit modal — visible only to owner/admin
   const [editOpen, setEditOpen] = useState(false);
+
+  // Members manager — visible only to owner/admin
+  const [membersManagerOpen, setMembersManagerOpen] = useState(false);
 
   const [members, setMembers] = useState<MemberWithProfile[]>([]);
   const [membersLoaded, setMembersLoaded] = useState(false);
@@ -425,7 +429,30 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
 
       {/* ── Members preview ──────────────────────────────────────────── */}
       <div className="px-5 py-6">
-        <SectionHeading>Miembros</SectionHeading>
+        <SectionHeading
+          trailing={
+            isAdmin ? (
+              <motion.button
+                type="button"
+                onClick={() => setMembersManagerOpen(true)}
+                whileTap={{ scale: 0.93 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                className="flex items-center gap-1 h-[32px] px-3 rounded-full border border-[#FFFFFF]/30 text-[#FFFFFF]/80 text-[10px] uppercase tracking-[0.1em] font-[family-name:var(--font-space-mono)] hover:border-[#FFFFFF]/60 hover:text-[#FFFFFF] transition-colors"
+                aria-label="Gestionar miembros"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <line x1="19" y1="8" x2="19" y2="14" />
+                  <line x1="22" y1="11" x2="16" y2="11" />
+                </svg>
+                Gestionar
+              </motion.button>
+            ) : undefined
+          }
+        >
+          Miembros
+        </SectionHeading>
         {members.length > 0 ? (
           <div className="flex items-center gap-3">
             <div className="flex -space-x-2">
@@ -561,6 +588,21 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
           community={community}
           onClose={() => setEditOpen(false)}
           onSuccess={refresh}
+        />
+      )}
+
+      {/* ── Members manager ── owner/admin only ── */}
+      {isAdmin && membersManagerOpen && community && user && (
+        <MembersManager
+          communityId={community.id}
+          currentUserRole={community.myMembership!.role as MemberRole}
+          currentUserId={user.id}
+          onClose={() => setMembersManagerOpen(false)}
+          onChanged={() => {
+            // Reload the members preview and community counts
+            setMembersLoaded(false);
+            refresh();
+          }}
         />
       )}
     </div>

@@ -281,6 +281,28 @@ export async function promoteMember(
   }
 }
 
+// ─── removeMember ──────────────────────────────────────────────────────────
+// Deletes a community_members row by communityId + userId.
+// RLS enforces that the caller is either the target user (self-leave) or an
+// admin/owner of that community — permission is validated server-side.
+// UI layer is responsible for preventing illegal calls (e.g. kicking the owner).
+export async function removeMember(
+  communityId: string,
+  userId: string
+): Promise<void> {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("community_members")
+    .delete()
+    .eq("community_id", communityId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw new Error(`Failed to remove member: ${error.message}`);
+  }
+}
+
 // ─── updateCommunity ───────────────────────────────────────────────────────
 // Calls the SECURITY DEFINER RPC update_community which validates the caller
 // is an owner/admin. COALESCE logic in the RPC means undefined args leave

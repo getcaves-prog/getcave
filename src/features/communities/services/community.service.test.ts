@@ -9,6 +9,7 @@ import {
   listMembers,
   listCommunityEvents,
   promoteMember,
+  removeMember,
   updateCommunity,
 } from "./community.service";
 
@@ -525,6 +526,36 @@ describe("promoteMember", () => {
 
     await expect(promoteMember("comm-1", "user-2", "admin")).rejects.toThrow(
       "Failed to promote member: Not authorized"
+    );
+  });
+});
+
+// ─── removeMember ──────────────────────────────────────────────────────────
+describe("removeMember", () => {
+  const mockDeleteEq = vi.fn();
+  const mockDeleteNestedEq = vi.fn();
+
+  beforeEach(() => {
+    // Chain: from().delete().eq("community_id").eq("user_id")
+    mockDeleteNestedEq.mockResolvedValue({ error: null });
+    mockDeleteEq.mockReturnValue({ eq: mockDeleteNestedEq });
+    mockDelete.mockReturnValue({ eq: mockDeleteEq });
+    mockFrom.mockReturnValue({ delete: mockDelete });
+  });
+
+  it("deletes the community_members row for the given communityId + userId", async () => {
+    await removeMember("comm-1", "user-2");
+
+    expect(mockFrom).toHaveBeenCalledWith("community_members");
+    expect(mockDeleteEq).toHaveBeenCalledWith("community_id", "comm-1");
+    expect(mockDeleteNestedEq).toHaveBeenCalledWith("user_id", "user-2");
+  });
+
+  it("throws descriptive error when Supabase returns an error", async () => {
+    mockDeleteNestedEq.mockResolvedValue({ error: { message: "RLS denied" } });
+
+    await expect(removeMember("comm-1", "user-2")).rejects.toThrow(
+      "Failed to remove member: RLS denied"
     );
   });
 });
