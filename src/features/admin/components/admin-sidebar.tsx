@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/flyers", label: "Flyers" },
   { href: "/admin/users", label: "Users" },
+  { href: "/admin/seed", label: "Sembrar comunidad" },
 ];
 
 export function AdminSidebar() {
