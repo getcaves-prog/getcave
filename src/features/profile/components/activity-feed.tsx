@@ -57,7 +57,7 @@ function JoinedCommunityItem({ item }: { item: JoinedCommunityActivity }) {
           Te uniste a{" "}
           <Link
             href={`/communities/${item.community_slug}`}
-            className="text-cave-white hover:text-[#39FF14] transition-colors font-medium"
+            className="text-cave-light hover:text-cave-white transition-colors font-medium"
           >
             {item.community_name}
           </Link>

@@ -391,7 +391,7 @@ export function EventThread({ subjectType, subjectId, currentUserId, onSignInReq
           <button
             type="button"
             onClick={onSignInRequest}
-            className="h-[44px] px-6 rounded-full border-2 border-[#39FF14] text-[#39FF14] text-xs font-bold uppercase tracking-[0.2em] font-[family-name:var(--font-space-mono)] hover:bg-[#39FF14]/10 transition-colors"
+            className="h-[44px] px-6 rounded-full border-2 border-cave-light text-cave-white text-xs font-bold uppercase tracking-[0.2em] font-[family-name:var(--font-space-mono)] hover:bg-white/10 transition-colors"
           >
             Iniciar sesión
           </button>
