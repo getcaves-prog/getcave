@@ -103,6 +103,9 @@ export async function createFlyer(data: CreateFlyerPayload) {
     address: data.address,
     status: data.status,
     ...(location && { location }),
+    ...(data.community_id !== undefined && { community_id: data.community_id }),
+    ...(data.event_date !== undefined && { event_date: data.event_date }),
+    ...(data.event_time !== undefined && { event_time: data.event_time }),
   });
 
   if (error) throw error;

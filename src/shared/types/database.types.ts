@@ -177,42 +177,57 @@ export type Database = {
         Row: {
           avatar_url: string | null
           city: string | null
+          claimed_at: string | null
+          claimed_by: string | null
           cover_url: string | null
           created_at: string
           created_by: string | null
           description: string | null
           id: string
+          is_seeded: boolean
           member_count: number
           name: string
           slug: string
+          source_platform: string | null
+          source_url: string | null
           updated_at: string
           zone_id: string | null
         }
         Insert: {
           avatar_url?: string | null
           city?: string | null
+          claimed_at?: string | null
+          claimed_by?: string | null
           cover_url?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
           id?: string
+          is_seeded?: boolean
           member_count?: number
           name: string
           slug: string
+          source_platform?: string | null
+          source_url?: string | null
           updated_at?: string
           zone_id?: string | null
         }
         Update: {
           avatar_url?: string | null
           city?: string | null
+          claimed_at?: string | null
+          claimed_by?: string | null
           cover_url?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
           id?: string
+          is_seeded?: boolean
           member_count?: number
           name?: string
           slug?: string
+          source_platform?: string | null
+          source_url?: string | null
           updated_at?: string
           zone_id?: string | null
         }
@@ -811,6 +826,7 @@ export type Database = {
           created_at: string
           id: string
           is_deleted: boolean
+          is_official: boolean
           parent_message_id: string | null
           updated_at: string
         }
@@ -821,6 +837,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_deleted?: boolean
+          is_official?: boolean
           parent_message_id?: string | null
           updated_at?: string
         }
@@ -831,6 +848,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_deleted?: boolean
+          is_official?: boolean
           parent_message_id?: string | null
           updated_at?: string
         }
@@ -1029,14 +1047,19 @@ export type Database = {
         Returns: {
           avatar_url: string | null
           city: string | null
+          claimed_at: string | null
+          claimed_by: string | null
           cover_url: string | null
           created_at: string
           created_by: string | null
           description: string | null
           id: string
+          is_seeded: boolean
           member_count: number
           name: string
           slug: string
+          source_platform: string | null
+          source_url: string | null
           updated_at: string
           zone_id: string | null
         }
@@ -1116,6 +1139,7 @@ export type Database = {
       get_user_stats: { Args: { target_user_id: string }; Returns: Json }
       get_zone_name: { Args: { lat: number; lng: number }; Returns: string }
       increment_view_count: { Args: { event_id: string }; Returns: undefined }
+      is_platform_admin: { Args: never; Returns: boolean }
       nearby_flyers: {
         Args: { radius_km?: number; user_lat: number; user_lng: number }
         Returns: {
@@ -1219,6 +1243,26 @@ export type Database = {
           zone_name: string
         }[]
       }
+      post_seeded_message: {
+        Args: { p_body: string; p_subject_id: string; p_subject_type: string }
+        Returns: {
+          author_id: string | null
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          is_deleted: boolean
+          is_official: boolean
+          parent_message_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       promote_community_member: {
         Args: { p_community_id: string; p_role: string; p_user_id: string }
         Returns: {
@@ -1245,6 +1289,34 @@ export type Database = {
         Returns: undefined
       }
       toggle_event_heat: { Args: { p_event_id: string }; Returns: Json }
+      transfer_community_ownership: {
+        Args: { p_community_id: string; p_new_owner: string }
+        Returns: {
+          avatar_url: string | null
+          city: string | null
+          claimed_at: string | null
+          claimed_by: string | null
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_seeded: boolean
+          member_count: number
+          name: string
+          slug: string
+          source_platform: string | null
+          source_url: string | null
+          updated_at: string
+          zone_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communities"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       update_community: {
         Args: {
           p_avatar_url?: string
@@ -1256,14 +1328,52 @@ export type Database = {
         Returns: {
           avatar_url: string | null
           city: string | null
+          claimed_at: string | null
+          claimed_by: string | null
           cover_url: string | null
           created_at: string
           created_by: string | null
           description: string | null
           id: string
+          is_seeded: boolean
           member_count: number
           name: string
           slug: string
+          source_platform: string | null
+          source_url: string | null
+          updated_at: string
+          zone_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "communities"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_community_seeded_flags: {
+        Args: {
+          p_community_id: string
+          p_is_seeded: boolean
+          p_source_platform?: string
+          p_source_url?: string
+        }
+        Returns: {
+          avatar_url: string | null
+          city: string | null
+          claimed_at: string | null
+          claimed_by: string | null
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_seeded: boolean
+          member_count: number
+          name: string
+          slug: string
+          source_platform: string | null
+          source_url: string | null
           updated_at: string
           zone_id: string | null
         }

@@ -101,3 +101,21 @@ export interface UpdateCommunityInput {
   avatarUrl?: string;
   coverUrl?: string;
 }
+
+// ─── Seeding inputs ──────────────────────────────────────────────────────────
+
+/** Input for creating a community seeded from an external platform */
+export interface SeededCommunityInput {
+  slug: string;
+  name: string;
+  description?: string;
+  avatarUrl?: string;
+  coverUrl?: string;
+  city?: string;
+  zoneId?: string;
+  sourcePlatform?: string;
+  sourceUrl?: string;
+}
+
+/** Subject types accepted by postOfficialMessage */
+export type MessageSubjectType = "flyer" | "community" | "channel";

@@ -26,6 +26,12 @@ export interface CreateFlyerPayload {
   status: string;
   latitude?: number;
   longitude?: number;
+  /** Optional: associate the flyer with a community */
+  community_id?: string;
+  /** Optional: event date in ISO format (YYYY-MM-DD) */
+  event_date?: string;
+  /** Optional: event time in HH:MM:SS format */
+  event_time?: string;
 }
 
 /** @deprecated Use CreateFlyerPayload instead */
