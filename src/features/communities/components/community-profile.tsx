@@ -14,6 +14,7 @@ import { EventThread } from "@/features/conversations/components/event-thread";
 // pattern as EventThread. isOwner not applicable in community context — gallery
 // is read-only for non-uploaders; community admins cannot delete others' recaps
 // at the community level (delete is per-flyer). See decision note below.
+import { SectionHeading } from "@/shared/components/ui/section-heading";
 import { BroadcastChannel } from "./broadcast-channel";
 import type { MemberWithProfile, Flyer, MemberRole } from "../types/community.types";
 
@@ -122,16 +123,6 @@ function EventCard({ event }: { event: Flyer }) {
         <polyline points="9 18 15 12 9 6" />
       </svg>
     </Link>
-  );
-}
-
-// ─── Section heading ──────────────────────────────────────────────────────────
-
-function SectionHeading({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="text-[10px] uppercase tracking-[0.2em] text-cave-smoke font-[family-name:var(--font-space-mono)] mb-3">
-      {children}
-    </h2>
   );
 }
 
@@ -337,7 +328,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
         </h1>
 
         {/* Meta row: city + member count */}
-        <div className="flex items-center gap-3 mt-1 flex-wrap">
+        <div className="flex items-center gap-3 mt-3 flex-wrap">
           {community.city && (
             <span className="flex items-center gap-1 text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -407,7 +398,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
       <div className="h-px bg-cave-ash/20 mx-5" />
 
       {/* ── Members preview ──────────────────────────────────────────── */}
-      <div className="px-5 py-5">
+      <div className="px-5 py-6">
         <SectionHeading>Miembros</SectionHeading>
         {members.length > 0 ? (
           <div className="flex items-center gap-3">
@@ -431,7 +422,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
       <div className="h-px bg-cave-ash/20 mx-5" />
 
       {/* ── Eventos ──────────────────────────────────────────────────── */}
-      <div className="px-5 py-5">
+      <div className="px-5 py-6">
         <SectionHeading>Eventos</SectionHeading>
 
         {/* Tab switcher */}
@@ -453,7 +444,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
         </div>
 
         {/* Event list */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {displayEvents.length === 0 ? (
             <p className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)] py-4 text-center">
               {eventTab === "upcoming"
@@ -470,11 +461,11 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
       <div className="h-px bg-cave-ash/20 mx-5" />
 
       {/* ── Conversación ─────────────────────────────────────────────── */}
-      <div className="px-5 py-5">
+      <div className="px-5 py-6">
         <button
           type="button"
           onClick={() => setShowThread((prev) => !prev)}
-          className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
+          className="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
         >
           <div className="flex items-center gap-2">
             <svg
@@ -518,7 +509,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
               transition={{ type: "spring", stiffness: 280, damping: 28 }}
               className="overflow-hidden"
             >
-              <div className="mt-3">
+              <div className="mt-4 pb-2">
                 {/* Cross-feature import: EventThread (conversations/) reused here
                     with subjectType='community'. Same documented pattern as
                     flyer-detail-modal.tsx. See engram: getcave / phase3 feature boundary. */}
@@ -538,7 +529,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
 
       {/* ── Difusión ──────────────────────────────────────────────────── */}
       <div className="h-px bg-cave-ash/20 mx-5" />
-      <div className="px-5 py-5">
+      <div className="px-5 py-6">
         <SectionHeading>Difusión</SectionHeading>
         {/* Admin-gating is handled inside BroadcastChannel via the role prop.
             role is derived from community.myMembership — null for anonymous/
@@ -561,7 +552,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
           is needed in the future, a dedicated service/hook that aggregates
           event_media by community_id should be built. */}
       <div className="h-px bg-cave-ash/20 mx-5" />
-      <div className="px-5 py-5">
+      <div className="px-5 py-6">
         <SectionHeading>Recaps</SectionHeading>
         <div className="py-5 flex flex-col items-center gap-3 rounded-2xl border border-cave-ash/20 bg-cave-stone/20">
           <svg

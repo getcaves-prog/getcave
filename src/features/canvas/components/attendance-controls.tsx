@@ -47,7 +47,7 @@ export function AttendanceControls({ flyerId, userId, onSignInRequest }: Attenda
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       {/* Buttons row */}
       <div className="flex gap-2">
         {/* VOY */}
@@ -59,7 +59,7 @@ export function AttendanceControls({ flyerId, userId, onSignInRequest }: Attenda
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
           className={`flex-1 h-[44px] flex items-center justify-center gap-2 rounded-full border-2 text-xs font-bold uppercase tracking-[0.15em] transition-colors disabled:opacity-50 font-[family-name:var(--font-space-mono)] ${
             going
-              ? "border-[#39FF14] text-[#39FF14] bg-[#39FF14]/10"
+              ? "border-[#39FF14] text-[#39FF14] bg-[#39FF14]/10 shadow-[0_0_12px_rgba(57,255,20,0.15)]"
               : "border-cave-ash text-cave-fog hover:border-cave-fog"
           }`}
           aria-pressed={going}
@@ -78,7 +78,7 @@ export function AttendanceControls({ flyerId, userId, onSignInRequest }: Attenda
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
           className={`flex-1 h-[44px] flex items-center justify-center gap-2 rounded-full border-2 text-xs font-bold uppercase tracking-[0.15em] transition-colors disabled:opacity-50 font-[family-name:var(--font-space-mono)] ${
             goingSolo
-              ? "border-[#39FF14] text-[#39FF14] bg-[#39FF14]/10"
+              ? "border-[#39FF14] text-[#39FF14] bg-[#39FF14]/10 shadow-[0_0_12px_rgba(57,255,20,0.15)]"
               : "border-cave-ash text-cave-fog hover:border-cave-fog"
           }`}
           aria-pressed={goingSolo}
@@ -91,7 +91,7 @@ export function AttendanceControls({ flyerId, userId, onSignInRequest }: Attenda
 
       {/* Counter line — only when there are attendees */}
       {(total > 0 || solo > 0) && (
-        <p className="text-[10px] text-cave-smoke text-center font-[family-name:var(--font-space-mono)] tracking-[0.1em]">
+        <p className="text-[10px] text-cave-fog text-center font-[family-name:var(--font-space-mono)] tracking-[0.1em]">
           {total} {total === 1 ? "va" : "van"}
           {solo > 0 && ` · ${solo} ${solo === 1 ? "solo" : "solos"}`}
         </p>
