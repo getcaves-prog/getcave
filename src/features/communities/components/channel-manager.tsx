@@ -503,54 +503,34 @@ export function ChannelManager({
             transition={{ type: "spring", stiffness: 320, damping: 30, duration: 0.15 }}
             className="mt-4"
           >
-            {/* Channel header with admin actions */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-xs text-cave-fog font-[family-name:var(--font-space-mono)]">
-                  #{selectedChannel.name}
-                </span>
-                {selectedChannel.write_permission === "admins_only" && (
-                  <LockIcon />
-                )}
-                {selectedChannel.description && (
-                  <span className="text-[10px] text-cave-smoke font-[family-name:var(--font-inter)] truncate hidden sm:block">
-                    — {selectedChannel.description}
+            {/* ── Channel header — terminal aesthetic ──────────────────── */}
+            <div className="pb-3 mb-3 border-b border-cave-rock/60">
+              {/* Top row: name + admin actions */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  {/* # prefix styled as terminal prompt */}
+                  <span className="text-[13px] font-semibold text-[#FFFFFF] font-[family-name:var(--font-space-mono)] tracking-tight truncate">
+                    <span className="text-cave-smoke mr-0.5">#</span>{selectedChannel.name}
                   </span>
-                )}
-              </div>
+                  {selectedChannel.write_permission === "admins_only" && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-cave-ash/40 bg-cave-stone/40 flex-shrink-0">
+                      <LockIcon />
+                      <span className="text-[8px] text-cave-smoke font-[family-name:var(--font-space-mono)] uppercase tracking-[0.1em] leading-none">
+                        solo admins
+                      </span>
+                    </span>
+                  )}
+                </div>
 
-              {/* Admin actions: edit + delete */}
-              {isAdmin && (
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {/* Edit */}
-                  <button
-                    type="button"
-                    onClick={() => setEditingChannel(selectedChannel)}
-                    className="flex items-center justify-center w-8 h-8 rounded-lg text-cave-fog hover:text-cave-white hover:bg-cave-stone/60 transition-colors"
-                    aria-label={`Editar canal ${selectedChannel.name}`}
-                  >
-                    <svg
-                      width="13"
-                      height="13"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                    </svg>
-                  </button>
-
-                  {/* Delete — disabled for default channel */}
-                  {!selectedChannel.is_default && (
+                {/* Admin actions: edit + delete */}
+                {isAdmin && (
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* Edit */}
                     <button
                       type="button"
-                      onClick={() => setDeletingChannel(selectedChannel)}
-                      className="flex items-center justify-center w-8 h-8 rounded-lg text-[#FF2D7B]/60 hover:text-[#FF2D7B] hover:bg-[#FF2D7B]/10 transition-colors"
-                      aria-label={`Eliminar canal ${selectedChannel.name}`}
+                      onClick={() => setEditingChannel(selectedChannel)}
+                      className="flex items-center justify-center w-8 h-8 rounded-lg text-cave-fog hover:text-cave-white hover:bg-cave-stone/60 transition-colors"
+                      aria-label={`Editar canal ${selectedChannel.name}`}
                     >
                       <svg
                         width="13"
@@ -562,15 +542,46 @@ export function ChannelManager({
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                        <path d="M10 11v6" />
-                        <path d="M14 11v6" />
-                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                       </svg>
                     </button>
-                  )}
-                </div>
+
+                    {/* Delete — disabled for default channel */}
+                    {!selectedChannel.is_default && (
+                      <button
+                        type="button"
+                        onClick={() => setDeletingChannel(selectedChannel)}
+                        className="flex items-center justify-center w-8 h-8 rounded-lg text-[#FF2D7B]/60 hover:text-[#FF2D7B] hover:bg-[#FF2D7B]/10 transition-colors"
+                        aria-label={`Eliminar canal ${selectedChannel.name}`}
+                      >
+                        <svg
+                          width="13"
+                          height="13"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Description row — shown when present */}
+              {selectedChannel.description && (
+                <p className="mt-1 text-[10px] text-cave-fog font-[family-name:var(--font-inter)] leading-[1.4]">
+                  {selectedChannel.description}
+                </p>
               )}
             </div>
 

@@ -166,4 +166,89 @@ describeIntegration("community data-model RPCs (local Supabase)", () => {
     // RLS policy "Admins create broadcasts" must reject this insert.
     expect(error).not.toBeNull();
   });
+
+  it("RLS: authenticated user can insert a message with their own author_id (RLS passes)", async () => {
+    // Create a community — this auto-creates a default 'General' channel.
+    const owner = await createUser(admin);
+    const slug = `chat-rls-${crypto.randomUUID().slice(0, 8)}`;
+    const { data: community, error: communityError } = await owner.client.rpc(
+      "create_community",
+      { p_slug: slug, p_name: "Chat RLS Test" },
+    );
+    expect(communityError).toBeNull();
+    expect(community).toBeTruthy();
+
+    // Find the default General channel seeded by create_community.
+    const { data: channels, error: channelsError } = await admin
+      .from("community_channels")
+      .select("id, name, is_default")
+      .eq("community_id", community!.id)
+      .eq("is_default", true)
+      .limit(1);
+    expect(channelsError).toBeNull();
+    expect(channels).toHaveLength(1);
+    const channelId = channels![0].id;
+
+    // Get or create the conversation for this channel.
+    const { data: conversation, error: convError } = await owner.client.rpc(
+      "get_or_create_conversation",
+      { p_subject_type: "channel", p_subject_id: channelId },
+    );
+    expect(convError).toBeNull();
+    expect(conversation).toBeTruthy();
+    const conversationId = conversation!.id;
+
+    // Insert a message with the correct author_id — RLS MUST allow this.
+    const { data: msg, error: insertError } = await owner.client
+      .from("messages")
+      .insert({
+        conversation_id: conversationId,
+        author_id: owner.id,
+        body: "Hola desde el test de integración",
+      })
+      .select("id, author_id, body")
+      .single();
+
+    expect(insertError).toBeNull();
+    expect(msg).toBeTruthy();
+    expect(msg!.author_id).toBe(owner.id);
+    expect(msg!.body).toBe("Hola desde el test de integración");
+  });
+
+  it("RLS: inserting a message with a DIFFERENT author_id fails (RLS rejects spoofed identity)", async () => {
+    // Create community and get a channel conversation as before.
+    const owner = await createUser(admin);
+    const attacker = await createUser(admin);
+    const slug = `spoof-${crypto.randomUUID().slice(0, 8)}`;
+    const { data: community } = await owner.client.rpc("create_community", {
+      p_slug: slug,
+      p_name: "Spoof Test Community",
+    });
+
+    const { data: channels } = await admin
+      .from("community_channels")
+      .select("id")
+      .eq("community_id", community!.id)
+      .eq("is_default", true)
+      .limit(1);
+    const channelId = channels![0].id;
+
+    const { data: conversation } = await owner.client.rpc(
+      "get_or_create_conversation",
+      { p_subject_type: "channel", p_subject_id: channelId },
+    );
+    const conversationId = conversation!.id;
+
+    // Attacker attempts to post a message claiming it came from the owner.
+    // RLS policy `author_id = auth.uid()` must reject this.
+    const { error: spoofError } = await attacker.client
+      .from("messages")
+      .insert({
+        conversation_id: conversationId,
+        author_id: owner.id, // spoofed — does NOT match attacker's auth.uid()
+        body: "Esto no soy yo",
+      });
+
+    expect(spoofError).not.toBeNull();
+  });
 });

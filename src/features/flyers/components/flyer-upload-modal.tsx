@@ -7,13 +7,16 @@ import { z } from "zod";
 import { createClient } from "@/shared/lib/supabase/client";
 import { autocomplete } from "@/shared/lib/geocoding/geocoding.service";
 import { useLocationStore } from "@/shared/stores/location.store";
+import { useActionModalStore } from "@/shared/stores/action-modal.store";
 import { useAuth } from "@/features/auth/hooks/use-auth";
+import { getMyCommunities } from "@/features/profile/services/activity.service";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { getCategories, setFlyerCategories } from "@/features/canvas/services/categories.service";
 import { saveInvitationConfig } from "@/features/invitations/services/invitation.service";
 import type { Category } from "@/features/canvas/services/categories.service";
 import type { GeocodingResult } from "@/shared/lib/geocoding/types";
+import type { MyCommunity } from "@/features/profile/types/activity.types";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -102,6 +105,7 @@ interface FlyerUploadModalProps {
 export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
   const { user } = useAuth();
   const { latitude, longitude } = useLocationStore();
+  const preselectedCommunityId = useActionModalStore((s) => s.preselectedCommunityId);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -135,9 +139,30 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
   const [invitePasscode, setInvitePasscode] = useState("");
   const [inviteCapacity, setInviteCapacity] = useState("");
 
+  // Community selector
+  const [myCommunities, setMyCommunities] = useState<MyCommunity[]>([]);
+  const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(
+    preselectedCommunityId
+  );
+
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {});
   }, []);
+
+  // Load user's communities for the selector
+  useEffect(() => {
+    if (!user) return;
+    getMyCommunities(user.id)
+      .then(setMyCommunities)
+      .catch(() => {});
+  }, [user]);
+
+  // Sync preselectedCommunityId into state when it changes (e.g. store updated before mount)
+  useEffect(() => {
+    if (preselectedCommunityId !== null) {
+      setSelectedCommunityId(preselectedCommunityId);
+    }
+  }, [preselectedCommunityId]);
 
   const handleImageSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -362,6 +387,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
         social_copy: socialCopy.trim() || null,
         ...(eventDate ? { event_date: eventDate } : {}),
         ...(eventTime ? { event_time: eventTime } : {}),
+        ...(selectedCommunityId ? { community_id: selectedCommunityId } : {}),
       }).select("id").single();
 
       if (insertError) {
@@ -414,7 +440,7 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
       setSubmitError(err instanceof Error ? err.message : "An unexpected error occurred");
       setSubmitting(false);
     }
-  }, [imageFile, address, selectedCoords, title, user, onClose, durationDays, selectedCategories, description, socialCopy, eventDate, eventTime, extraImages, invitationsEnabled, invitePasscode, inviteCapacity]);
+  }, [imageFile, address, selectedCoords, title, user, onClose, durationDays, selectedCategories, description, socialCopy, eventDate, eventTime, extraImages, invitationsEnabled, invitePasscode, inviteCapacity, selectedCommunityId]);
 
   useEffect(() => {
     return () => {
@@ -524,6 +550,32 @@ export function FlyerUploadModal({ onBack, onClose }: FlyerUploadModalProps) {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* Community selector */}
+      {myCommunities.length > 0 && (
+        <div className="mb-4">
+          <label className="block text-xs text-cave-fog mb-1.5 font-[family-name:var(--font-space-mono)]">
+            ¿Pertenece a una comunidad? <span className="text-cave-smoke">(opcional)</span>
+          </label>
+          <select
+            value={selectedCommunityId ?? ""}
+            onChange={(e) => setSelectedCommunityId(e.target.value || null)}
+            className="w-full h-11 rounded-xl border border-cave-ash bg-cave-stone px-3 text-sm text-cave-white focus:outline-none focus:border-[#FFFFFF]/60 transition-colors font-[family-name:var(--font-inter)] appearance-none"
+          >
+            <option value="">Ninguna</option>
+            {myCommunities.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          {selectedCommunityId && !eventDate && (
+            <p className="text-[10px] text-cave-smoke mt-1 font-[family-name:var(--font-space-mono)]">
+              Añadí una fecha en &quot;Event details&quot; para que aparezca en la sección Eventos.
+            </p>
+          )}
         </div>
       )}
 

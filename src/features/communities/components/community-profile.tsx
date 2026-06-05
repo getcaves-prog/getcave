@@ -14,6 +14,7 @@ import { BroadcastChannel } from "./broadcast-channel";
 import { ChannelManager } from "./channel-manager";
 import { CommunityEditModal } from "./community-edit-modal";
 import { MembersManager } from "./members-manager";
+import { useActionModalStore } from "@/shared/stores/action-modal.store";
 import type { MemberWithProfile, Flyer, MemberRole } from "../types/community.types";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -146,6 +147,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
     slug,
     user?.id
   );
+  const openActionModal = useActionModalStore((s) => s.open);
 
   const [joining, setJoining] = useState(false);
   const [leaving, setLeaving] = useState(false);
@@ -162,6 +164,12 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
 
   // Event tab state
   const [eventTab, setEventTab] = useState<"upcoming" | "past">("upcoming");
+
+  // Open the upload modal with this community preselected
+  const handleAddEvent = useCallback(() => {
+    if (!community) return;
+    openActionModal("upload", community.id);
+  }, [community, openActionModal]);
 
   // Channels section — managed by ChannelManager component
 
@@ -263,9 +271,8 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
       {/* Grain overlay */}
       <div className="grain-overlay" />
 
-      {/* ── Sticky header — full width, inner content centered ────────────── */}
-      <header className="sticky top-0 z-40 bg-[#050505]/80 backdrop-blur-md safe-area-top border-b border-cave-ash/20">
-        <div className="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
+      {/* ── Sticky header — full width, like the other pages ──────────────── */}
+      <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-[#050505]/80 backdrop-blur-md safe-area-top border-b border-cave-ash/20">
           <Link
             href="/communities"
             className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
@@ -303,35 +310,56 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
           ) : (
             <div className="w-10" />
           )}
-        </div>
       </header>
 
       {/* ── Hero: cover banner (full bleed) ───────────────────────────────── */}
-      <div className="relative w-full h-44 bg-cave-stone overflow-hidden">
+      <div
+        className="relative w-full h-44 overflow-hidden"
+        onClick={!community.cover_url && isAdmin ? () => setEditOpen(true) : undefined}
+        role={!community.cover_url && isAdmin ? "button" : undefined}
+        aria-label={!community.cover_url && isAdmin ? "Agregá una portada" : undefined}
+        style={!community.cover_url && isAdmin ? { cursor: "pointer" } : undefined}
+      >
         {community.cover_url ? (
-          <Image
-            src={community.cover_url}
-            alt={`Portada de ${community.name}`}
-            fill
-            className="object-cover"
-            unoptimized
-            priority
-          />
+          <>
+            <Image
+              src={community.cover_url}
+              alt={`Portada de ${community.name}`}
+              fill
+              className="object-cover"
+              unoptimized
+              priority
+            />
+            {/* Gradient fade to cave-black at the bottom */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050505]/30 to-[#050505]" />
+          </>
         ) : (
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(135deg, #111116 0%, #1a1a22 40%, #0e0e12 100%)",
-            }}
-          />
+          /* Empty-state placeholder — clearly delimited, not a vague gradient */
+          <div className="absolute inset-0 bg-cave-stone/40 border border-cave-rock flex flex-col items-center justify-center gap-2">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-cave-ash"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
+            </svg>
+            <span className="text-[11px] text-cave-fog font-[family-name:var(--font-space-mono)] tracking-[0.1em]">
+              {isAdmin ? "Agregá una portada" : "Sin portada"}
+            </span>
+          </div>
         )}
-        {/* Gradient fade to cave-black at the bottom */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050505]/30 to-[#050505]" />
       </div>
 
       {/* ── Centered content column ────────────────────────────────────────── */}
-      <div className="max-w-2xl mx-auto px-4 sm:px-5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-5">
 
         {/* ── Avatar overlapping banner ─────────────────────────────────── */}
         {/* Negative margin pulls avatar up to overlap the banner bottom edge */}
@@ -570,7 +598,28 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
 
           {/* Eventos */}
           <SectionCard>
-            <SectionHeading>Eventos</SectionHeading>
+            <SectionHeading
+              trailing={
+                isMember ? (
+                  <motion.button
+                    type="button"
+                    onClick={handleAddEvent}
+                    whileTap={{ scale: 0.93 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                    className="flex items-center gap-1 h-[32px] px-3 rounded-full border border-[#FFFFFF]/30 text-[#FFFFFF]/80 text-[10px] uppercase tracking-[0.1em] font-[family-name:var(--font-space-mono)] hover:border-[#FFFFFF]/60 hover:text-[#FFFFFF] transition-colors"
+                    aria-label="Agregar evento"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Agregar
+                  </motion.button>
+                ) : undefined
+              }
+            >
+              Eventos
+            </SectionHeading>
 
             {/* Tab switcher */}
             <div className="flex gap-0 my-4 rounded-xl overflow-hidden border border-cave-ash/40 w-fit">
