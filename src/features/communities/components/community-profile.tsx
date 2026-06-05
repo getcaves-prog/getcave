@@ -14,6 +14,7 @@ import { BroadcastChannel } from "./broadcast-channel";
 import { ChannelManager } from "./channel-manager";
 import { CommunityEditModal } from "./community-edit-modal";
 import { MembersManager } from "./members-manager";
+import { useActionModalStore } from "@/shared/stores/action-modal.store";
 import type { MemberWithProfile, Flyer, MemberRole } from "../types/community.types";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -146,6 +147,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
     slug,
     user?.id
   );
+  const openActionModal = useActionModalStore((s) => s.open);
 
   const [joining, setJoining] = useState(false);
   const [leaving, setLeaving] = useState(false);
@@ -162,6 +164,12 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
 
   // Event tab state
   const [eventTab, setEventTab] = useState<"upcoming" | "past">("upcoming");
+
+  // Open the upload modal with this community preselected
+  const handleAddEvent = useCallback(() => {
+    if (!community) return;
+    openActionModal("upload", community.id);
+  }, [community, openActionModal]);
 
   // Channels section — managed by ChannelManager component
 
@@ -590,7 +598,28 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
 
           {/* Eventos */}
           <SectionCard>
-            <SectionHeading>Eventos</SectionHeading>
+            <SectionHeading
+              trailing={
+                isMember ? (
+                  <motion.button
+                    type="button"
+                    onClick={handleAddEvent}
+                    whileTap={{ scale: 0.93 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                    className="flex items-center gap-1 h-[32px] px-3 rounded-full border border-[#FFFFFF]/30 text-[#FFFFFF]/80 text-[10px] uppercase tracking-[0.1em] font-[family-name:var(--font-space-mono)] hover:border-[#FFFFFF]/60 hover:text-[#FFFFFF] transition-colors"
+                    aria-label="Agregar evento"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Agregar
+                  </motion.button>
+                ) : undefined
+              }
+            >
+              Eventos
+            </SectionHeading>
 
             {/* Tab switcher */}
             <div className="flex gap-0 my-4 rounded-xl overflow-hidden border border-cave-ash/40 w-fit">
