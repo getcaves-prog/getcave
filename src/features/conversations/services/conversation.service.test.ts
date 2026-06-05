@@ -20,11 +20,15 @@ const mockIn = vi.fn();
 const mockInsert = vi.fn();
 const mockUpdate = vi.fn();
 const mockSingle = vi.fn();
+const mockGetUser = vi.fn();
 
 vi.mock("@/shared/lib/supabase/client", () => ({
   createClient: () => ({
     rpc: mockRpc,
     from: mockFrom,
+    auth: {
+      getUser: mockGetUser,
+    },
   }),
 }));
 
@@ -263,6 +267,8 @@ describe("listMessages", () => {
 
 // ─── postMessage ───────────────────────────────────────────────────────────
 describe("postMessage", () => {
+  const AUTHENTICATED_USER_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+
   const mockInsertedMessage = {
     id: "msg-new",
     conversation_id: "conv-1",
@@ -272,10 +278,15 @@ describe("postMessage", () => {
     is_official: false,
     created_at: "2026-06-01T13:00:00Z",
     updated_at: "2026-06-01T13:00:00Z",
-    author_id: "user-1",
+    author_id: AUTHENTICATED_USER_ID,
   };
 
   beforeEach(() => {
+    // auth.getUser() resolves to a signed-in user by default
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: AUTHENTICATED_USER_ID } },
+      error: null,
+    });
     // for postMessage: from().insert().select().single()
     mockSingle.mockResolvedValue({ data: mockInsertedMessage, error: null });
     mockSelect.mockReturnValue({ single: mockSingle });
@@ -283,16 +294,45 @@ describe("postMessage", () => {
     mockFrom.mockReturnValue({ insert: mockInsert });
   });
 
-  it("inserts message with correct fields and returns the row", async () => {
+  it("inserts message with correct fields including author_id and returns the row", async () => {
     const result = await postMessage("conv-1", "Nuevo mensaje");
 
     expect(mockFrom).toHaveBeenCalledWith("messages");
+    // Regression guard: author_id MUST be present in the insert payload.
+    // Without it the RLS policy (author_id = auth.uid()) rejects every insert.
     expect(mockInsert).toHaveBeenCalledWith({
       conversation_id: "conv-1",
+      author_id: AUTHENTICATED_USER_ID,
       body: "Nuevo mensaje",
       parent_message_id: undefined,
     });
     expect(result.id).toBe("msg-new");
+  });
+
+  it("sets author_id from the authenticated user returned by getUser", async () => {
+    const differentUserId = "f0e1d2c3-b4a5-6789-0123-456789abcdef";
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: differentUserId } },
+      error: null,
+    });
+    mockSingle.mockResolvedValue({
+      data: { ...mockInsertedMessage, author_id: differentUserId },
+      error: null,
+    });
+
+    await postMessage("conv-1", "Hola");
+
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ author_id: differentUserId })
+    );
+  });
+
+  it("throws when not authenticated (getUser returns null user)", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
+
+    await expect(postMessage("conv-1", "Hola")).rejects.toThrow();
+    // Must NOT hit the network when unauthenticated
+    expect(mockInsert).not.toHaveBeenCalled();
   });
 
   it("passes parentMessageId when provided", async () => {
@@ -305,6 +345,7 @@ describe("postMessage", () => {
 
     expect(mockInsert).toHaveBeenCalledWith({
       conversation_id: "conv-1",
+      author_id: AUTHENTICATED_USER_ID,
       body: "Respuesta",
       parent_message_id: "msg-parent",
     });

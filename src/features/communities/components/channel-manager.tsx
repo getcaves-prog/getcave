@@ -503,18 +503,19 @@ export function ChannelManager({
             transition={{ type: "spring", stiffness: 320, damping: 30, duration: 0.15 }}
             className="mt-4"
           >
-            {/* ── Discord-style channel header ─────────────────────────── */}
-            <div className="pb-3 mb-3 border-b border-cave-rock">
+            {/* ── Channel header — terminal aesthetic ──────────────────── */}
+            <div className="pb-3 mb-3 border-b border-cave-rock/60">
               {/* Top row: name + admin actions */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-sm font-bold text-cave-white font-[family-name:var(--font-space-mono)] truncate">
-                    #{selectedChannel.name}
+                  {/* # prefix styled as terminal prompt */}
+                  <span className="text-[13px] font-semibold text-[#FFFFFF] font-[family-name:var(--font-space-mono)] tracking-tight truncate">
+                    <span className="text-cave-smoke mr-0.5">#</span>{selectedChannel.name}
                   </span>
                   {selectedChannel.write_permission === "admins_only" && (
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-cave-ash/60 bg-cave-stone/60 flex-shrink-0">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-cave-ash/40 bg-cave-stone/40 flex-shrink-0">
                       <LockIcon />
-                      <span className="text-[9px] text-cave-smoke font-[family-name:var(--font-space-mono)] uppercase tracking-[0.1em] leading-none">
+                      <span className="text-[8px] text-cave-smoke font-[family-name:var(--font-space-mono)] uppercase tracking-[0.1em] leading-none">
                         solo admins
                       </span>
                     </span>
@@ -578,7 +579,7 @@ export function ChannelManager({
 
               {/* Description row — shown when present */}
               {selectedChannel.description && (
-                <p className="mt-1 text-[11px] text-cave-fog font-[family-name:var(--font-inter)] leading-4">
+                <p className="mt-1 text-[10px] text-cave-fog font-[family-name:var(--font-inter)] leading-[1.4]">
                   {selectedChannel.description}
                 </p>
               )}

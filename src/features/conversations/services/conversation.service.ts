@@ -143,10 +143,20 @@ export async function postMessage(
 
   const supabase = createClient();
 
+  // RLS on messages requires author_id = auth.uid(); set it explicitly
+  // (an INSERT without it leaves author_id NULL → policy rejects the row).
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error("Tenés que iniciar sesión para escribir.");
+  }
+
   const { data, error } = await supabase
     .from("messages")
     .insert({
       conversation_id: conversationId,
+      author_id: user.id,
       body: trimmed,
       parent_message_id: parentMessageId,
     })
