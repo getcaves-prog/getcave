@@ -263,9 +263,8 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
       {/* Grain overlay */}
       <div className="grain-overlay" />
 
-      {/* ── Sticky header — full width, inner content centered ────────────── */}
-      <header className="sticky top-0 z-40 bg-[#050505]/80 backdrop-blur-md safe-area-top border-b border-cave-ash/20">
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
+      {/* ── Sticky header — full width, like the other pages ──────────────── */}
+      <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-[#050505]/80 backdrop-blur-md safe-area-top border-b border-cave-ash/20">
           <Link
             href="/communities"
             className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
@@ -303,7 +302,6 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
           ) : (
             <div className="w-10" />
           )}
-        </div>
       </header>
 
       {/* ── Hero: cover banner (full bleed) ───────────────────────────────── */}
@@ -353,7 +351,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
       </div>
 
       {/* ── Centered content column ────────────────────────────────────────── */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-5">
 
         {/* ── Avatar overlapping banner ─────────────────────────────────── */}
         {/* Negative margin pulls avatar up to overlap the banner bottom edge */}

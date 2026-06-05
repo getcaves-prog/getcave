@@ -212,7 +212,7 @@ export default function CommunitiesPage() {
         </Link>
       </header>
 
-      <div className="px-4 py-5 max-w-[480px] mx-auto">
+      <div className="px-4 py-5 max-w-3xl mx-auto">
         {/* Hero copy */}
         <div className="mb-5">
           <h1 className="text-xl font-bold text-cave-white font-[family-name:var(--font-space-mono)] tracking-tight mb-1">
