@@ -265,7 +265,7 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
 
       {/* ── Sticky header — full width, inner content centered ────────────── */}
       <header className="sticky top-0 z-40 bg-[#050505]/80 backdrop-blur-md safe-area-top border-b border-cave-ash/20">
-        <div className="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
+        <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
           <Link
             href="/communities"
             className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
@@ -307,31 +307,53 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
       </header>
 
       {/* ── Hero: cover banner (full bleed) ───────────────────────────────── */}
-      <div className="relative w-full h-44 bg-cave-stone overflow-hidden">
+      <div
+        className="relative w-full h-44 overflow-hidden"
+        onClick={!community.cover_url && isAdmin ? () => setEditOpen(true) : undefined}
+        role={!community.cover_url && isAdmin ? "button" : undefined}
+        aria-label={!community.cover_url && isAdmin ? "Agregá una portada" : undefined}
+        style={!community.cover_url && isAdmin ? { cursor: "pointer" } : undefined}
+      >
         {community.cover_url ? (
-          <Image
-            src={community.cover_url}
-            alt={`Portada de ${community.name}`}
-            fill
-            className="object-cover"
-            unoptimized
-            priority
-          />
+          <>
+            <Image
+              src={community.cover_url}
+              alt={`Portada de ${community.name}`}
+              fill
+              className="object-cover"
+              unoptimized
+              priority
+            />
+            {/* Gradient fade to cave-black at the bottom */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050505]/30 to-[#050505]" />
+          </>
         ) : (
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(135deg, #111116 0%, #1a1a22 40%, #0e0e12 100%)",
-            }}
-          />
+          /* Empty-state placeholder — clearly delimited, not a vague gradient */
+          <div className="absolute inset-0 bg-cave-stone/40 border border-cave-rock flex flex-col items-center justify-center gap-2">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-cave-ash"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
+            </svg>
+            <span className="text-[11px] text-cave-fog font-[family-name:var(--font-space-mono)] tracking-[0.1em]">
+              {isAdmin ? "Agregá una portada" : "Sin portada"}
+            </span>
+          </div>
         )}
-        {/* Gradient fade to cave-black at the bottom */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050505]/30 to-[#050505]" />
       </div>
 
       {/* ── Centered content column ────────────────────────────────────────── */}
-      <div className="max-w-2xl mx-auto px-4 sm:px-5">
+      <div className="max-w-5xl mx-auto px-4 sm:px-5">
 
         {/* ── Avatar overlapping banner ─────────────────────────────────── */}
         {/* Negative margin pulls avatar up to overlap the banner bottom edge */}

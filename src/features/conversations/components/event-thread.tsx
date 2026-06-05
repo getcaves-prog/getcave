@@ -78,9 +78,9 @@ function MessageBubble({ message, currentUserId, onReply, onDelete, isReply }: M
   // Official CAVES-authored messages get a dedicated identity
   if (message.is_official) {
     return (
-      <div className="flex gap-2">
+      <div className="group flex gap-3 px-1 py-0.5 rounded-lg hover:bg-cave-stone/30 transition-colors">
         {/* CAVES logo avatar */}
-        <div className="w-8 h-8 rounded-full flex-shrink-0 bg-cave-white flex items-center justify-center ring-1 ring-white/30">
+        <div className="w-8 h-8 rounded-full flex-shrink-0 bg-cave-white flex items-center justify-center ring-1 ring-white/30 mt-0.5">
           <span className="text-[8px] font-bold text-cave-black font-[family-name:var(--font-space-mono)] leading-none">
             CAV
           </span>
@@ -88,9 +88,9 @@ function MessageBubble({ message, currentUserId, onReply, onDelete, isReply }: M
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Identity row */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-bold text-cave-white font-[family-name:var(--font-space-mono)]">
+          {/* Identity row: name + badge + timestamp */}
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className="text-[12px] font-bold text-[#FFFFFF] font-[family-name:var(--font-space-mono)] leading-none">
               CAVES
             </span>
             {/* Official badge */}
@@ -102,18 +102,18 @@ function MessageBubble({ message, currentUserId, onReply, onDelete, isReply }: M
                 oficial
               </span>
             </span>
-            <span className="text-[10px] text-cave-fog font-[family-name:var(--font-space-mono)]">
+            <span className="text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)]">
               {relativeTime(message.created_at)}
             </span>
           </div>
 
           {/* Body */}
           {message.is_deleted ? (
-            <p className="text-xs text-cave-smoke italic mt-1 font-[family-name:var(--font-inter)]">
+            <p className="text-[13px] text-cave-smoke italic mt-0.5 font-[family-name:var(--font-inter)] leading-5">
               mensaje eliminado
             </p>
           ) : (
-            <p className="text-sm text-cave-white leading-5 mt-1 font-[family-name:var(--font-inter)] break-words">
+            <p className="text-[13px] text-cave-light leading-[1.5] mt-0.5 font-[family-name:var(--font-inter)] break-words">
               {message.body}
             </p>
           )}
@@ -123,42 +123,42 @@ function MessageBubble({ message, currentUserId, onReply, onDelete, isReply }: M
   }
 
   return (
-    <div className={`flex gap-2 ${isReply ? "" : ""}`}>
-      {/* Avatar */}
+    <div className="group flex gap-3 px-1 py-0.5 rounded-lg hover:bg-cave-stone/30 transition-colors">
+      {/* Circular avatar — left aligned, top-aligned to the name row */}
       <Avatar url={message.author?.avatar_url ?? null} username={authorName} />
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        {/* Header row */}
+        {/* Header row: author name + timestamp on one line */}
         <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-[11px] font-bold text-cave-white font-[family-name:var(--font-space-mono)] truncate max-w-[140px]">
+          <span className="text-[12px] font-bold text-[#FFFFFF] font-[family-name:var(--font-space-mono)] leading-none truncate max-w-[180px]">
             @{authorName}
           </span>
-          <span className="text-[10px] text-cave-fog font-[family-name:var(--font-space-mono)]">
+          <span className="text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)]">
             {relativeTime(message.created_at)}
           </span>
         </div>
 
-        {/* Body */}
+        {/* Body — comfortable line-height for readability */}
         {message.is_deleted ? (
-          <p className="text-xs text-cave-smoke italic mt-1 font-[family-name:var(--font-inter)]">
+          <p className="text-[13px] text-cave-smoke italic mt-0.5 font-[family-name:var(--font-inter)] leading-5">
             mensaje eliminado
           </p>
         ) : (
-          <p className="text-sm text-cave-white leading-5 mt-1 font-[family-name:var(--font-inter)] break-words">
+          <p className="text-[13px] text-cave-light leading-[1.5] mt-0.5 font-[family-name:var(--font-inter)] break-words">
             {message.body}
           </p>
         )}
 
-        {/* Actions — only on non-deleted messages */}
+        {/* Actions — visible on group-hover; subtle, Discord-like */}
         {!message.is_deleted && (
-          <div className="flex items-center gap-3 mt-2">
-            {/* Reply — only available on top-level messages (not on replies themselves) */}
+          <div className="flex items-center gap-3 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* Reply — only on top-level messages */}
             {!isReply && currentUserId && (
               <button
                 type="button"
                 onClick={() => onReply(message.id, authorName)}
-                className="text-[10px] text-cave-smoke hover:text-cave-fog transition-colors font-[family-name:var(--font-space-mono)] min-h-[28px] flex items-center"
+                className="text-[10px] text-cave-fog hover:text-cave-light transition-colors font-[family-name:var(--font-space-mono)] min-h-[24px] flex items-center"
               >
                 responder
               </button>
@@ -170,7 +170,7 @@ function MessageBubble({ message, currentUserId, onReply, onDelete, isReply }: M
                 type="button"
                 onClick={handleDelete}
                 disabled={deleting}
-                className="text-[10px] text-[#FF2D7B]/70 hover:text-[#FF2D7B] transition-colors font-[family-name:var(--font-space-mono)] min-h-[28px] flex items-center disabled:opacity-40"
+                className="text-[10px] text-[#FF2D7B]/60 hover:text-[#FF2D7B] transition-colors font-[family-name:var(--font-space-mono)] min-h-[24px] flex items-center disabled:opacity-40"
               >
                 {deleting ? "eliminando..." : "eliminar"}
               </button>
@@ -255,7 +255,7 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
       </AnimatePresence>
 
       {/* Input row */}
-      <div className="flex items-end gap-3">
+      <div className="flex items-end gap-2">
         <div className="flex-1 relative">
           <label className="sr-only">
             {replyTo ? `Responder a @${replyTo.author}` : "Escribí un mensaje"}
@@ -267,7 +267,7 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
             placeholder={replyTo ? `Responder a @${replyTo.author}...` : "Escribí un mensaje..."}
             rows={1}
             maxLength={2000}
-            className="w-full min-h-[44px] px-4 py-3 rounded-xl bg-cave-rock border border-cave-ash text-cave-white placeholder:text-cave-smoke focus:outline-none focus:border-[#FFFFFF] transition-colors resize-none font-[family-name:var(--font-inter)] text-sm leading-5"
+            className="w-full min-h-[44px] px-4 py-3 rounded-xl bg-cave-ash/40 border border-cave-rock text-cave-white placeholder:text-cave-smoke focus:outline-none focus:border-[#FFFFFF] transition-colors resize-none font-[family-name:var(--font-inter)] text-sm leading-5"
             style={{ height: "44px" }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -283,15 +283,15 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
           disabled={!text.trim() || posting}
           whileTap={{ scale: 0.93 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
-          className="w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-full bg-[#FFFFFF] text-cave-black disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
+          className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full bg-[#FFFFFF] text-cave-black disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
           aria-label="Enviar mensaje"
         >
           {posting ? (
-            <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M21 12a9 9 0 1 1-6.219-8.56" />
             </svg>
           ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="22" y1="2" x2="11" y2="13" />
               <polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>
@@ -387,9 +387,10 @@ export function EventThread({ subjectType, subjectId, currentUserId, onSignInReq
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Message list */}
-      <div className="flex flex-col gap-4">
+    /* Discord-style contained chat box: scrollable messages + pinned composer */
+    <div className="flex flex-col rounded-xl border border-cave-rock overflow-hidden">
+      {/* ── Scrollable message area ─────────────────────────────────────── */}
+      <div className="flex flex-col gap-1 overflow-y-auto max-h-80 py-3 px-2 scrollbar-none">
         {threads.length === 0 ? (
           <div className="py-8 text-center">
             <p className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)] leading-5">
@@ -398,7 +399,7 @@ export function EventThread({ subjectType, subjectId, currentUserId, onSignInReq
           </div>
         ) : (
           threads.map((thread) => (
-            <div key={thread.id} className="flex flex-col gap-3">
+            <div key={thread.id} className="flex flex-col gap-0.5">
               {/* Root message */}
               <MessageBubble
                 message={thread}
@@ -407,9 +408,9 @@ export function EventThread({ subjectType, subjectId, currentUserId, onSignInReq
                 onDelete={remove}
               />
 
-              {/* Replies — one level only */}
+              {/* Replies — one level only, indented with left rule */}
               {thread.replies.length > 0 && (
-                <div className="flex flex-col gap-3 border-l border-cave-rock ml-4 pl-3">
+                <div className="flex flex-col gap-0.5 border-l-2 border-cave-ash/30 ml-5 pl-3 mt-0.5">
                   {thread.replies.map((r) => (
                     <MessageBubble
                       key={r.id}
@@ -428,51 +429,53 @@ export function EventThread({ subjectType, subjectId, currentUserId, onSignInReq
         <div ref={bottomRef} />
       </div>
 
-      {/* Composer — logged-in users only, and only when canWrite is true */}
-      {currentUserId ? (
-        canWrite ? (
-          <Composer
-            replyTo={replyTo}
-            onCancelReply={handleCancelReply}
-            onSubmit={handleSubmit}
-          />
+      {/* ── Composer / footer — pinned at bottom ────────────────────────── */}
+      <div className="border-t border-cave-rock px-3 py-3">
+        {currentUserId ? (
+          canWrite ? (
+            <Composer
+              replyTo={replyTo}
+              onCancelReply={handleCancelReply}
+              onSubmit={handleSubmit}
+            />
+          ) : (
+            /* Read-only notice for admins_only channels */
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-cave-stone/60 border border-cave-ash/30">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-cave-fog flex-shrink-0"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <p className="text-[11px] text-cave-fog font-[family-name:var(--font-space-mono)]">
+                Solo administradores pueden escribir
+              </p>
+            </div>
+          )
         ) : (
-          /* Read-only notice for admins_only channels when user is not admin */
-          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-cave-stone/60 border border-cave-ash/40">
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-cave-fog flex-shrink-0"
-            >
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            <p className="text-xs text-cave-fog font-[family-name:var(--font-space-mono)]">
-              Solo administradores pueden escribir
+          /* Logged-out sign-in affordance */
+          <div className="flex flex-col items-center gap-3 py-2">
+            <p className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)] text-center leading-5">
+              Iniciá sesión para participar en la conversación
             </p>
+            <button
+              type="button"
+              onClick={onSignInRequest}
+              className="h-[44px] px-6 rounded-full border-2 border-cave-light text-cave-white text-xs font-bold uppercase tracking-[0.2em] font-[family-name:var(--font-space-mono)] hover:bg-white/10 transition-colors"
+            >
+              Iniciar sesión
+            </button>
           </div>
-        )
-      ) : (
-        /* Logged-out sign-in affordance */
-        <div className="flex flex-col items-center gap-3 py-4">
-          <p className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)] text-center leading-5">
-            Iniciá sesión para participar en la conversación
-          </p>
-          <button
-            type="button"
-            onClick={onSignInRequest}
-            className="h-[44px] px-6 rounded-full border-2 border-cave-light text-cave-white text-xs font-bold uppercase tracking-[0.2em] font-[family-name:var(--font-space-mono)] hover:bg-white/10 transition-colors"
-          >
-            Iniciar sesión
-          </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
