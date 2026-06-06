@@ -1,0 +1,94 @@
+[     660ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[     740ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[    1286ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[    1310ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[    1366ms] [WARNING] Image with src "/Logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio. @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[   42080ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[   42168ms] [LOG] [Fast Refresh] done in 188ms @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[   52643ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[   52690ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[   52797ms] [WARNING] Image with src "/Logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio. @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[  541073ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[  541481ms] [LOG] [Fast Refresh] done in 460ms @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[  604889ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[  605023ms] [LOG] [Fast Refresh] done in 240ms @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[  645976ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[  646265ms] [LOG] [Fast Refresh] done in 366ms @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[  646807ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[  648082ms] [LOG] [Fast Refresh] done in 1372ms @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[  648223ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[  651387ms] [LOG] [Fast Refresh] done in 3238ms @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[  652067ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/?_rsc=1e52p:0
+[  654160ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[  658805ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/:0
+[  660340ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0ka1_react-dom_021u~dm._.js:15305
+[  662841ms] Error: Your project's URL and Key are required to create a Supabase client!
+
+Check your Supabase project's API settings to find these values
+
+https://supabase.com/dashboard/project/_/settings/api
+    at <unknown> (https://supabase.com/dashboard/project/_/settings/api)
+    at createServerClient (file:///home/asepulvedadev/dev/getcave/.next/dev/server/chunks/0ka1_0pwc4u-._.js:14407:15)
+    at proxy (file:///home/asepulvedadev/dev/getcave/.next/dev/server/chunks/[root-of-the-server]__0020rke._.js:115:229)
+    at <unknown> (file:///home/asepulvedadev/dev/getcave/.next/dev/server/chunks/0ka1_next_0aix5up._.js:19506:26)
+    at AsyncLocalStorage.run (node:async_hooks:346:14)
+    at <unknown> (file:///home/asepulvedadev/dev/getcave/.next/dev/server/chunks/0ka1_next_0aix5up._.js:7043:633)
+    at AsyncLocalStorage.run (node:async_hooks:346:14)
+    at <unknown> (file:///home/asepulvedadev/dev/getcave/.next/dev/server/chunks/0ka1_next_0aix5up._.js:7043:314)
+    at async adapter (file:///home/asepulvedadev/dev/getcave/.next/dev/server/chunks/0ka1_next_0aix5up._.js:6998:16)
+    at async DevServer.runMiddleware (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/next-server.js:1192:26)
+    at async DevServer.runMiddleware (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/dev/next-dev-server.js:278:28)
+    at async NextNodeServer.handleCatchallMiddlewareRequest (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/next-server.js:392:26)
+    at async DevServer.handleRequestImpl (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/base-server.js:940:28)
+    at async (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/dev/next-dev-server.js:394:20)
+    at async Span.traceAsyncFn (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/trace/trace.js:164:20)
+    at async DevServer.handleRequest (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/dev/next-dev-server.js:390:24)
+    at async handleRoute (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/lib/router-utils/resolve-routes.js:352:33)
+    at async resolveRoutes (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/lib/router-utils/resolve-routes.js:608:28)
+    at async handleRequest (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/lib/router-server.js:301:96)
+    at async requestHandlerImpl (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/lib/router-server.js:501:13)
+    at async Server.requestListener (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/lib/start-server.js:225:13)
+[  662741ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_13p0ode._.js:1226
+[ 2425921ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_13p0ode._.js:1226
+[ 2425941ms] [LOG] [Fast Refresh] done in 120ms @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_13p0ode._.js:1226
+[17465214ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/:0
+[17465342ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0ka1_react-dom_021u~dm._.js:15305
+[17465359ms] Error: Your project's URL and Key are required to create a Supabase client!
+
+Check your Supabase project's API settings to find these values
+
+https://supabase.com/dashboard/project/_/settings/api
+    at <unknown> (https://supabase.com/dashboard/project/_/settings/api)
+    at createServerClient (file:///home/asepulvedadev/dev/getcave/.next/dev/server/chunks/0ka1_0pwc4u-._.js:14407:15)
+    at proxy (file:///home/asepulvedadev/dev/getcave/.next/dev/server/chunks/[root-of-the-server]__0020rke._.js:115:229)
+    at <unknown> (file:///home/asepulvedadev/dev/getcave/.next/dev/server/chunks/0ka1_next_0aix5up._.js:19506:26)
+    at AsyncLocalStorage.run (node:async_hooks:346:14)
+    at <unknown> (file:///home/asepulvedadev/dev/getcave/.next/dev/server/chunks/0ka1_next_0aix5up._.js:7043:633)
+    at AsyncLocalStorage.run (node:async_hooks:346:14)
+    at <unknown> (file:///home/asepulvedadev/dev/getcave/.next/dev/server/chunks/0ka1_next_0aix5up._.js:7043:314)
+    at async adapter (file:///home/asepulvedadev/dev/getcave/.next/dev/server/chunks/0ka1_next_0aix5up._.js:6998:16)
+    at async DevServer.runMiddleware (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/next-server.js:1192:26)
+    at async DevServer.runMiddleware (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/dev/next-dev-server.js:278:28)
+    at async NextNodeServer.handleCatchallMiddlewareRequest (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/next-server.js:392:26)
+    at async DevServer.handleRequestImpl (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/base-server.js:940:28)
+    at async (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/dev/next-dev-server.js:394:20)
+    at async Span.traceAsyncFn (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/trace/trace.js:164:20)
+    at async DevServer.handleRequest (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/dev/next-dev-server.js:390:24)
+    at async handleRoute (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/lib/router-utils/resolve-routes.js:352:33)
+    at async resolveRoutes (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/lib/router-utils/resolve-routes.js:608:28)
+    at async handleRequest (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/lib/router-server.js:301:96)
+    at async requestHandlerImpl (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/lib/router-server.js:501:13)
+    at async Server.requestListener (file:///home/asepulvedadev/dev/getcave/node_modules/next/dist/server/lib/start-server.js:225:13)
+[17465358ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_13p0ode._.js:1226
+[17557500ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_05foeum._.js:2342
+[17558502ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_05foeum._.js:2342
+[17559504ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_05foeum._.js:2342
+[17560505ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_05foeum._.js:2342
+[17561506ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_05foeum._.js:2342
+[17566508ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_05foeum._.js:2342
+[17571509ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_05foeum._.js:2342
+[17576510ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_05foeum._.js:2342
+[17581513ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_05foeum._.js:2342
+[17586516ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_05foeum._.js:2342
+[17591519ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_05foeum._.js:2342
+[17596521ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_05foeum._.js:2342

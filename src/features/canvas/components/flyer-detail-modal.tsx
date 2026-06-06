@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useOpenChatsStore } from "@/features/conversations/stores/open-chats.store";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,9 +25,7 @@ import type { GenerateInviteResult, QrInvite } from "@/features/invitations/type
 // Cross-feature: Recaps are presented via a lateral modal (not inline accordion).
 // RecapsModal wraps RecapsGallery — no chat logic duplicated here.
 import { RecapsModal } from "./recaps-modal";
-// Conversación: opens a focused lateral modal for THIS event's chat (mirrors
-// RecapsModal). Reuses EventThread; not the global floating ChatHeadsOverlay.
-import { ChatModal } from "./chat-modal";
+// Conversación: opens the global floating chat head (bubble) for this event.
 import { SectionHeading } from "@/shared/components/ui/section-heading";
 import type { LayoutFlyer, NearbyFlyer } from "../types/canvas.types";
 
@@ -78,8 +77,8 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
   const [showQrDisplay, setShowQrDisplay] = useState(false);
   const [qrResult, setQrResult] = useState<GenerateInviteResult | null>(null);
   const [showRecaps, setShowRecaps] = useState(false);
-  const [showChat, setShowChat] = useState(false);
   const viewTrackedRef = useRef(false);
+  const openChat = useOpenChatsStore((s) => s.openChat);
 
   // Attendance state is lifted here so VOY (card) and VOY SOLO (side rail) share
   // a single source of truth instead of two separate hook instances.
@@ -313,7 +312,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                 goingSolo={attendance.goingSolo}
                 loading={attendance.loading}
                 onToggleSolo={handleSolo}
-                onOpenChat={() => setShowChat(true)}
+                onOpenChat={() => openChat({ subjectType: "flyer", subjectId: flyer.id, label: flyer.title ?? "Evento" })}
               />
             </div>
 
@@ -420,9 +419,9 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                 {creator && (
                   <Link
                     href={`/profile/${creator.username}`}
-                    className="mt-1.5 inline-block text-[11px] text-cave-ash hover:text-cave-fog transition-colors font-[family-name:var(--font-inter)] leading-none"
+                    className="mt-1.5 inline-block text-[13px] text-[#FFFFFF] hover:text-[#FFFFFF]/80 transition-colors font-[family-name:var(--font-space-mono)] font-bold leading-none"
                   >
-                    ver perfil @{creator.username}
+                    @{creator.username}
                   </Link>
                 )}
               </div>
@@ -434,7 +433,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                   disabled={savingInProgress}
                   whileTap={{ scale: 0.93 }}
                   transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                  className={`h-[40px] px-4 flex items-center gap-2 rounded-full border-2 font-bold tracking-[0.15em] uppercase text-[11px] transition-colors disabled:opacity-50 ${
+                  className={`h-[44px] px-5 flex items-center gap-2 rounded-full border-2 font-bold tracking-[0.15em] uppercase text-[12px] transition-colors disabled:opacity-50 ${
                     saved
                       ? "border-[#FFFFFF] text-[#FFFFFF] bg-[#FFFFFF]/10"
                       : "border-cave-ash text-cave-white hover:border-cave-fog"
@@ -443,12 +442,12 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                   aria-label={saved ? "Guardado" : "Guardar"}
                 >
                   <BookmarkIcon filled={saved} />
-                  <span className="hidden xs:inline">{saved ? "GUARDADO" : "GUARDAR"}</span>
+                  <span>{saved ? "GUARDADO" : "GUARDAR"}</span>
                 </motion.button>
 
                 <button
                   onClick={handleShare}
-                  className="w-[40px] h-[40px] flex items-center justify-center rounded-full border-2 border-cave-ash text-cave-smoke hover:text-cave-white hover:border-cave-fog transition-colors"
+                  className="w-[44px] h-[44px] flex items-center justify-center rounded-full border-2 border-cave-ash text-cave-smoke hover:text-cave-white hover:border-cave-fog transition-colors"
                   aria-label="Compartir"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -609,18 +608,6 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
             flyerId={flyer.id}
             isOwner={isOwner}
             onClose={() => setShowRecaps(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Conversación — focused lateral modal for this event's chat */}
-      <AnimatePresence>
-        {showChat && (
-          <ChatModal
-            flyerId={flyer.id}
-            label={flyer.title ?? "Evento"}
-            currentUserId={user?.id}
-            onClose={() => setShowChat(false)}
           />
         )}
       </AnimatePresence>

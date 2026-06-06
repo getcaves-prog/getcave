@@ -1,0 +1,94 @@
+- generic [ref=e1]:
+  - generic [active]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - navigation [ref=e7]:
+          - button "previous" [disabled] [ref=e8]:
+            - img "previous" [ref=e9]
+          - generic [ref=e11]:
+            - generic [ref=e12]: 1/
+            - text: "1"
+          - button "next" [disabled] [ref=e13]:
+            - img "next" [ref=e14]
+        - link "Next.js 16.2.1 (stale) Turbopack" [ref=e17] [cursor=pointer]:
+          - /url: https://nextjs.org/docs/messages/version-staleness
+          - img [ref=e18]
+          - generic "There is a newer version (16.2.4) available, upgrade recommended!" [ref=e20]: Next.js 16.2.1 (stale)
+          - generic [ref=e21]: Turbopack
+      - dialog "Runtime Error" [ref=e23]:
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - generic [ref=e28]:
+              - generic [ref=e30]: Runtime Error
+              - generic [ref=e31]:
+                - button "Copy Error Info" [ref=e32] [cursor=pointer]:
+                  - img [ref=e33]
+                - button "No related documentation found" [disabled] [ref=e35]:
+                  - img [ref=e36]
+                - button "Attach Node.js inspector" [ref=e38] [cursor=pointer]:
+                  - img [ref=e39]
+            - generic [ref=e48]:
+              - text: "@supabase/ssr: Your project's URL and API key are required to create a Supabase client! Check your Supabase project's API settings to find these values"
+              - link "https://supabase.com/dashboard/project/_/settings/api" [ref=e49] [cursor=pointer]:
+                - /url: https://supabase.com/dashboard/project/_/settings/api
+          - generic [ref=e50]:
+            - generic [ref=e51]:
+              - paragraph [ref=e53]:
+                - img [ref=e55]
+                - generic [ref=e59]: src/shared/lib/supabase/client.ts (6:29) @ createClient
+                - button "Open in editor" [ref=e60] [cursor=pointer]:
+                  - img [ref=e62]
+              - generic [ref=e65]:
+                - generic [ref=e66]: 4 |
+                - generic [ref=e67]: "5 | export function createClient() {"
+                - generic [ref=e68]: "> 6 | return createBrowserClient<Database>("
+                - generic [ref=e69]: "| ^"
+                - generic [ref=e70]: 7 | getSupabaseUrl(),
+                - generic [ref=e71]: 8 | getSupabaseAnonKey()
+                - generic [ref=e72]: 9 | );
+            - generic [ref=e73]:
+              - generic [ref=e74]:
+                - paragraph [ref=e75]:
+                  - text: Call Stack
+                  - generic [ref=e76]: "53"
+                - button "Show 50 ignore-listed frame(s)" [ref=e77] [cursor=pointer]:
+                  - text: Show 50 ignore-listed frame(s)
+                  - img [ref=e78]
+              - generic [ref=e80]:
+                - generic [ref=e81]:
+                  - text: createClient
+                  - button "Open createClient in editor" [ref=e82] [cursor=pointer]:
+                    - img [ref=e83]
+                - text: src/shared/lib/supabase/client.ts (6:29)
+              - generic [ref=e85]:
+                - generic [ref=e86]:
+                  - text: useAuth.useEffect
+                  - button "Open useAuth.useEffect in editor" [ref=e87] [cursor=pointer]:
+                    - img [ref=e88]
+                - text: src/features/auth/hooks/use-auth.ts (16:34)
+              - generic [ref=e90]:
+                - generic [ref=e91]:
+                  - text: HomePage
+                  - button "Open HomePage in editor" [ref=e92] [cursor=pointer]:
+                    - img [ref=e93]
+                - text: src/app/page.tsx (117:9)
+        - generic [ref=e95]: "1"
+        - generic [ref=e96]: "2"
+    - generic [ref=e101] [cursor=pointer]:
+      - button "Open Next.js Dev Tools" [ref=e102]:
+        - img [ref=e103]
+      - generic [ref=e106]:
+        - button "Open issues overlay" [ref=e107]:
+          - generic [ref=e108]:
+            - generic [ref=e109]: "0"
+            - generic [ref=e110]: "1"
+          - generic [ref=e111]: Issue
+        - button "Collapse issues badge" [ref=e112]:
+          - img [ref=e113]
+  - generic [ref=e116]:
+    - img [ref=e117]
+    - heading "This page couldn’t load" [level=1] [ref=e119]
+    - paragraph [ref=e120]: Reload to try again, or go back.
+    - generic [ref=e121]:
+      - button "Reload" [ref=e123] [cursor=pointer]
+      - button "Back" [ref=e124] [cursor=pointer]

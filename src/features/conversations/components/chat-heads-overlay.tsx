@@ -149,6 +149,7 @@ function ChatWindow({
             subjectType={chat.subjectType}
             subjectId={chat.subjectId}
             currentUserId={currentUserId}
+            canWrite={chat.canWrite}
           />
         </div>
       </div>
