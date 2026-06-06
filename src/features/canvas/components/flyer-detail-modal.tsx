@@ -517,21 +517,6 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                   <span>Chat</span>
                 </motion.button>
               </div>
-
-              {/* Attendance counter — below the row, subtle */}
-              {(attendance.total > 0 || attendance.solo > 0) && (
-                <p className="mt-2 text-center text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)] tracking-[0.12em]">
-                  <span className="text-cave-light font-bold">{attendance.total}</span>
-                  {" "}{attendance.total === 1 ? "va" : "van"}
-                  {attendance.solo > 0 && (
-                    <>
-                      {" · "}
-                      <span className="text-cave-light font-bold">{attendance.solo}</span>
-                      {" "}{attendance.solo === 1 ? "solo" : "solos"}
-                    </>
-                  )}
-                </p>
-              )}
             </div>
 
             {/* ── QR Invitation button ────────────────────── */}
