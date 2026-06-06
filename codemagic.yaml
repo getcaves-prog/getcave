@@ -12,7 +12,9 @@ workflows:
       node: 20.11.0
     scripts:
       - name: Install dependencies
-        script: npm install
+        script: |
+          corepack enable
+          pnpm install --frozen-lockfile
       - name: Add iOS platform
         script: npx cap add ios || true
       - name: Sync Capacitor
@@ -32,11 +34,11 @@ workflows:
       - name: Set build number
         working_directory: ios/App
         script: |
-          BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number "com.getcaves.app") + 1))
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number "com.getcaves.app" 2>/dev/null || echo 0)
+          BUILD_NUMBER=$((LATEST_BUILD_NUMBER + 1))
           xcrun agvtool new-version -all "$BUILD_NUMBER"
       - name: Build IPA
         script: |
-          xcode-project use-profiles
           xcode-project build-ipa \
             --workspace ios/App/App.xcworkspace \
             --scheme App
