@@ -15,6 +15,7 @@ import { ChannelManager } from "./channel-manager";
 import { CommunityEditModal } from "./community-edit-modal";
 import { MembersManager } from "./members-manager";
 import { useActionModalStore } from "@/shared/stores/action-modal.store";
+import { ActionModal } from "@/shared/components/layout/action-modal";
 import type { MemberWithProfile, Flyer, MemberRole } from "../types/community.types";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -148,6 +149,8 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
     user?.id
   );
   const openActionModal = useActionModalStore((s) => s.open);
+  const actionModalOpen = useActionModalStore((s) => s.isOpen);
+  const closeActionModal = useActionModalStore((s) => s.close);
 
   const [joining, setJoining] = useState(false);
   const [leaving, setLeaving] = useState(false);
@@ -745,6 +748,16 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
           }}
         />
       )}
+
+      {/* Action modal (flyer upload) — mounted here so "Agregar evento" opens
+          the full flyer-create flow with this community preselected. */}
+      <ActionModal
+        isOpen={actionModalOpen}
+        onClose={() => {
+          closeActionModal();
+          refresh();
+        }}
+      />
     </div>
   );
 }
