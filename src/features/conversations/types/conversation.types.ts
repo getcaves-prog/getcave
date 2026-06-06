@@ -21,9 +21,13 @@ export interface MessageWithAuthor {
   id: string;
   conversation_id: string;
   parent_message_id: string | null;
-  body: string | null; // null when is_deleted === true
+  body: string | null; // null when is_deleted === true OR when media-only message
   is_deleted: boolean;
   is_official: boolean; // true = CAVES-authored seeded message
+  // ── Media fields (null when message is text-only) ───────────────────────
+  media_url: string | null;
+  media_type: "image" | "audio" | null;
+  media_duration_seconds: number | null; // audio only; null for images
   created_at: string;
   updated_at: string;
   author: MessageAuthor | null; // null when author was deleted from auth.users

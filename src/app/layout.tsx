@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Mono, Pinyon_Script } from "next/font/google";
 import { TermsConsentGate } from "@/features/auth/components/terms-consent-gate";
+import { ChatHeadsOverlay } from "@/features/conversations/components/chat-heads-overlay";
 import "./globals.css";
 
 const inter = Inter({
@@ -105,6 +106,8 @@ export default function RootLayout({
       <body className="min-h-dvh bg-cave-black text-white font-[family-name:var(--font-inter)] antialiased overscroll-none">
         {children}
         <TermsConsentGate />
+        {/* Global chat-heads overlay — fixed, z-150, persists across navigation */}
+        <ChatHeadsOverlay />
       </body>
     </html>
   );

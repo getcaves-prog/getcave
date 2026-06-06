@@ -104,6 +104,10 @@ describe("listMessages", () => {
       body: "Hola!",
       is_deleted: false,
       is_official: false,
+      media_url: null,
+      media_type: null,
+      media_duration_seconds: null,
+      media_size_bytes: null,
       created_at: "2026-06-01T10:00:00Z",
       updated_at: "2026-06-01T10:00:00Z",
       author_id: "user-1",
@@ -115,6 +119,10 @@ describe("listMessages", () => {
       body: "Qué onda",
       is_deleted: false,
       is_official: false,
+      media_url: null,
+      media_type: null,
+      media_duration_seconds: null,
+      media_size_bytes: null,
       created_at: "2026-06-01T10:05:00Z",
       updated_at: "2026-06-01T10:05:00Z",
       author_id: "user-2",
@@ -170,6 +178,9 @@ describe("listMessages", () => {
     expect(result[0].body).toBe("Hola!");
     expect(result[0].is_deleted).toBe(false);
     expect(result[0].is_official).toBe(false);
+    expect(result[0].media_url).toBeNull();
+    expect(result[0].media_type).toBeNull();
+    expect(result[0].media_duration_seconds).toBeNull();
     expect(result[0].author).toEqual({
       id: "user-1",
       username: "juan",
@@ -177,6 +188,39 @@ describe("listMessages", () => {
     });
     expect(result[1].parent_message_id).toBe("msg-1");
     expect(result[1].author?.username).toBe("maria");
+  });
+
+  it("maps media fields for media-only messages", async () => {
+    const mediaRows = [
+      {
+        id: "msg-media-1",
+        conversation_id: "conv-1",
+        parent_message_id: null,
+        body: null,
+        is_deleted: false,
+        is_official: false,
+        media_url: "https://storage.example.com/chat-media/uid/conv-1/uuid.webm",
+        media_type: "audio",
+        media_duration_seconds: 15.3,
+        media_size_bytes: 204800,
+        created_at: "2026-06-01T10:00:00Z",
+        updated_at: "2026-06-01T10:00:00Z",
+        author_id: "user-1",
+      },
+    ];
+    setupMessagesChain(
+      { data: mediaRows, error: null },
+      { data: [{ id: "user-1", username: "juan", avatar_url: null }], error: null }
+    );
+
+    const result = await listMessages("conv-1");
+
+    expect(result[0].body).toBeNull();
+    expect(result[0].media_url).toBe(
+      "https://storage.example.com/chat-media/uid/conv-1/uuid.webm"
+    );
+    expect(result[0].media_type).toBe("audio");
+    expect(result[0].media_duration_seconds).toBe(15.3);
   });
 
   it("sets is_official=true for official seeded messages", async () => {
@@ -188,6 +232,10 @@ describe("listMessages", () => {
         body: "Mensaje oficial de CAVES",
         is_deleted: false,
         is_official: true,
+        media_url: null,
+        media_type: null,
+        media_duration_seconds: null,
+        media_size_bytes: null,
         created_at: "2026-06-01T10:00:00Z",
         updated_at: "2026-06-01T10:00:00Z",
         author_id: null,
@@ -210,6 +258,10 @@ describe("listMessages", () => {
         body: "contenido eliminado",
         is_deleted: true,
         is_official: false,
+        media_url: null,
+        media_type: null,
+        media_duration_seconds: null,
+        media_size_bytes: null,
         created_at: "2026-06-01T11:00:00Z",
         updated_at: "2026-06-01T11:30:00Z",
         author_id: "user-1",
@@ -235,6 +287,10 @@ describe("listMessages", () => {
         body: "mensaje de usuario eliminado",
         is_deleted: false,
         is_official: false,
+        media_url: null,
+        media_type: null,
+        media_duration_seconds: null,
+        media_size_bytes: null,
         created_at: "2026-06-01T12:00:00Z",
         updated_at: "2026-06-01T12:00:00Z",
         author_id: null,
@@ -276,6 +332,10 @@ describe("postMessage", () => {
     body: "Nuevo mensaje",
     is_deleted: false,
     is_official: false,
+    media_url: null,
+    media_type: null,
+    media_duration_seconds: null,
+    media_size_bytes: null,
     created_at: "2026-06-01T13:00:00Z",
     updated_at: "2026-06-01T13:00:00Z",
     author_id: AUTHENTICATED_USER_ID,
@@ -335,7 +395,7 @@ describe("postMessage", () => {
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
-  it("passes parentMessageId when provided", async () => {
+  it("passes parentMessageId when provided as positional 3rd argument (backward compat)", async () => {
     mockSingle.mockResolvedValue({
       data: { ...mockInsertedMessage, parent_message_id: "msg-parent" },
       error: null,
@@ -348,6 +408,22 @@ describe("postMessage", () => {
       author_id: AUTHENTICATED_USER_ID,
       body: "Respuesta",
       parent_message_id: "msg-parent",
+    });
+  });
+
+  it("passes parentMessageId via opts object", async () => {
+    mockSingle.mockResolvedValue({
+      data: { ...mockInsertedMessage, parent_message_id: "msg-parent-opts" },
+      error: null,
+    });
+
+    await postMessage("conv-1", "Respuesta via opts", { parentMessageId: "msg-parent-opts" });
+
+    expect(mockInsert).toHaveBeenCalledWith({
+      conversation_id: "conv-1",
+      author_id: AUTHENTICATED_USER_ID,
+      body: "Respuesta via opts",
+      parent_message_id: "msg-parent-opts",
     });
   });
 
@@ -394,6 +470,81 @@ describe("postMessage", () => {
       "Failed to post message: Foreign key violation"
     );
   });
+
+  // ── Media opts ─────────────────────────────────────────────────────────────
+
+  it("posts a media-only message (null body + media payload)", async () => {
+    const mediaMsg = {
+      ...mockInsertedMessage,
+      body: null,
+      media_url: "https://storage.example.com/chat-media/uid/conv-1/uuid.webm",
+      media_type: "audio",
+      media_duration_seconds: 12.5,
+      media_size_bytes: 204800,
+    };
+    mockSingle.mockResolvedValue({ data: mediaMsg, error: null });
+
+    const result = await postMessage("conv-1", null, {
+      media: {
+        url: "https://storage.example.com/chat-media/uid/conv-1/uuid.webm",
+        type: "audio",
+        durationSeconds: 12.5,
+        sizeBytes: 204800,
+      },
+    });
+
+    expect(mockInsert).toHaveBeenCalledWith({
+      conversation_id: "conv-1",
+      author_id: AUTHENTICATED_USER_ID,
+      body: null,
+      parent_message_id: undefined,
+      media_url: "https://storage.example.com/chat-media/uid/conv-1/uuid.webm",
+      media_type: "audio",
+      media_duration_seconds: 12.5,
+      media_size_bytes: 204800,
+    });
+    expect(result.id).toBe("msg-new");
+  });
+
+  it("posts a text + media message", async () => {
+    const mediaMsg = {
+      ...mockInsertedMessage,
+      body: "Mirá esta foto",
+      media_url: "https://storage.example.com/chat-media/uid/conv-1/uuid.jpg",
+      media_type: "image",
+      media_size_bytes: 102400,
+    };
+    mockSingle.mockResolvedValue({ data: mediaMsg, error: null });
+
+    await postMessage("conv-1", "Mirá esta foto", {
+      media: {
+        url: "https://storage.example.com/chat-media/uid/conv-1/uuid.jpg",
+        type: "image",
+        sizeBytes: 102400,
+      },
+    });
+
+    expect(mockInsert).toHaveBeenCalledWith({
+      conversation_id: "conv-1",
+      author_id: AUTHENTICATED_USER_ID,
+      body: "Mirá esta foto",
+      parent_message_id: undefined,
+      media_url: "https://storage.example.com/chat-media/uid/conv-1/uuid.jpg",
+      media_type: "image",
+      media_duration_seconds: null,
+      media_size_bytes: 102400,
+    });
+  });
+
+  it("rejects null body without media payload", async () => {
+    await expect(postMessage("conv-1", null)).rejects.toThrow();
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects whitespace-only body without media payload", async () => {
+    await expect(postMessage("conv-1", "   ")).rejects.toThrow();
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
 });
 
 // ─── softDeleteMessage ─────────────────────────────────────────────────────
@@ -436,6 +587,9 @@ describe("groupByThread", () => {
     body: "msg",
     is_deleted: false,
     is_official: false,
+    media_url: null,
+    media_type: null,
+    media_duration_seconds: null,
     created_at: "2026-06-01T10:00:00Z",
     updated_at: "2026-06-01T10:00:00Z",
     author: null,
