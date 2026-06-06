@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { EventThread } from "@/features/conversations/components/event-thread";
+import { useOpenChatsStore } from "@/features/conversations/stores/open-chats.store";
 import { SectionHeading } from "@/shared/components/ui/section-heading";
 import { useChannels } from "../hooks/use-channels";
 import type { CommunityChannel, WritePermission } from "../types/community.types";
@@ -308,6 +308,8 @@ export function ChannelManager({
   const { channels, loading, error, create, update, remove, refresh } =
     useChannels(communityId);
 
+  const openChat = useOpenChatsStore((s) => s.openChat);
+
   // Selected channel id
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -329,10 +331,6 @@ export function ChannelManager({
   }, [channels, selectedId]);
 
   const selectedChannel = channels.find((c) => c.id === selectedId) ?? null;
-
-  // A non-admin can write only when the channel allows everyone
-  const canWrite =
-    isAdmin || selectedChannel?.write_permission === "everyone";
 
   const handleCreate = useCallback(
     async (data: { name: string; description: string; write_permission: WritePermission }) => {
@@ -585,14 +583,67 @@ export function ChannelManager({
               )}
             </div>
 
-            {/* Channel thread */}
-            <EventThread
-              subjectType="channel"
-              subjectId={selectedChannel.id}
-              currentUserId={currentUserId}
-              onSignInRequest={onSignInRequest}
-              canWrite={canWrite}
-            />
+            {/* ── Open conversation as floating chat head ───────────── */}
+            <button
+              type="button"
+              onClick={() => {
+                const channelCanWrite =
+                  isAdmin || selectedChannel.write_permission === "everyone";
+                openChat({
+                  subjectType: "channel",
+                  subjectId: selectedChannel.id,
+                  label: `#${selectedChannel.name}`,
+                  canWrite: channelCanWrite,
+                });
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-cave-stone/30 border border-cave-ash/30 hover:border-white/30 hover:bg-cave-stone/50 transition-colors group"
+              aria-label={`Abrir conversación en #${selectedChannel.name}`}
+            >
+              {/* Chat bubble icon */}
+              <div className="w-8 h-8 rounded-full bg-cave-rock border border-cave-ash/40 flex items-center justify-center flex-shrink-0 group-hover:border-white/30 transition-colors">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-cave-fog group-hover:text-white transition-colors"
+                >
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+              </div>
+
+              {/* Text */}
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-cave-white font-[family-name:var(--font-space-mono)] group-hover:text-white transition-colors">
+                  Conversación
+                </p>
+                <p className="text-[10px] text-cave-fog font-[family-name:var(--font-inter)] mt-0.5 truncate">
+                  {selectedChannel.write_permission === "admins_only" && !isAdmin
+                    ? "Solo lectura · abrí la ventana flotante"
+                    : "Abrí la conversación en ventana flotante"}
+                </p>
+              </div>
+
+              {/* Arrow */}
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-cave-ash group-hover:text-white/60 transition-colors flex-shrink-0"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
