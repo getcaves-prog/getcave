@@ -15,6 +15,11 @@ export interface OpenChat {
   position?: { x: number; y: number };
   /** Stack order — higher = on top (only relevant for desktop multi-window) */
   zIndex: number;
+  /**
+   * Whether the current user can write in this chat. When false, EventThread
+   * hides the composer and shows a read-only notice. Defaults to true.
+   */
+  canWrite?: boolean;
 }
 
 interface OpenChatsState {
@@ -31,7 +36,7 @@ interface OpenChatsActions {
    * the front. If already open AND minimized, expand it. Caps at 3 windows
    * on desktop (further opens replace the LRU, i.e. the lowest zIndex).
    */
-  openChat: (chat: Pick<OpenChat, "subjectType" | "subjectId" | "label">) => void;
+  openChat: (chat: Pick<OpenChat, "subjectType" | "subjectId" | "label" | "canWrite">) => void;
   closeChat: (id: string) => void;
   minimizeChat: (id: string) => void;
   expandChat: (id: string) => void;
@@ -59,17 +64,18 @@ export const useOpenChatsStore = create<OpenChatsStore>()(
       focusedId: null,
       _zCounter: 0,
 
-      openChat({ subjectType, subjectId, label }) {
+      openChat({ subjectType, subjectId, label, canWrite }) {
         const id = makeChatId(subjectType, subjectId);
         const { chats, _zCounter } = get();
         const existing = chats.find((c) => c.id === id);
 
         if (existing) {
-          // Already open: un-minimize + bring to front
+          // Already open: un-minimize + bring to front; update canWrite in case
+          // the user's permission changed (e.g. was promoted to admin)
           set({
             chats: chats.map((c) =>
               c.id === id
-                ? { ...c, minimized: false, zIndex: BASE_Z + _zCounter + 1 }
+                ? { ...c, minimized: false, zIndex: BASE_Z + _zCounter + 1, canWrite: canWrite ?? c.canWrite }
                 : c
             ),
             focusedId: id,
@@ -93,6 +99,7 @@ export const useOpenChatsStore = create<OpenChatsStore>()(
           label,
           minimized: false,
           zIndex: BASE_Z + _zCounter + 1,
+          canWrite,
         };
 
         set({
