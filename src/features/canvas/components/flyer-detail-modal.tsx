@@ -383,31 +383,32 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                  Space Mono for labels, Inter for supporting text.
             ─────────────────────────────────────────────── */}
             <div className="mt-5 px-1 flex items-start justify-between gap-3">
-              {/* Left: date + location as prominent meta */}
+              {/* Left: creator (prominent, white) → date + location below */}
               <div className="flex-1 min-w-0">
-                <EventInfoLine
-                  zoneName={flyer.zone_name}
-                  eventDate={flyer.event_date}
-                />
-                {/* Creator as secondary line below */}
                 {creator && (
                   <Link
                     href={`/profile/${creator.username}`}
-                    className="mt-1.5 inline-block text-[11px] text-cave-ash hover:text-cave-fog transition-colors font-[family-name:var(--font-inter)] leading-none"
+                    className="block text-[15px] font-bold text-[#FFFFFF] hover:text-cave-fog transition-colors font-[family-name:var(--font-space-mono)] truncate leading-tight"
                   >
-                    por @{creator.username}
+                    @{creator.username}
                   </Link>
                 )}
+                <div className={creator ? "mt-1.5" : ""}>
+                  <EventInfoLine
+                    zoneName={flyer.zone_name}
+                    eventDate={flyer.event_date}
+                  />
+                </div>
               </div>
 
-              {/* Right: GUARDAR + share */}
-              <div className="flex items-center gap-1.5 shrink-0">
+              {/* Right: GUARDAR (large, label always visible) + share */}
+              <div className="flex items-center gap-2 shrink-0">
                 <motion.button
                   onClick={handleToggleSave}
                   disabled={savingInProgress}
                   whileTap={{ scale: 0.93 }}
                   transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                  className={`h-[40px] px-4 flex items-center gap-2 rounded-full border-2 font-bold tracking-[0.15em] uppercase text-[11px] transition-colors disabled:opacity-50 ${
+                  className={`h-[44px] px-5 flex items-center gap-2 rounded-full border-2 font-bold tracking-[0.15em] uppercase text-[12px] transition-colors disabled:opacity-50 ${
                     saved
                       ? "border-[#FFFFFF] text-[#FFFFFF] bg-[#FFFFFF]/10"
                       : "border-cave-ash text-cave-white hover:border-cave-fog"
@@ -416,15 +417,15 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                   aria-label={saved ? "Guardado" : "Guardar"}
                 >
                   <BookmarkIcon filled={saved} />
-                  <span className="hidden xs:inline">{saved ? "GUARDADO" : "GUARDAR"}</span>
+                  <span>{saved ? "GUARDADO" : "GUARDAR"}</span>
                 </motion.button>
 
                 <button
                   onClick={handleShare}
-                  className="w-[40px] h-[40px] flex items-center justify-center rounded-full border-2 border-cave-ash text-cave-smoke hover:text-cave-white hover:border-cave-fog transition-colors"
+                  className="w-[44px] h-[44px] flex items-center justify-center rounded-full border-2 border-cave-ash text-cave-smoke hover:text-cave-white hover:border-cave-fog transition-colors"
                   aria-label="Compartir"
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
                     <polyline points="16 6 12 2 8 6" />
                     <line x1="12" y1="2" x2="12" y2="15" />
