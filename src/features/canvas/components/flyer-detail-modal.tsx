@@ -14,6 +14,8 @@ import { ReportModal } from "./report-modal";
 import { EventInfoLine } from "./event-info-line";
 import { MasHoyCarousel } from "./mas-hoy-carousel";
 import { AttendanceControls } from "./attendance-controls";
+import { EventSideRail } from "./event-side-rail";
+import { useAttendance } from "../hooks/use-attendance";
 import { useMasHoy } from "../hooks/use-mas-hoy";
 import { QrPasscodeModal } from "@/features/invitations/components/qr-passcode-modal";
 import { QrDisplayModal } from "@/features/invitations/components/qr-display-modal";
@@ -22,9 +24,9 @@ import type { GenerateInviteResult, QrInvite } from "@/features/invitations/type
 // Cross-feature: Recaps are presented via a lateral modal (not inline accordion).
 // RecapsModal wraps RecapsGallery — no chat logic duplicated here.
 import { RecapsModal } from "./recaps-modal";
-// Chat heads: openChat() opens the floating chat window (lateral on desktop).
-// No EventThread rendered inline anymore — chat lives in the ChatHeadsOverlay.
-import { useOpenChatsStore } from "@/features/conversations/stores/open-chats.store";
+// Conversación: opens a focused lateral modal for THIS event's chat (mirrors
+// RecapsModal). Reuses EventThread; not the global floating ChatHeadsOverlay.
+import { ChatModal } from "./chat-modal";
 import { SectionHeading } from "@/shared/components/ui/section-heading";
 import type { LayoutFlyer, NearbyFlyer } from "../types/canvas.types";
 
@@ -76,8 +78,23 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
   const [showQrDisplay, setShowQrDisplay] = useState(false);
   const [qrResult, setQrResult] = useState<GenerateInviteResult | null>(null);
   const [showRecaps, setShowRecaps] = useState(false);
-  const openChat = useOpenChatsStore((s) => s.openChat);
+  const [showChat, setShowChat] = useState(false);
   const viewTrackedRef = useRef(false);
+
+  // Attendance state is lifted here so VOY (card) and VOY SOLO (side rail) share
+  // a single source of truth instead of two separate hook instances.
+  const attendance = useAttendance(flyer.id, user?.id);
+  const requestSignIn = useCallback(() => {
+    usePendingActionStore.getState().setPending({ kind: "save-flyer", flyerId: flyer.id });
+  }, [flyer.id]);
+  const handleGoing = useCallback(() => {
+    if (!user?.id) { requestSignIn(); return; }
+    void attendance.toggleGoing();
+  }, [user?.id, requestSignIn, attendance]);
+  const handleSolo = useCallback(() => {
+    if (!user?.id) { requestSignIn(); return; }
+    void attendance.toggleSolo();
+  }, [user?.id, requestSignIn, attendance]);
 
   const masHoyFlyers = useMasHoy(flyer.id, allFlyers, flyer.event_date ?? null);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -282,7 +299,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
       >
         <div className="min-h-full flex flex-col items-center justify-center px-8 py-16">
           <motion.div
-            className="w-full max-w-[400px]"
+            className="relative w-full max-w-[400px]"
             onClick={(e) => e.stopPropagation()}
             initial={{ scale: 0.92, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -290,6 +307,16 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
             style={{ willChange: "transform, opacity" }}
           >
+            {/* ── Side action rail (VOY SOLO + CHAT), pinned to the card's right edge ── */}
+            <div className="absolute top-1/2 -translate-y-1/2 right-1 z-20">
+              <EventSideRail
+                goingSolo={attendance.goingSolo}
+                loading={attendance.loading}
+                onToggleSolo={handleSolo}
+                onOpenChat={() => setShowChat(true)}
+              />
+            </div>
+
             {/* ── Image carousel ─────────────────────────── */}
             <div className={`relative w-full overflow-hidden rounded-[16px] ${flyer.is_promoted ? "ring-1 ring-amber-500/30" : ""}`}>
               {/* Slides */}
@@ -383,19 +410,19 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                  Space Mono for labels, Inter for supporting text.
             ─────────────────────────────────────────────── */}
             <div className="mt-5 px-1 flex items-start justify-between gap-3">
-              {/* Left: date + location as prominent meta */}
+              {/* Left: creator IN FRONT of location + date, then a tappable profile link */}
               <div className="flex-1 min-w-0">
                 <EventInfoLine
+                  username={creator?.username}
                   zoneName={flyer.zone_name}
                   eventDate={flyer.event_date}
                 />
-                {/* Creator as secondary line below */}
                 {creator && (
                   <Link
                     href={`/profile/${creator.username}`}
                     className="mt-1.5 inline-block text-[11px] text-cave-ash hover:text-cave-fog transition-colors font-[family-name:var(--font-inter)] leading-none"
                   >
-                    por @{creator.username}
+                    ver perfil @{creator.username}
                   </Link>
                 )}
               </div>
@@ -433,14 +460,17 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
               </div>
             </div>
 
-            {/* ── Attendance controls ─────────────────────── */}
+            {/* ── Attendance: VOY (primary, in card). VOY SOLO lives in the side rail. ── */}
             <div className="mt-5">
               <AttendanceControls
-                flyerId={flyer.id}
-                userId={user?.id}
-                onSignInRequest={() => {
-                  usePendingActionStore.getState().setPending({ kind: "save-flyer", flyerId: flyer.id });
-                }}
+                variant="going"
+                going={attendance.going}
+                goingSolo={attendance.goingSolo}
+                total={attendance.total}
+                solo={attendance.solo}
+                loading={attendance.loading}
+                onToggleGoing={handleGoing}
+                onToggleSolo={handleSolo}
               />
             </div>
 
@@ -504,65 +534,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
               </div>
             )}
 
-            {/* ── Conversación → chat head (floating window) ──
-                 Tapping this button opens the existing ChatHeadsOverlay
-                 system (lateral on desktop, draggable bubble on mobile).
-                 No EventThread rendered inline — chat lives outside.
-            ─────────────────────────────────────────────── */}
-            <div className="mt-5">
-              <motion.button
-                type="button"
-                onClick={() => {
-                  openChat({
-                    subjectType: "flyer",
-                    subjectId: flyer.id,
-                    label: flyer.title ?? "Evento",
-                  });
-                }}
-                whileTap={{ scale: 0.97 }}
-                transition={{ type: "spring", stiffness: 400, damping: 22 }}
-                className="w-full flex items-center justify-between px-5 py-4 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 hover:bg-cave-stone/80 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 flex items-center justify-center rounded-full bg-cave-ash/30 group-hover:bg-cave-ash/50 transition-colors">
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="text-cave-white"
-                    >
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                  </div>
-                  <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-cave-white font-[family-name:var(--font-space-mono)]">
-                      Conversación
-                    </span>
-                    <span className="text-[10px] text-cave-ash font-[family-name:var(--font-inter)]">
-                      Abrir chat del evento
-                    </span>
-                  </div>
-                </div>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-cave-smoke group-hover:text-cave-fog transition-colors"
-                >
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </motion.button>
-            </div>
+            {/* Conversación moved to the side rail (opens ChatModal). */}
 
             {/* ── Recaps → lateral modal ───────────────────────
                  Tapping opens a side panel (desktop right panel /
@@ -637,6 +609,18 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
             flyerId={flyer.id}
             isOwner={isOwner}
             onClose={() => setShowRecaps(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Conversación — focused lateral modal for this event's chat */}
+      <AnimatePresence>
+        {showChat && (
+          <ChatModal
+            flyerId={flyer.id}
+            label={flyer.title ?? "Evento"}
+            currentUserId={user?.id}
+            onClose={() => setShowChat(false)}
           />
         )}
       </AnimatePresence>
