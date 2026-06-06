@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   getOrCreateConversation,
   listMessages,
@@ -8,6 +8,7 @@ import {
   softDeleteMessage,
 } from "../services/conversation.service";
 import { uploadChatMedia } from "../services/chat-media.service";
+import { createClient } from "@/shared/lib/supabase/client";
 import type { Conversation, MessageWithAuthor } from "../types/conversation.types";
 import type { SubjectType } from "../types/conversation.types";
 import type { Tables } from "@/shared/types/database.types";
@@ -41,9 +42,12 @@ export type UseConversationResult = UseConversationState & UseConversationAction
 // Lazily gets-or-creates the conversation on mount, then loads messages.
 // Exposes post/reply/remove/refresh so the UI doesn't touch services directly.
 //
-// Realtime subscriptions are intentionally deferred to Phase 4.
-// TODO: subscribe to `messages` INSERT events via supabase.channel() once
-// the feature is stable, to enable live-updating threads without polling.
+// Realtime: once the conversation is loaded, subscribes to INSERT + UPDATE
+// events on `messages` filtered by conversation_id. On any event, calls
+// refresh() (debounced 300ms) so we always get correct author data via the
+// 2-query path in listMessages. Deduplication by id prevents double-adding
+// messages that the local poster already optimistically inserted.
+// Cleanup: channel is removed on unmount and when conversationId changes.
 export function useConversation(
   subjectType: SubjectType,
   subjectId: string
@@ -54,6 +58,10 @@ export function useConversation(
     loading: true,
     error: null,
   });
+
+  // Stable ref so the realtime callback always sees the latest load without
+  // being listed as a dependency (avoids resubscribe on every load cycle).
+  const loadRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
   const load = useCallback(async () => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
@@ -70,9 +78,63 @@ export function useConversation(
     }
   }, [subjectType, subjectId]);
 
+  // Keep the ref in sync so the realtime handler always calls the latest load.
+  useEffect(() => {
+    loadRef.current = load;
+  }, [load]);
+
   useEffect(() => {
     load();
   }, [load]);
+
+  // ─── Realtime subscription ─────────────────────────────────────────────
+  // Subscribe once the conversation id is available. The channel is scoped
+  // to that specific conversation_id so we don't receive noise from other
+  // conversations. On INSERT/UPDATE we debounce a refresh (300ms) so rapid
+  // bursts of messages result in a single re-fetch, not N concurrent loads.
+  useEffect(() => {
+    const conversationId = state.conversation?.id;
+    if (!conversationId) return;
+
+    const supabase = createClient();
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const scheduleRefresh = () => {
+      if (debounceTimer !== null) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        void loadRef.current();
+      }, 300);
+    };
+
+    const channel = supabase
+      .channel(`messages:conversation_id=eq.${conversationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        scheduleRefresh
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        scheduleRefresh
+      )
+      .subscribe();
+
+    return () => {
+      if (debounceTimer !== null) clearTimeout(debounceTimer);
+      void supabase.removeChannel(channel);
+    };
+  }, [state.conversation?.id]);
 
   const post = useCallback(
     async (body: string) => {
