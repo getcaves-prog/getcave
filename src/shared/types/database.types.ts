@@ -821,34 +821,46 @@ export type Database = {
       messages: {
         Row: {
           author_id: string | null
-          body: string
+          body: string | null
           conversation_id: string
           created_at: string
           id: string
           is_deleted: boolean
           is_official: boolean
+          media_duration_seconds: number | null
+          media_size_bytes: number | null
+          media_type: string | null
+          media_url: string | null
           parent_message_id: string | null
           updated_at: string
         }
         Insert: {
           author_id?: string | null
-          body: string
+          body?: string | null
           conversation_id: string
           created_at?: string
           id?: string
           is_deleted?: boolean
           is_official?: boolean
+          media_duration_seconds?: number | null
+          media_size_bytes?: number | null
+          media_type?: string | null
+          media_url?: string | null
           parent_message_id?: string | null
           updated_at?: string
         }
         Update: {
           author_id?: string | null
-          body?: string
+          body?: string | null
           conversation_id?: string
           created_at?: string
           id?: string
           is_deleted?: boolean
           is_official?: boolean
+          media_duration_seconds?: number | null
+          media_size_bytes?: number | null
+          media_type?: string | null
+          media_url?: string | null
           parent_message_id?: string | null
           updated_at?: string
         }
@@ -1247,12 +1259,16 @@ export type Database = {
         Args: { p_body: string; p_subject_id: string; p_subject_type: string }
         Returns: {
           author_id: string | null
-          body: string
+          body: string | null
           conversation_id: string
           created_at: string
           id: string
           is_deleted: boolean
           is_official: boolean
+          media_duration_seconds: number | null
+          media_size_bytes: number | null
+          media_type: string | null
+          media_url: string | null
           parent_message_id: string | null
           updated_at: string
         }
