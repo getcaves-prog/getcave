@@ -138,20 +138,17 @@ function ChatWindow({
       </div>
 
       {/* ── Thread ─────────────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-hidden">
-        {/*
-          EventThread renders its own scrollable area (max-h-80 inside the component).
-          We override that constraint by wrapping with a flex container that lets
-          it grow. The outer container clips overflow.
-        */}
-        <div className="h-full overflow-y-auto [&_.max-h-80]:max-h-none [&_.max-h-80]:h-full">
-          <EventThread
-            subjectType={chat.subjectType}
-            subjectId={chat.subjectId}
-            currentUserId={currentUserId}
-            canWrite={chat.canWrite}
-          />
-        </div>
+      {/* min-h-0 lets this flex child shrink below its content so EventThread's
+          internal scroll works instead of pushing the header off-screen.
+          `fill` makes the thread fill this fixed-height area. */}
+      <div className="flex-1 min-h-0">
+        <EventThread
+          subjectType={chat.subjectType}
+          subjectId={chat.subjectId}
+          currentUserId={currentUserId}
+          canWrite={chat.canWrite}
+          fill
+        />
       </div>
     </motion.div>
   );

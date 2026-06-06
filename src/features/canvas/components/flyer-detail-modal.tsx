@@ -14,8 +14,6 @@ import { trackFlyerView, getFlyerViewCount } from "../services/views.service";
 import { ReportModal } from "./report-modal";
 import { EventInfoLine } from "./event-info-line";
 import { MasHoyCarousel } from "./mas-hoy-carousel";
-import { AttendanceControls } from "./attendance-controls";
-import { EventSideRail } from "./event-side-rail";
 import { useAttendance } from "../hooks/use-attendance";
 import { useMasHoy } from "../hooks/use-mas-hoy";
 import { QrPasscodeModal } from "@/features/invitations/components/qr-passcode-modal";
@@ -25,9 +23,16 @@ import type { GenerateInviteResult, QrInvite } from "@/features/invitations/type
 // Cross-feature: Recaps are presented via a lateral modal (not inline accordion).
 // RecapsModal wraps RecapsGallery — no chat logic duplicated here.
 import { RecapsModal } from "./recaps-modal";
-// Conversación: opens the global floating chat head (bubble) for this event.
 import { SectionHeading } from "@/shared/components/ui/section-heading";
 import type { LayoutFlyer, NearbyFlyer } from "../types/canvas.types";
+
+// ─── Titleless-flyer identifier ────────────────────────────────────────────
+// When a flyer has no title (no community, no label), derive a short readable
+// code so chat heads and UI always have something distinguishable to show.
+function getFlyerDisplayName(flyer: Pick<LayoutFlyer, "id" | "title">): string {
+  if (flyer.title && flyer.title.trim().length > 0) return flyer.title;
+  return `Evento ${flyer.id.slice(0, 4).toUpperCase()}`;
+}
 
 // Bookmark icon — filled when saved
 function BookmarkIcon({ filled }: { filled: boolean }) {
@@ -80,20 +85,11 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
   const viewTrackedRef = useRef(false);
   const openChat = useOpenChatsStore((s) => s.openChat);
 
-  // Attendance state is lifted here so VOY (card) and VOY SOLO (side rail) share
-  // a single source of truth instead of two separate hook instances.
+  // Attendance state — single source of truth for SOLO + GRUPO buttons.
   const attendance = useAttendance(flyer.id, user?.id);
   const requestSignIn = useCallback(() => {
     usePendingActionStore.getState().setPending({ kind: "save-flyer", flyerId: flyer.id });
   }, [flyer.id]);
-  const handleGoing = useCallback(() => {
-    if (!user?.id) { requestSignIn(); return; }
-    void attendance.toggleGoing();
-  }, [user?.id, requestSignIn, attendance]);
-  const handleSolo = useCallback(() => {
-    if (!user?.id) { requestSignIn(); return; }
-    void attendance.toggleSolo();
-  }, [user?.id, requestSignIn, attendance]);
 
   const masHoyFlyers = useMasHoy(flyer.id, allFlyers, flyer.event_date ?? null);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -173,22 +169,22 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
         qr_token: myInvite.qr_token,
         display_name: myInvite.display_name,
         phone: myInvite.phone,
-        flyer_title: flyer.title,
+        flyer_title: getFlyerDisplayName(flyer),
         already_existed: true,
       });
       setShowQrDisplay(true);
     } else {
       setShowQrPasscode(true);
     }
-  }, [myInvite, flyer.title]);
+  }, [myInvite, flyer]);
 
   const handleQrVerify = useCallback(async (passcode: string, displayName: string, phone: string | null) => {
     const result = await verifyAndGetInvite(flyer.id, passcode, displayName, phone);
     setMyInvite({ id: "", flyer_id: flyer.id, user_id: user?.id ?? "", qr_token: result.qr_token, display_name: result.display_name, phone, checked_in: false, checked_in_at: null, created_at: "" });
-    setQrResult({ ...result, phone, flyer_title: flyer.title ?? "" });
+    setQrResult({ ...result, phone, flyer_title: getFlyerDisplayName(flyer) });
     setShowQrPasscode(false);
     setShowQrDisplay(true);
-  }, [flyer.id, flyer.title, user]);
+  }, [flyer, user]);
 
   const isOwner = user?.id === flyer.user_id;
 
@@ -306,16 +302,6 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
             style={{ willChange: "transform, opacity" }}
           >
-            {/* ── Side action rail (VOY SOLO + CHAT), pinned to the card's right edge ── */}
-            <div className="absolute top-1/2 -translate-y-1/2 right-1 z-20">
-              <EventSideRail
-                goingSolo={attendance.goingSolo}
-                loading={attendance.loading}
-                onToggleSolo={handleSolo}
-                onOpenChat={() => openChat({ subjectType: "flyer", subjectId: flyer.id, label: flyer.title ?? "Evento" })}
-              />
-            </div>
-
             {/* ── Image carousel ─────────────────────────── */}
             <div className={`relative w-full overflow-hidden rounded-[16px] ${flyer.is_promoted ? "ring-1 ring-amber-500/30" : ""}`}>
               {/* Slides */}
@@ -459,18 +445,93 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
               </div>
             </div>
 
-            {/* ── Attendance: VOY (primary, in card). VOY SOLO lives in the side rail. ── */}
-            <div className="mt-5">
-              <AttendanceControls
-                variant="going"
-                going={attendance.going}
-                goingSolo={attendance.goingSolo}
-                total={attendance.total}
-                solo={attendance.solo}
-                loading={attendance.loading}
-                onToggleGoing={handleGoing}
-                onToggleSolo={handleSolo}
-              />
+            {/* ── Controls row: SOLO + GRUPO + CHAT (outside the image, gray surface) ── */}
+            <div className="mt-4">
+              <div className="flex items-stretch gap-2 rounded-2xl bg-cave-stone p-2">
+                {/* SOLO — going alone */}
+                <motion.button
+                  type="button"
+                  onClick={() => {
+                    if (!user?.id) { requestSignIn(); return; }
+                    // SOLO = going + goingSolo. Tapping active state toggles off.
+                    void attendance.toggleSolo();
+                  }}
+                  disabled={attendance.loading}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className={`flex-1 min-h-[48px] flex flex-col items-center justify-center gap-0.5 rounded-xl border-2 text-[11px] font-bold uppercase tracking-[0.18em] transition-all disabled:opacity-50 font-[family-name:var(--font-space-mono)] ${
+                    attendance.goingSolo
+                      ? "border-[#FFFFFF] text-cave-black bg-[#FFFFFF] shadow-[0_0_12px_rgba(255,255,255,0.18)]"
+                      : "border-cave-ash/60 text-cave-fog bg-cave-rock/60 hover:border-cave-fog hover:text-cave-white"
+                  }`}
+                  aria-pressed={attendance.goingSolo}
+                  aria-label={attendance.goingSolo ? "Voy solo — toca para cancelar" : "Marcar que voy solo"}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <span>{attendance.goingSolo ? "Solo ✓" : "Solo"}</span>
+                </motion.button>
+
+                {/* GRUPO — going with others */}
+                <motion.button
+                  type="button"
+                  onClick={() => {
+                    if (!user?.id) { requestSignIn(); return; }
+                    // GRUPO = going + not solo. Tapping active state toggles off.
+                    void attendance.toggleGoing();
+                  }}
+                  disabled={attendance.loading}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className={`flex-1 min-h-[48px] flex flex-col items-center justify-center gap-0.5 rounded-xl border-2 text-[11px] font-bold uppercase tracking-[0.18em] transition-all disabled:opacity-50 font-[family-name:var(--font-space-mono)] ${
+                    attendance.going && !attendance.goingSolo
+                      ? "border-[#FFFFFF] text-cave-black bg-[#FFFFFF] shadow-[0_0_12px_rgba(255,255,255,0.18)]"
+                      : "border-cave-ash/60 text-cave-fog bg-cave-rock/60 hover:border-cave-fog hover:text-cave-white"
+                  }`}
+                  aria-pressed={attendance.going && !attendance.goingSolo}
+                  aria-label={attendance.going && !attendance.goingSolo ? "Voy en grupo — toca para cancelar" : "Marcar que voy en grupo"}
+                >
+                  <svg width="17" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  <span>{attendance.going && !attendance.goingSolo ? "Grupo ✓" : "Grupo"}</span>
+                </motion.button>
+
+                {/* CHAT — open floating chat head */}
+                <motion.button
+                  type="button"
+                  onClick={() => openChat({ subjectType: "flyer", subjectId: flyer.id, label: getFlyerDisplayName(flyer) })}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className="flex-1 min-h-[48px] flex flex-col items-center justify-center gap-0.5 rounded-xl border-2 border-cave-ash/60 text-cave-fog bg-cave-rock/60 hover:border-cave-fog hover:text-cave-white transition-all text-[11px] font-bold uppercase tracking-[0.18em] font-[family-name:var(--font-space-mono)]"
+                  aria-label="Abrir conversación del evento"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <span>Chat</span>
+                </motion.button>
+              </div>
+
+              {/* Attendance counter — below the row, subtle */}
+              {(attendance.total > 0 || attendance.solo > 0) && (
+                <p className="mt-2 text-center text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)] tracking-[0.12em]">
+                  <span className="text-cave-light font-bold">{attendance.total}</span>
+                  {" "}{attendance.total === 1 ? "va" : "van"}
+                  {attendance.solo > 0 && (
+                    <>
+                      {" · "}
+                      <span className="text-cave-light font-bold">{attendance.solo}</span>
+                      {" "}{attendance.solo === 1 ? "solo" : "solos"}
+                    </>
+                  )}
+                </p>
+              )}
             </div>
 
             {/* ── QR Invitation button ────────────────────── */}
@@ -481,7 +542,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                   onClick={handleQrButtonClick}
                   whileTap={{ scale: 0.97 }}
                   transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                  className="w-full h-[48px] flex items-center justify-center gap-2.5 rounded-full bg-neon-green text-cave-black font-bold tracking-[0.15em] uppercase text-sm"
+                  className="w-full h-[48px] flex items-center justify-center gap-2.5 rounded-full bg-[#FFFFFF] text-cave-black font-bold tracking-[0.15em] uppercase text-sm"
                   style={{ fontFamily: "var(--font-space-mono)" }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -616,7 +677,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
       <AnimatePresence>
         {showQrPasscode && (
           <QrPasscodeModal
-            flyerTitle={flyer.title}
+            flyerTitle={getFlyerDisplayName(flyer)}
             onVerify={handleQrVerify}
             onClose={() => setShowQrPasscode(false)}
           />
