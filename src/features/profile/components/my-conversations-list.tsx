@@ -1,9 +1,19 @@
 "use client";
 
-import Link from "next/link";
+import { useCallback } from "react";
 import type { MyConversation } from "../types/activity.types";
+import { useOpenChatsStore } from "@/features/conversations/stores/open-chats.store";
+import type { SubjectType } from "@/features/conversations/types/conversation.types";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
+
+// Valid SubjectTypes for the chat-heads store
+const VALID_SUBJECT_TYPES: SubjectType[] = ["flyer", "community", "channel"];
+
+function toSubjectType(raw: string): SubjectType | null {
+  if ((VALID_SUBJECT_TYPES as string[]).includes(raw)) return raw as SubjectType;
+  return null;
+}
 
 function relativeTime(dateStr: string): string {
   const now = Date.now();
@@ -20,17 +30,6 @@ function relativeTime(dateStr: string): string {
     day: "numeric",
     month: "short",
   });
-}
-
-function resolveHref(conv: MyConversation): string {
-  if (conv.subject_type === "flyer") {
-    return `/flyer/${conv.subject_id}`;
-  }
-  if (conv.subject_type === "community") {
-    // Route is /communities/[slug] — use community_slug, fallback to "#" if missing
-    return conv.community_slug ? `/communities/${conv.community_slug}` : "#";
-  }
-  return "#";
 }
 
 // ─── Subject type chip ─────────────────────────────────────────────────────
@@ -54,12 +53,23 @@ function SubjectChip({ subjectType }: { subjectType: string }) {
 // ─── Conversation row ──────────────────────────────────────────────────────
 
 function ConversationRow({ conv }: { conv: MyConversation }) {
-  const href = resolveHref(conv);
+  const openChat = useOpenChatsStore((s) => s.openChat);
+
+  const handleOpen = useCallback(() => {
+    const subjectType = toSubjectType(conv.subject_type);
+    if (!subjectType) return;
+    openChat({
+      subjectType,
+      subjectId: conv.subject_id,
+      label: conv.subject_label ?? "Conversación",
+    });
+  }, [conv, openChat]);
 
   return (
-    <Link
-      href={href}
-      className="flex items-center gap-3 px-4 py-3 rounded-xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 active:scale-[0.98] transition-all"
+    <button
+      type="button"
+      onClick={handleOpen}
+      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-cave-stone/60 border border-cave-ash/40 hover:border-white/30 active:scale-[0.98] transition-all text-left"
     >
       {/* Icon */}
       <div className="w-10 h-10 rounded-full bg-cave-ash flex items-center justify-center flex-shrink-0">
@@ -91,7 +101,7 @@ function ConversationRow({ conv }: { conv: MyConversation }) {
         </p>
       </div>
 
-      {/* Chevron */}
+      {/* Pop-out icon */}
       <svg
         width="14"
         height="14"
@@ -103,9 +113,11 @@ function ConversationRow({ conv }: { conv: MyConversation }) {
         strokeLinejoin="round"
         className="text-cave-ash flex-shrink-0"
       >
-        <polyline points="9 18 15 12 9 6" />
+        <polyline points="15 3 21 3 21 9" />
+        <line x1="10" y1="14" x2="21" y2="3" />
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
       </svg>
-    </Link>
+    </button>
   );
 }
 
