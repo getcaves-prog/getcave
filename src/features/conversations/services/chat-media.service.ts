@@ -42,7 +42,11 @@ export async function uploadChatMedia(
   // ── Validate mime BEFORE hitting the network ────────────────────────────
   const allowedMimes = kind === "image" ? ALLOWED_IMAGE_MIMES : ALLOWED_AUDIO_MIMES;
 
-  if (!allowedMimes.has(file.type)) {
+  // MediaRecorder reports mimes like "audio/webm;codecs=opus" — normalize to the
+  // base type before validating and uploading (the bucket only allows base types).
+  const baseMime = file.type.split(";")[0].trim().toLowerCase();
+
+  if (!allowedMimes.has(baseMime)) {
     throw new Error(
       kind === "image"
         ? `Tipo de archivo no permitido para imagen: ${file.type}. Permitidos: jpeg, png, webp.`
@@ -69,14 +73,14 @@ export async function uploadChatMedia(
   }
 
   // ── Build storage path: uid FIRST (RLS requires foldername(name)[1] = uid) ─
-  const ext = getExtensionFromMime(file.type);
+  const ext = getExtensionFromMime(baseMime);
   const uuid = crypto.randomUUID();
   const storagePath = `${user.id}/${conversationId}/${uuid}${ext}`;
 
-  // ── Upload ──────────────────────────────────────────────────────────────
+  // ── Upload (force base contentType so the bucket allowed_mime_types accepts it) ─
   const { error: storageError } = await supabase.storage
     .from(CHAT_MEDIA_BUCKET)
-    .upload(storagePath, file);
+    .upload(storagePath, file, { contentType: baseMime });
 
   if (storageError) {
     throw new Error(`Failed to upload chat media: ${storageError.message}`);
