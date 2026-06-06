@@ -19,14 +19,12 @@ import { QrPasscodeModal } from "@/features/invitations/components/qr-passcode-m
 import { QrDisplayModal } from "@/features/invitations/components/qr-display-modal";
 import { getInvitationStatus, getMyInviteForFlyer, verifyAndGetInvite } from "@/features/invitations/services/invitation.service";
 import type { GenerateInviteResult, QrInvite } from "@/features/invitations/types/invitation.types";
-// Cross-feature import: EventThread lives in conversations/; this is the minimal
-// surface (one import, no shared state). Alternative (route-based) would require
-// significant routing changes — not justified at MVP scale. See engram note.
-import { EventThread } from "@/features/conversations/components/event-thread";
-// Cross-feature import: RecapsGallery lives in recaps/. Same minimal-surface
-// pattern as EventThread — one named import, no shared state. isOwner is
-// derived locally from user?.id === flyer.user_id (already computed as isOwner).
-import { RecapsGallery } from "@/features/recaps/components/recaps-gallery";
+// Cross-feature: Recaps are presented via a lateral modal (not inline accordion).
+// RecapsModal wraps RecapsGallery — no chat logic duplicated here.
+import { RecapsModal } from "./recaps-modal";
+// Chat heads: openChat() opens the floating chat window (lateral on desktop).
+// No EventThread rendered inline anymore — chat lives in the ChatHeadsOverlay.
+import { useOpenChatsStore } from "@/features/conversations/stores/open-chats.store";
 import { SectionHeading } from "@/shared/components/ui/section-heading";
 import type { LayoutFlyer, NearbyFlyer } from "../types/canvas.types";
 
@@ -77,8 +75,8 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
   const [showQrPasscode, setShowQrPasscode] = useState(false);
   const [showQrDisplay, setShowQrDisplay] = useState(false);
   const [qrResult, setQrResult] = useState<GenerateInviteResult | null>(null);
-  const [showThread, setShowThread] = useState(false);
   const [showRecaps, setShowRecaps] = useState(false);
+  const openChat = useOpenChatsStore((s) => s.openChat);
   const viewTrackedRef = useRef(false);
 
   const masHoyFlyers = useMasHoy(flyer.id, allFlyers, flyer.event_date ?? null);
@@ -380,57 +378,60 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
               )}
             </div>
 
-            {/* Info line — zona y fecha, sin username */}
-            <div className="mt-5 px-1">
-              <EventInfoLine
-                zoneName={flyer.zone_name}
-                eventDate={flyer.event_date}
-              />
-            </div>
-
-            {/* ── GUARDAR — grande, centrado ──────────────── */}
-            <div className="mt-5 flex items-center gap-2">
-              <motion.button
-                onClick={handleToggleSave}
-                disabled={savingInProgress}
-                whileTap={{ scale: 0.96 }}
-                transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                className={`flex-1 h-[52px] flex items-center justify-center gap-2.5 rounded-full border-2 font-bold tracking-[0.2em] uppercase text-sm transition-colors disabled:opacity-50 ${
-                  saved
-                    ? "border-[#FFFFFF] text-[#FFFFFF] bg-[#FFFFFF]/8"
-                    : "border-cave-ash text-cave-white hover:border-cave-fog"
-                }`}
-                style={{ fontFamily: "var(--font-space-mono)" }}
-                aria-label={saved ? "Guardado" : "Guardar"}
-              >
-                <BookmarkIcon filled={saved} />
-                <span>{saved ? "GUARDADO" : "GUARDAR"}</span>
-              </motion.button>
-
-              <button
-                onClick={handleShare}
-                className="w-[52px] h-[52px] flex items-center justify-center rounded-full border-2 border-cave-ash text-cave-smoke hover:text-cave-white hover:border-cave-fog transition-colors"
-                aria-label="Compartir"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                  <polyline points="16 6 12 2 8 6" />
-                  <line x1="12" y1="2" x2="12" y2="15" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Creator link */}
-            {creator && (
-              <div className="mt-5 px-1">
-                <Link
-                  href={`/profile/${creator.username}`}
-                  className="text-sm text-cave-light hover:text-cave-white transition-colors font-[family-name:var(--font-space-mono)]"
-                >
-                  @{creator.username}
-                </Link>
+            {/* ── Event meta block ─────────────────────────
+                 Hierarchy: date/location (primary) → creator (secondary)
+                 Space Mono for labels, Inter for supporting text.
+            ─────────────────────────────────────────────── */}
+            <div className="mt-5 px-1 flex items-start justify-between gap-3">
+              {/* Left: date + location as prominent meta */}
+              <div className="flex-1 min-w-0">
+                <EventInfoLine
+                  zoneName={flyer.zone_name}
+                  eventDate={flyer.event_date}
+                />
+                {/* Creator as secondary line below */}
+                {creator && (
+                  <Link
+                    href={`/profile/${creator.username}`}
+                    className="mt-1.5 inline-block text-[11px] text-cave-ash hover:text-cave-fog transition-colors font-[family-name:var(--font-inter)] leading-none"
+                  >
+                    por @{creator.username}
+                  </Link>
+                )}
               </div>
-            )}
+
+              {/* Right: GUARDAR + share */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <motion.button
+                  onClick={handleToggleSave}
+                  disabled={savingInProgress}
+                  whileTap={{ scale: 0.93 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className={`h-[40px] px-4 flex items-center gap-2 rounded-full border-2 font-bold tracking-[0.15em] uppercase text-[11px] transition-colors disabled:opacity-50 ${
+                    saved
+                      ? "border-[#FFFFFF] text-[#FFFFFF] bg-[#FFFFFF]/10"
+                      : "border-cave-ash text-cave-white hover:border-cave-fog"
+                  }`}
+                  style={{ fontFamily: "var(--font-space-mono)" }}
+                  aria-label={saved ? "Guardado" : "Guardar"}
+                >
+                  <BookmarkIcon filled={saved} />
+                  <span className="hidden xs:inline">{saved ? "GUARDADO" : "GUARDAR"}</span>
+                </motion.button>
+
+                <button
+                  onClick={handleShare}
+                  className="w-[40px] h-[40px] flex items-center justify-center rounded-full border-2 border-cave-ash text-cave-smoke hover:text-cave-white hover:border-cave-fog transition-colors"
+                  aria-label="Compartir"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                    <polyline points="16 6 12 2 8 6" />
+                    <line x1="12" y1="2" x2="12" y2="15" />
+                  </svg>
+                </button>
+              </div>
+            </div>
 
             {/* ── Attendance controls ─────────────────────── */}
             <div className="mt-5">
@@ -503,20 +504,49 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
               </div>
             )}
 
-            {/* ── Conversación ────────────────────────────── */}
+            {/* ── Conversación → chat head (floating window) ──
+                 Tapping this button opens the existing ChatHeadsOverlay
+                 system (lateral on desktop, draggable bubble on mobile).
+                 No EventThread rendered inline — chat lives outside.
+            ─────────────────────────────────────────────── */}
             <div className="mt-5">
-              <button
+              <motion.button
                 type="button"
-                onClick={() => setShowThread((prev) => !prev)}
-                className="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
+                onClick={() => {
+                  openChat({
+                    subjectType: "flyer",
+                    subjectId: flyer.id,
+                    label: flyer.title ?? "Evento",
+                  });
+                }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                className="w-full flex items-center justify-between px-5 py-4 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 hover:bg-cave-stone/80 transition-colors group"
               >
-                <div className="flex items-center gap-2">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cave-fog">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-cave-fog font-[family-name:var(--font-space-mono)]">
-                    Conversación
-                  </span>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 flex items-center justify-center rounded-full bg-cave-ash/30 group-hover:bg-cave-ash/50 transition-colors">
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-cave-white"
+                    >
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                  </div>
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-cave-white font-[family-name:var(--font-space-mono)]">
+                      Conversación
+                    </span>
+                    <span className="text-[10px] text-cave-ash font-[family-name:var(--font-inter)]">
+                      Abrir chat del evento
+                    </span>
+                  </div>
                 </div>
                 <svg
                   width="14"
@@ -527,65 +557,52 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className={`text-cave-smoke transition-transform duration-200 ${showThread ? "rotate-180" : ""}`}
+                  className="text-cave-smoke group-hover:text-cave-fog transition-colors"
                 >
-                  <polyline points="6 9 12 15 18 9" />
+                  <polyline points="9 18 15 12 9 6" />
                 </svg>
-              </button>
-
-              <AnimatePresence>
-                {showThread && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ type: "spring", stiffness: 280, damping: 28 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-4 px-1 pb-2">
-                      <EventThread
-                        subjectType="flyer"
-                        subjectId={flyer.id}
-                        currentUserId={user?.id}
-                        onSignInRequest={() => {
-                          usePendingActionStore.getState().setPending({ kind: "save-flyer", flyerId: flyer.id });
-                        }}
-                      />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              </motion.button>
             </div>
 
-            {/* ── Recaps ──────────────────────────────────────── */}
-            {/* Cross-feature import: RecapsGallery from recaps/. isOwner
-                allows the flyer creator to delete any recap; regular users
-                can only delete their own uploads (enforced by RLS + UI). */}
+            {/* ── Recaps → lateral modal ───────────────────────
+                 Tapping opens a side panel (desktop right panel /
+                 mobile near-fullscreen sheet) with RecapsGallery.
+                 No inline gallery — content is in RecapsModal.
+            ─────────────────────────────────────────────── */}
             <div className="mt-5">
-              <button
+              <motion.button
                 type="button"
-                onClick={() => setShowRecaps((prev) => !prev)}
-                className="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 transition-colors"
+                onClick={() => setShowRecaps(true)}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                className="w-full flex items-center justify-between px-5 py-4 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 hover:bg-cave-stone/80 transition-colors group"
               >
-                <div className="flex items-center gap-2">
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-cave-fog"
-                  >
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <polyline points="21 15 16 10 5 21" />
-                  </svg>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-cave-fog font-[family-name:var(--font-space-mono)]">
-                    Recaps
-                  </span>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 flex items-center justify-center rounded-full bg-cave-ash/30 group-hover:bg-cave-ash/50 transition-colors">
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-cave-white"
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                  </div>
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-cave-white font-[family-name:var(--font-space-mono)]">
+                      Recaps
+                    </span>
+                    <span className="text-[10px] text-cave-ash font-[family-name:var(--font-inter)]">
+                      Fotos y videos del evento
+                    </span>
+                  </div>
                 </div>
                 <svg
                   width="14"
@@ -596,27 +613,11 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className={`text-cave-smoke transition-transform duration-200 ${showRecaps ? "rotate-180" : ""}`}
+                  className="text-cave-smoke group-hover:text-cave-fog transition-colors"
                 >
-                  <polyline points="6 9 12 15 18 9" />
+                  <polyline points="9 18 15 12 9 6" />
                 </svg>
-              </button>
-
-              <AnimatePresence>
-                {showRecaps && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ type: "spring", stiffness: 280, damping: 28 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-4 px-1 pb-2">
-                      <RecapsGallery flyerId={flyer.id} isOwner={isOwner} />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              </motion.button>
             </div>
 
             {/* Más hoy carousel */}
@@ -628,6 +629,17 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
           </motion.div>
         </div>
       </div>
+
+      {/* Recaps lateral modal */}
+      <AnimatePresence>
+        {showRecaps && (
+          <RecapsModal
+            flyerId={flyer.id}
+            isOwner={isOwner}
+            onClose={() => setShowRecaps(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* QR modals */}
       <AnimatePresence>
