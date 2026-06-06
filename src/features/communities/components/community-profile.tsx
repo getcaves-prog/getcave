@@ -263,8 +263,14 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
     );
   }
 
-  const isMember = !!community.myMembership;
+  // The community creator ALWAYS retains full control — even if their
+  // membership row is missing (e.g. they left and rejoined as a plain member,
+  // or it was never created). This stops an owner from locking themselves out
+  // of their own community (the "Agregar evento" button, edit, manage members).
+  const isCreator = !!user && community.created_by === user.id;
+  const isMember = !!community.myMembership || isCreator;
   const isAdmin =
+    isCreator ||
     community.myMembership?.role === "owner" ||
     community.myMembership?.role === "admin";
   const displayEvents = eventTab === "upcoming" ? upcomingEvents : pastEvents;
