@@ -216,12 +216,15 @@ export async function getMyConversations(
   // Partition subject_ids by type
   const flyerSubjectIds: string[] = [];
   const communitySubjectIds: string[] = [];
+  const channelSubjectIds: string[] = [];
 
   for (const conv of convMap.values()) {
     if (conv.subject_type === "flyer") {
       flyerSubjectIds.push(conv.subject_id);
     } else if (conv.subject_type === "community") {
       communitySubjectIds.push(conv.subject_id);
+    } else if (conv.subject_type === "channel") {
+      channelSubjectIds.push(conv.subject_id);
     }
   }
 
@@ -255,6 +258,34 @@ export async function getMyConversations(
     }
   }
 
+  // Q3c: channel labels (channel name) + parent community slug for routing
+  const channelLabelMap = new Map<string, string | null>();
+  const channelSlugMap = new Map<string, string>();
+  if (channelSubjectIds.length > 0) {
+    const { data: channelRows } = await supabase
+      .from("community_channels")
+      .select("id, name, community_id")
+      .in("id", channelSubjectIds);
+    if (channelRows) {
+      const parentIds = [...new Set(channelRows.map((c) => c.community_id))];
+      const slugByCommunity = new Map<string, string>();
+      if (parentIds.length > 0) {
+        const { data: parents } = await supabase
+          .from("communities")
+          .select("id, slug")
+          .in("id", parentIds);
+        if (parents) {
+          for (const p of parents) slugByCommunity.set(p.id, p.slug);
+        }
+      }
+      for (const ch of channelRows) {
+        channelLabelMap.set(ch.id, ch.name);
+        const slug = slugByCommunity.get(ch.community_id);
+        if (slug) channelSlugMap.set(ch.id, slug);
+      }
+    }
+  }
+
   // Build result — one entry per conversation_id, ordered by last_activity_at desc
   const result: MyConversation[] = conversationIds
     .map((convId) => {
@@ -268,6 +299,9 @@ export async function getMyConversations(
       } else if (conv.subject_type === "community") {
         subjectLabel = communityLabelMap.get(conv.subject_id) ?? null;
         communitySlug = communitySlugMap.get(conv.subject_id) ?? null;
+      } else if (conv.subject_type === "channel") {
+        subjectLabel = channelLabelMap.get(conv.subject_id) ?? null;
+        communitySlug = channelSlugMap.get(conv.subject_id) ?? null;
       }
 
       return {
