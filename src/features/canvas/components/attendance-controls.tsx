@@ -47,9 +47,9 @@ export function AttendanceControls({ flyerId, userId, onSignInRequest }: Attenda
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2.5">
       {/* Buttons row */}
-      <div className="flex gap-2">
+      <div className="flex gap-2.5">
         {/* VOY */}
         <motion.button
           type="button"
@@ -57,10 +57,10 @@ export function AttendanceControls({ flyerId, userId, onSignInRequest }: Attenda
           disabled={loading}
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
-          className={`flex-1 h-[44px] flex items-center justify-center gap-2 rounded-full border-2 text-xs font-bold uppercase tracking-[0.15em] transition-colors disabled:opacity-50 font-[family-name:var(--font-space-mono)] ${
+          className={`flex-1 h-[48px] flex items-center justify-center gap-2 rounded-full border-2 text-[11px] font-bold uppercase tracking-[0.18em] transition-all disabled:opacity-50 font-[family-name:var(--font-space-mono)] ${
             going
-              ? "border-[#FFFFFF] text-[#FFFFFF] bg-[#FFFFFF]/10 shadow-[0_0_12px_rgba(255,255,255,0.15)]"
-              : "border-cave-ash text-cave-fog hover:border-cave-fog"
+              ? "border-[#FFFFFF] text-cave-black bg-[#FFFFFF] shadow-[0_0_16px_rgba(255,255,255,0.2)]"
+              : "border-cave-ash/60 text-cave-fog bg-transparent hover:border-cave-fog hover:text-cave-light"
           }`}
           aria-pressed={going}
           aria-label={going ? "Ya voy — tocar para cancelar" : "Marcar que voy"}
@@ -76,10 +76,10 @@ export function AttendanceControls({ flyerId, userId, onSignInRequest }: Attenda
           disabled={loading}
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
-          className={`flex-1 h-[44px] flex items-center justify-center gap-2 rounded-full border-2 text-xs font-bold uppercase tracking-[0.15em] transition-colors disabled:opacity-50 font-[family-name:var(--font-space-mono)] ${
+          className={`flex-1 h-[48px] flex items-center justify-center gap-2 rounded-full border-2 text-[11px] font-bold uppercase tracking-[0.18em] transition-all disabled:opacity-50 font-[family-name:var(--font-space-mono)] ${
             goingSolo
-              ? "border-[#FFFFFF] text-[#FFFFFF] bg-[#FFFFFF]/10 shadow-[0_0_12px_rgba(255,255,255,0.15)]"
-              : "border-cave-ash text-cave-fog hover:border-cave-fog"
+              ? "border-[#FFFFFF] text-cave-black bg-[#FFFFFF] shadow-[0_0_16px_rgba(255,255,255,0.2)]"
+              : "border-cave-ash/60 text-cave-fog bg-transparent hover:border-cave-fog hover:text-cave-light"
           }`}
           aria-pressed={goingSolo}
           aria-label={goingSolo ? "Voy solo — tocar para cambiar" : "Marcar que voy solo"}
@@ -89,13 +89,22 @@ export function AttendanceControls({ flyerId, userId, onSignInRequest }: Attenda
         </motion.button>
       </div>
 
-      {/* Counter line — only when there are attendees */}
-      {(total > 0 || solo > 0) && (
-        <p className="text-[10px] text-cave-fog text-center font-[family-name:var(--font-space-mono)] tracking-[0.1em]">
-          {total} {total === 1 ? "va" : "van"}
-          {solo > 0 && ` · ${solo} ${solo === 1 ? "solo" : "solos"}`}
-        </p>
-      )}
+      {/* Counter — prominent when attendees exist, subtle placeholder otherwise */}
+      <div className="flex items-center justify-center gap-1.5 min-h-[16px]">
+        {(total > 0 || solo > 0) ? (
+          <p className="text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)] tracking-[0.12em]">
+            <span className="text-cave-light font-bold">{total}</span>
+            {" "}{total === 1 ? "va" : "van"}
+            {solo > 0 && (
+              <>
+                {" · "}
+                <span className="text-cave-light font-bold">{solo}</span>
+                {" "}{solo === 1 ? "solo" : "solos"}
+              </>
+            )}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }
