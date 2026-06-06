@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAVES MVP — Propuesta para Cliente</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050505;
+      --panel: #0e0e0e;
+      --panel-2: #111111;
+      --line: #1c1c1c;
+      --text: #f5f5f5;
+      --muted: #a1a1a1;
+      --soft: #6f6f6f;
+      --accent: #ffffff;
+      --chip: #171717;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, sans-serif;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      width: 215.9mm;
+      min-height: 279.4mm;
+      page-break-after: always;
+      padding: 18mm 16mm;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page:last-child { page-break-after: avoid; }
+
+    .grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 140px 140px;
+    }
+
+    .content { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; gap: 18px; }
+
+    .eyebrow {
+      font: 700 9px/1.2 'Space Mono', monospace;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    h1 {
+      font-size: 30px;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      max-width: 10ch;
+    }
+
+    h2 {
+      font-size: 18px;
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+    }
+
+    p, li { color: var(--muted); font-size: 10.5px; line-height: 1.65; }
+
+    .hero {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    }
+
+    .grid { display: grid; gap: 12px; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .card h3 {
+      font-size: 12px;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--chip);
+      color: var(--text);
+      font-size: 9px;
+      letter-spacing: 0.02em;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .table th, .table td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      font-size: 10px;
+    }
+
+    .table th {
+      color: var(--text);
+      font: 700 9px/1.2 'Space Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      background: #0c0c0c;
+    }
+
+    .table tr:last-child td { border-bottom: 0; }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 12px;
+    }
+
+    .note {
+      padding: 14px 16px;
+      border-left: 2px solid #fff;
+      background: rgba(255,255,255,0.03);
+      border-radius: 0 14px 14px 0;
+    }
+
+    .scope-list {
+      display: grid;
+      gap: 5px;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    .scope-list li {
+      position: relative;
+      padding-left: 14px;
+      color: var(--muted);
+    }
+
+    .scope-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.72em;
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: #fff;
+    }
+
+    ul { padding-left: 16px; display: grid; gap: 6px; }
+    .muted { color: var(--soft); }
+    .footer {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      font-size: 9px;
+      color: var(--soft);
+    }
+
+    .big-number {
+      font-size: 34px;
+      line-height: 1;
+      letter-spacing: -0.06em;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .cover-meta { display: flex; gap: 10px; flex-wrap: wrap; }
+    .cover-meta .tag { background: transparent; }
+
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+  <section class="page">
+    <div class="grain"></div>
+    <div class="content">
+      <div class="eyebrow">CAVES · Propuesta MVP</div>
+      <div class="hero">
+        <h1>Plataforma para descubrir experiencias y comunidades reales.</h1>
+        <p style="max-width: 58ch; margin-top: 14px;">Esta propuesta no parte de cero. El proyecto ya tiene una base sólida de descubrimiento, perfil, auth, guardados, views y creación de eventos. El trabajo real es adaptar y completar la capa de comunidad, conversación y retención.</p>
+        <div class="cover-meta" style="margin-top: 16px;">
+          <span class="tag">Base ya construida</span>
+          <span class="tag">Adaptación incremental</span>
+          <span class="tag">Comunidad + continuidad</span>
+          <span class="tag">MVP piloto</span>
+        </div>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="card">
+          <div class="big-number">14-26h</div>
+          <p>Estimación recomendada para completar lo que falta sobre la base existente, usando ayuda de un LLM.</p>
+        </div>
+        <div class="card">
+          <div class="big-number">28-40h</div>
+          <p>Estimación para una versión más sólida, con más pulido visual, QA y menos deuda técnica.</p>
+        </div>
+        <div class="card">
+          <div class="big-number">2-4 días</div>
+          <p>Tiempo de entrega aproximado si una sola persona implementa por etapas y usa LLM como apoyo diario.</p>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="card">
+          <h2>Objetivo</h2>
+          <p>Validar que los usuarios regresan, exploran eventos, se unen a comunidades y mantienen actividad después del evento.</p>
+        </div>
+        <div class="card">
+          <h2>Idea central</h2>
+          <p>El evento es la adquisición. La comunidad es la retención. La conversación es la continuidad.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-bottom: 12px;">Ya existe en el proyecto</h2>
+        <div class="grid grid-2">
+          <div>
+            <ul>
+              <li>Home / feed visual con flyers</li>
+              <li>Detalle de evento</li>
+              <li>Guardar, compartir y views</li>
+              <li>Crear evento con upload</li>
+            </ul>
+          </div>
+          <div>
+            <ul>
+              <li>Auth y perfil de usuario</li>
+              <li>Onboarding base</li>
+              <li>Flujo de organizador</li>
+              <li>Invitaciones / QR / check-in</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>CAVES MVP Proposal</span>
+        <span>Documento para cliente</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="page page-break">
+    <div class="grain"></div>
+    <div class="content">
+      <div class="eyebrow">Alcance del MVP</div>
+      <h2>Qué falta construir</h2>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>1. Comunidades</h3>
+          <p>Modelo de comunidad, membresía, perfil de comunidad y relación con eventos.</p>
+        </div>
+        <div class="card">
+          <h3>2. Conversaciones</h3>
+          <p>Threads persistentes por evento y por comunidad, con respuestas y actividad continua.</p>
+        </div>
+        <div class="card">
+          <h3>3. Difusión</h3>
+          <p>Canal oficial para anuncios, cambios, encuestas y publicaciones de admins.</p>
+        </div>
+        <div class="card">
+          <h3>4. Recaps</h3>
+          <p>Galería de fotos y videos de eventos pasados para identidad y continuidad.</p>
+        </div>
+        <div class="card">
+          <h3>5. Perfil usuario</h3>
+          <p>Mis comunidades, mis eventos, mis conversaciones y actividad reciente.</p>
+        </div>
+        <div class="card">
+          <h3>6. Onboarding e intereses</h3>
+          <p>Selección inicial de intereses para recomendaciones y exploración futura.</p>
+        </div>
+      </div>
+
+      <div class="note">
+        <p><strong style="color: var(--text);">No entra en esta fase:</strong> IA, marketplace, ticketing, DMs, stories, matching, gamificación y mapas avanzados.</p>
+      </div>
+
+      <div class="footer">
+        <span>In scope / out of scope</span>
+        <span>MVP disciplinado</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="page page-break">
+    <div class="grain"></div>
+    <div class="content">
+      <div class="eyebrow">Detalle funcional</div>
+      <h2>Qué hace cada módulo</h2>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Home / descubrimiento</h3>
+          <ul class="scope-list">
+            <li>Ajustar el feed actual para que sea el home principal.</li>
+            <li>Mostrar eventos/flyers en mosaico con scroll infinito.</li>
+            <li>Permitir cambio de ciudad para explorar otros polos.</li>
+            <li>No incluye likes, comentarios tipo red social ni perfiles ajenos en el feed.</li>
+        </ul>
+        </div>
+
+        <div class="card">
+          <h3>Evento / detalle</h3>
+          <ul class="scope-list">
+            <li>Reutilizar el detalle actual de flyer y ampliarlo a evento/comunidad.</li>
+            <li>Acciones: guardar, voy, compartir y voy solo.</li>
+            <li>Mostrar quién más va solo y acceso a la conversación del evento.</li>
+            <li>No incluye ticketing, checkout ni venta integrada.</li>
+        </ul>
+        </div>
+
+        <div class="card">
+          <h3>Voy solo</h3>
+          <ul class="scope-list">
+            <li>Permitir que una persona indique que asistirá sin compañía.</li>
+            <li>Mostrar contador de personas en la misma situación.</li>
+            <li>Entrar a la conversación del evento con menos fricción.</li>
+            <li>No incluye matching, citas ni emparejamiento automático.</li>
+        </ul>
+        </div>
+
+        <div class="card">
+          <h3>Conversación del evento</h3>
+          <ul class="scope-list">
+            <li>Thread persistente para preguntas, coordinación y hype.</li>
+            <li>Mensajes como comentarios con respuestas anidadas simples.</li>
+            <li>Guardar el historial para que siga vivo después del evento.</li>
+            <li>No incluye chats privados ni formato tipo WhatsApp.</li>
+        </ul>
+        </div>
+
+        <div class="card">
+          <h3>Comunidad</h3>
+          <ul class="scope-list">
+            <li>Perfil de comunidad con foto, descripción, miembros y botón unirme.</li>
+            <li>Sección de próximos eventos y eventos pasados.</li>
+            <li>Base para construir continuidad entre experiencias.</li>
+            <li>No incluye subcomunidades ni jerarquías complejas.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Difusión</h3>
+          <ul class="scope-list">
+            <li>Canal oficial solo para administradores.</li>
+            <li>Anuncios, cambios de horario, cambios de ubicación y encuestas.</li>
+            <li>Evita ruido y centraliza información importante.</li>
+            <li>No permite que todos publiquen en ese canal.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Conversaciones de comunidad</h3>
+          <ul class="scope-list">
+            <li>Espacio abierto para crear temas y responder con continuidad.</li>
+            <li>Útil para planes posteriores al evento y relación entre miembros.</li>
+            <li>Threads persistentes para que la comunidad no muera después del meetup.</li>
+            <li>No incluye DMs ni grupo de mensajería privada.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Recaps</h3>
+          <ul class="scope-list">
+            <li>Galería de fotos y videos de eventos pasados.</li>
+            <li>Sirve como memoria, identidad y FOMO.</li>
+            <li>Refuerza el regreso al siguiente evento.</li>
+            <li>No incluye edición avanzada de video ni stories efímeras.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Perfil de usuario</h3>
+          <ul class="scope-list">
+            <li>Ver mis comunidades, mis eventos, mis conversaciones y actividad reciente.</li>
+            <li>Permite volver rápido a donde la persona participó.</li>
+            <li>Sirve como centro de retención personal.</li>
+            <li>No incluye feed social público de amigos ni seguidores.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Onboarding e intereses</h3>
+          <ul class="scope-list">
+            <li>Elegir intereses iniciales al registrarse.</li>
+            <li>Usarlos para recomendaciones y descubrimiento futuro.</li>
+            <li>Reducir fricción en el primer uso.</li>
+            <li>No incluye un sistema complejo de personalización algorítmica.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Convertirse en organizador</h3>
+          <ul class="scope-list">
+            <li>Dar permisos para crear y administrar comunidades y eventos.</li>
+            <li>Permitir administrar conversaciones y publicar difusión.</li>
+            <li>Preparar la app para uso por creadores y organizadores reales.</li>
+            <li>No incluye panel enterprise ni analytics avanzados.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>Functional breakdown</span>
+        <span>Qué incluye cada módulo</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="page page-break">
+    <div class="grain"></div>
+    <div class="content">
+      <div class="eyebrow">Plan de trabajo</div>
+      <h2>Fases y horas</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Fase</th>
+            <th>Alcance</th>
+            <th>Horas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>Base de datos, RLS y modelos nuevos</td><td>3-5</td></tr>
+          <tr><td>2</td><td>Home, búsqueda, ciudades y feed</td><td>2-3</td></tr>
+          <tr><td>3</td><td>Evento, conversación y voy solo</td><td>3-5</td></tr>
+          <tr><td>4</td><td>Comunidad, difusión y recaps</td><td>3-5</td></tr>
+          <tr><td>5</td><td>Perfil usuario y actividad</td><td>2-3</td></tr>
+          <tr><td>6</td><td>Onboarding, intereses y ajustes</td><td>1-2</td></tr>
+          <tr><td>7</td><td>QA, bugs, responsive y polish</td><td>2-3</td></tr>
+        </tbody>
+      </table>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Estimación recomendada</h3>
+          <p style="font-size: 22px; color: var(--text); font-weight: 800; margin-bottom: 6px;">14-26 horas</p>
+          <p>Para completar lo que falta sobre la base existente con foco en velocidad.</p>
+        </div>
+        <div class="card">
+          <h3>Versión más sólida</h3>
+          <p style="font-size: 22px; color: var(--text); font-weight: 800; margin-bottom: 6px;">28-40 horas</p>
+          <p>Para dejar una base más robusta, presentable y con menos deuda técnica.</p>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>Work plan</span>
+        <span>Horas estimadas</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="page page-break">
+    <div class="grain"></div>
+    <div class="content">
+      <div class="eyebrow">Conclusión</div>
+      <h2>Recomendación</h2>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Lo correcto</h3>
+          <ul>
+            <li>No reescribir el proyecto desde cero.</li>
+            <li>Construir comunidad y conversación sobre la base existente.</li>
+            <li>Validar retención antes de sumar features complejas.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Próximo paso</h3>
+          <ul>
+            <li>Aprobar alcance.</li>
+            <li>Partir en sprints.</li>
+            <li>Crear issues o roadmap técnico.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="note">
+        <p><strong style="color: var(--text);">Resumen ejecutivo:</strong> CAVES ya tiene la adquisición. Falta la capa que convierte eventos aislados en comunidades vivas.</p>
+      </div>
+
+      <div class="footer">
+        <span>Gracias</span>
+        <span>CAVES</span>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

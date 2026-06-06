@@ -1,0 +1,19 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - link "My profile" [ref=e5] [cursor=pointer]:
+          - /url: /profile
+        - img "Caves" [ref=e10] [cursor=pointer]
+        - button "Upload flyer" [ref=e11]
+      - button "Cúcuta" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - generic [ref=e17]: Cúcuta
+      - generic [ref=e18]:
+        - img [ref=e20]
+        - heading "No flyers nearby" [level=2] [ref=e23]
+        - paragraph [ref=e24]: No events in your area yet. Be the first to share what's happening!
+        - button "Upload a Flyer" [ref=e25]
+  - button "Open Next.js Dev Tools" [ref=e31] [cursor=pointer]:
+    - img [ref=e32]
+  - alert [ref=e35]

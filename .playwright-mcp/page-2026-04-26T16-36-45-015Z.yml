@@ -1,0 +1,9 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - img "Caves" [ref=e3]
+    - generic [ref=e4]:
+      - button "Log in." [ref=e5]
+      - link "Sign up." [ref=e6] [cursor=pointer]:
+        - /url: /auth/signup
+  - button "Open Next.js Dev Tools" [ref=e12] [cursor=pointer]:
+    - img [ref=e13]

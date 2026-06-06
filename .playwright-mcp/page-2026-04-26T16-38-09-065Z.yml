@@ -1,0 +1,18 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e21] [cursor=pointer]:
+    - img [ref=e22]
+  - alert [ref=e25]: Caves
+  - main [ref=e27]:
+    - generic [ref=e28]:
+      - generic [ref=e29]:
+        - link "My profile" [ref=e30] [cursor=pointer]:
+          - /url: /profile
+          - img [ref=e31]
+        - img "Caves" [ref=e35] [cursor=pointer]
+        - button "Upload flyer" [ref=e36]:
+          - img [ref=e37]
+      - button "Cúcuta" [ref=e38] [cursor=pointer]:
+        - img [ref=e39]
+        - generic [ref=e42]: Cúcuta
+      - paragraph [ref=e46]: Loading flyers...
+    - img "Caves" [ref=e49]

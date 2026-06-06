@@ -1,13 +1,17 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useAttendance } from "../hooks/use-attendance";
 
 interface AttendanceControlsProps {
-  flyerId: string;
-  userId: string | undefined;
-  /** Called when a logged-out user taps a toggle */
-  onSignInRequest?: () => void;
+  going: boolean;
+  goingSolo: boolean;
+  total: number;
+  solo: number;
+  loading: boolean;
+  onToggleGoing: () => void;
+  onToggleSolo: () => void;
+  /** "full" = VOY + VOY SOLO; "going" = only VOY (VOY SOLO lives in the side rail) */
+  variant?: "full" | "going";
 }
 
 // ─── Icons ─────────────────────────────────────────────────────────────────
@@ -29,23 +33,17 @@ function PersonIcon() {
   );
 }
 
-// ─── AttendanceControls ─────────────────────────────────────────────────────
-export function AttendanceControls({ flyerId, userId, onSignInRequest }: AttendanceControlsProps) {
-  const { total, solo, going, goingSolo, loading, toggleGoing, toggleSolo } = useAttendance(
-    flyerId,
-    userId
-  );
-
-  const handleGoing = async () => {
-    if (!userId) { onSignInRequest?.(); return; }
-    await toggleGoing();
-  };
-
-  const handleSolo = async () => {
-    if (!userId) { onSignInRequest?.(); return; }
-    await toggleSolo();
-  };
-
+// ─── AttendanceControls (controlled) ────────────────────────────────────────
+export function AttendanceControls({
+  going,
+  goingSolo,
+  total,
+  solo,
+  loading,
+  onToggleGoing,
+  onToggleSolo,
+  variant = "full",
+}: AttendanceControlsProps) {
   return (
     <div className="flex flex-col gap-2.5">
       {/* Buttons row */}
@@ -53,7 +51,7 @@ export function AttendanceControls({ flyerId, userId, onSignInRequest }: Attenda
         {/* VOY */}
         <motion.button
           type="button"
-          onClick={handleGoing}
+          onClick={onToggleGoing}
           disabled={loading}
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
@@ -69,10 +67,11 @@ export function AttendanceControls({ flyerId, userId, onSignInRequest }: Attenda
           {going ? "Voy ✓" : "Voy"}
         </motion.button>
 
-        {/* VOY SOLO */}
+        {/* VOY SOLO — hidden in "going" variant (it lives in the side rail) */}
+        {variant === "full" && (
         <motion.button
           type="button"
-          onClick={handleSolo}
+          onClick={onToggleSolo}
           disabled={loading}
           whileTap={{ scale: 0.95 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
@@ -87,6 +86,7 @@ export function AttendanceControls({ flyerId, userId, onSignInRequest }: Attenda
           <PersonIcon />
           {goingSolo ? "Solo ✓" : "Voy solo"}
         </motion.button>
+        )}
       </div>
 
       {/* Counter — prominent when attendees exist, subtle placeholder otherwise */}
