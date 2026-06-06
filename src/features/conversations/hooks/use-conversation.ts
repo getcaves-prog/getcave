@@ -7,6 +7,7 @@ import {
   postMessage,
   softDeleteMessage,
 } from "../services/conversation.service";
+import { uploadChatMedia } from "../services/chat-media.service";
 import type { Conversation, MessageWithAuthor } from "../types/conversation.types";
 import type { SubjectType } from "../types/conversation.types";
 import type { Tables } from "@/shared/types/database.types";
@@ -23,6 +24,15 @@ interface UseConversationActions {
   reply: (body: string, parentMessageId: string) => Promise<Tables<"messages">>;
   remove: (messageId: string) => Promise<void>;
   refresh: () => Promise<void>;
+  /**
+   * Uploads a media file then posts it as a message (with optional text body).
+   * For audio, pass durationSeconds so it's stored on the message row.
+   */
+  postMedia: (
+    file: File | Blob,
+    kind: "image" | "audio",
+    opts?: { body?: string; durationSeconds?: number }
+  ) => Promise<Tables<"messages">>;
 }
 
 export type UseConversationResult = UseConversationState & UseConversationActions;
@@ -96,11 +106,48 @@ export function useConversation(
     [load]
   );
 
+  const postMedia = useCallback(
+    async (
+      file: File | Blob,
+      kind: "image" | "audio",
+      opts?: { body?: string; durationSeconds?: number }
+    ) => {
+      if (!state.conversation) {
+        throw new Error("La conversación aún no fue cargada.");
+      }
+      // Wrap Blob in a File so uploadChatMedia receives a File (it reads .type and .size)
+      const fileToUpload =
+        file instanceof File
+          ? file
+          : new File([file], kind === "audio" ? "audio.webm" : "media", {
+              type: file.type || (kind === "audio" ? "audio/webm" : "image/webp"),
+            });
+
+      const uploaded = await uploadChatMedia(state.conversation.id, fileToUpload, kind);
+      const msg = await postMessage(
+        state.conversation.id,
+        opts?.body ?? null,
+        {
+          media: {
+            url: uploaded.url,
+            type: uploaded.type,
+            sizeBytes: uploaded.sizeBytes,
+            durationSeconds: opts?.durationSeconds,
+          },
+        }
+      );
+      await load();
+      return msg;
+    },
+    [state.conversation, load]
+  );
+
   return {
     ...state,
     post,
     reply,
     remove,
+    postMedia,
     refresh: load,
   };
 }
