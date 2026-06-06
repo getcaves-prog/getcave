@@ -57,6 +57,11 @@ export interface MyConversation {
    * Null for flyer subjects (those link via subject_id directly).
    */
   community_slug: string | null;
+  /**
+   * For channel conversations: the parent community's display name.
+   * Used as the chip label instead of the literal "CHANNEL" fallback.
+   */
+  community_name: string | null;
   /** ISO timestamp of the user's most recent message in this conversation */
   last_activity_at: string;
 }

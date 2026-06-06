@@ -34,18 +34,38 @@ function relativeTime(dateStr: string): string {
 
 // ─── Subject type chip ─────────────────────────────────────────────────────
 
-const SUBJECT_CHIP: Record<string, { label: string; color: string }> = {
-  flyer: { label: "Evento", color: "bg-[#FFFFFF]/10 text-[#FFFFFF]" },
-  community: { label: "Comunidad", color: "bg-cave-fog/10 text-cave-fog" },
+const SUBJECT_CHIP: Record<string, { color: string }> = {
+  flyer: { color: "bg-[#FFFFFF]/10 text-[#FFFFFF]" },
+  community: { color: "bg-cave-fog/10 text-cave-fog" },
+  channel: { color: "bg-cave-fog/10 text-cave-fog" },
 };
 
-function SubjectChip({ subjectType }: { subjectType: string }) {
-  const chip = SUBJECT_CHIP[subjectType] ?? { label: subjectType, color: "bg-cave-ash/40 text-cave-smoke" };
+interface SubjectChipProps {
+  subjectType: string;
+  /** For channel conversations: the parent community's display name */
+  communityName?: string | null;
+}
+
+function SubjectChip({ subjectType, communityName }: SubjectChipProps) {
+  const chipStyle = SUBJECT_CHIP[subjectType] ?? { color: "bg-cave-ash/40 text-cave-smoke" };
+
+  // For channels: show the community name instead of "CHANNEL"
+  let label: string;
+  if (subjectType === "channel") {
+    label = communityName ? communityName.toUpperCase() : "CANAL";
+  } else if (subjectType === "flyer") {
+    label = "Evento";
+  } else if (subjectType === "community") {
+    label = "Comunidad";
+  } else {
+    label = subjectType.toUpperCase();
+  }
+
   return (
     <span
-      className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-[family-name:var(--font-space-mono)] uppercase tracking-wide ${chip.color}`}
+      className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-[family-name:var(--font-space-mono)] uppercase tracking-wide ${chipStyle.color}`}
     >
-      {chip.label}
+      {label}
     </span>
   );
 }
@@ -91,7 +111,7 @@ function ConversationRow({ conv }: { conv: MyConversation }) {
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <SubjectChip subjectType={conv.subject_type} />
+          <SubjectChip subjectType={conv.subject_type} communityName={conv.community_name} />
           <span className="text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)]">
             {relativeTime(conv.last_activity_at)}
           </span>

@@ -829,9 +829,15 @@ export interface EventThreadProps {
    * the message input. Defaults to true. Use to gate admins_only channels.
    */
   canWrite?: boolean;
+  /**
+   * When true, the thread fills its parent's height (flex column with a
+   * scrollable message area) instead of its own bordered box with max-height.
+   * Used when embedded in a fixed-height chat-head window.
+   */
+  fill?: boolean;
 }
 
-export function EventThread({ subjectType, subjectId, currentUserId, onSignInRequest, canWrite = true }: EventThreadProps) {
+export function EventThread({ subjectType, subjectId, currentUserId, onSignInRequest, canWrite = true, fill = false }: EventThreadProps) {
   const { messages, loading, error, post, reply, remove, postMedia } = useConversation(subjectType, subjectId);
   const [replyTo, setReplyTo] = useState<{ id: string; author: string } | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -918,9 +924,9 @@ export function EventThread({ subjectType, subjectId, currentUserId, onSignInReq
       )}
 
       {/* Contained chat box: scrollable messages + pinned composer */}
-      <div className="flex flex-col rounded-xl border border-cave-rock overflow-hidden bg-[#070707]">
+      <div className={`flex flex-col overflow-hidden bg-[#070707] ${fill ? "h-full" : "rounded-xl border border-cave-rock"}`}>
         {/* ── Scrollable message area ─────────────────────────────────────── */}
-        <div className="flex flex-col overflow-y-auto max-h-80 py-2 px-1 scrollbar-none">
+        <div className={`flex flex-col overflow-y-auto py-2 px-1 scrollbar-none ${fill ? "flex-1 min-h-0" : "max-h-80"}`}>
           {threads.length === 0 ? (
             <div className="py-8 text-center">
               <p className="text-[11px] text-cave-smoke font-[family-name:var(--font-space-mono)] leading-5">

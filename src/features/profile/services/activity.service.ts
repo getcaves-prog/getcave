@@ -258,9 +258,10 @@ export async function getMyConversations(
     }
   }
 
-  // Q3c: channel labels (channel name) + parent community slug for routing
+  // Q3c: channel labels (channel name) + parent community slug + community name for routing/chip
   const channelLabelMap = new Map<string, string | null>();
   const channelSlugMap = new Map<string, string>();
+  const channelCommunityNameMap = new Map<string, string>();
   if (channelSubjectIds.length > 0) {
     const { data: channelRows } = await supabase
       .from("community_channels")
@@ -269,19 +270,25 @@ export async function getMyConversations(
     if (channelRows) {
       const parentIds = [...new Set(channelRows.map((c) => c.community_id))];
       const slugByCommunity = new Map<string, string>();
+      const nameByCommunity = new Map<string, string>();
       if (parentIds.length > 0) {
         const { data: parents } = await supabase
           .from("communities")
-          .select("id, slug")
+          .select("id, slug, name")
           .in("id", parentIds);
         if (parents) {
-          for (const p of parents) slugByCommunity.set(p.id, p.slug);
+          for (const p of parents) {
+            slugByCommunity.set(p.id, p.slug);
+            nameByCommunity.set(p.id, p.name);
+          }
         }
       }
       for (const ch of channelRows) {
         channelLabelMap.set(ch.id, ch.name);
         const slug = slugByCommunity.get(ch.community_id);
         if (slug) channelSlugMap.set(ch.id, slug);
+        const cname = nameByCommunity.get(ch.community_id);
+        if (cname) channelCommunityNameMap.set(ch.id, cname);
       }
     }
   }
@@ -294,6 +301,7 @@ export async function getMyConversations(
 
       let subjectLabel: string | null = null;
       let communitySlug: string | null = null;
+      let communityName: string | null = null;
       if (conv.subject_type === "flyer") {
         subjectLabel = flyerLabelMap.get(conv.subject_id) ?? null;
       } else if (conv.subject_type === "community") {
@@ -302,6 +310,7 @@ export async function getMyConversations(
       } else if (conv.subject_type === "channel") {
         subjectLabel = channelLabelMap.get(conv.subject_id) ?? null;
         communitySlug = channelSlugMap.get(conv.subject_id) ?? null;
+        communityName = channelCommunityNameMap.get(conv.subject_id) ?? null;
       }
 
       return {
@@ -310,6 +319,7 @@ export async function getMyConversations(
         subject_id: conv.subject_id,
         subject_label: subjectLabel,
         community_slug: communitySlug,
+        community_name: communityName,
         last_activity_at: lastActivityMap.get(convId)!,
       };
     })
