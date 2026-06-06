@@ -293,7 +293,7 @@ function Composer({ replyTo, onCancelReply, onSubmit }: ComposerProps) {
             placeholder={replyTo ? `Responder a @${replyTo.author}...` : "Escribí un mensaje..."}
             rows={1}
             maxLength={2000}
-            className="w-full min-h-[44px] px-4 py-3 rounded-xl bg-cave-ash/30 border border-cave-rock text-[#FFFFFF] placeholder:text-cave-smoke focus:outline-none focus:border-[#FFFFFF] focus:shadow-[0_0_0_1px_rgba(255,255,255,0.12)] transition-all resize-none font-[family-name:var(--font-inter)] text-[13px] leading-5"
+            className="w-full min-h-[44px] px-4 py-3 rounded-xl bg-cave-ash/30 border border-cave-rock text-[#FFFFFF] placeholder:text-cave-smoke focus:outline-none focus:border-[#FFFFFF] focus:shadow-[0_0_0_1px_rgba(255,255,255,0.12)] transition-all resize-none overflow-hidden scrollbar-none font-[family-name:var(--font-inter)] text-[13px] leading-5"
             style={{ height: "44px" }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
