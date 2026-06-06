@@ -1,0 +1,22 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - img "Caves" [ref=e3]
+    - generic [ref=e4]:
+      - textbox "Email" [ref=e5]
+      - textbox "Username" [ref=e6]
+      - textbox "Password" [ref=e7]
+      - textbox "Confirm password" [ref=e8]
+      - generic [ref=e9]:
+        - checkbox [ref=e10]
+        - generic [ref=e11]:
+          - text: I agree to the
+          - button "terms and conditions" [ref=e12]
+          - text: .
+      - button "Sign up" [ref=e13]
+    - paragraph [ref=e14]:
+      - text: Already have an account?
+      - link "Log in" [ref=e15] [cursor=pointer]:
+        - /url: /auth/login
+  - button "Open Next.js Dev Tools" [ref=e21] [cursor=pointer]:
+    - img [ref=e22]
+  - alert [ref=e25]

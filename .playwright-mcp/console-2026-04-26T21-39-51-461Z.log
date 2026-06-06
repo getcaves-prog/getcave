@@ -1,0 +1,135 @@
+[     318ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[     432ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[     575ms] Error: @supabase/ssr: Your project's URL and API key are required to create a Supabase client!
+
+Check your Supabase project's API settings to find these values
+
+https://supabase.com/dashboard/project/_/settings/api
+    at createBrowserClient (http://localhost:3000/_next/static/chunks/0ka1_0-8nd0m._.js:14898:15)
+    at createClient (http://localhost:3000/_next/static/chunks/getcave_src_0t~_zoh._.js:40:224)
+    at useAuth.useEffect (http://localhost:3000/_next/static/chunks/getcave_src_0t~_zoh._.js:846:203)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:15087:22)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:965:74)
+    at commitHookEffectListMount (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:7255:167)
+    at commitHookPassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:7290:60)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8779:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8793:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8793:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8778:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8778:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8778:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8793:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8793:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8778:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8793:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8778:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8793:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8778:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8738:970)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8730:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8693:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8750:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8750:17)
+[    8148ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[    8169ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[    8235ms] Error: @supabase/ssr: Your project's URL and API key are required to create a Supabase client!
+
+Check your Supabase project's API settings to find these values
+
+https://supabase.com/dashboard/project/_/settings/api
+    at createBrowserClient (http://localhost:3000/_next/static/chunks/0ka1_0-8nd0m._.js:14898:15)
+    at createClient (http://localhost:3000/_next/static/chunks/getcave_src_0t~_zoh._.js:40:224)
+    at useAuth.useEffect (http://localhost:3000/_next/static/chunks/getcave_src_0t~_zoh._.js:846:203)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:15087:22)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:965:74)
+    at commitHookEffectListMount (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:7255:167)
+    at commitHookPassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:7290:60)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8779:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8793:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8793:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8778:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8778:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8778:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8793:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8793:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8778:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8793:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8778:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8793:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at reconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8778:17)
+    at recursivelyTraverseReconnectPassiveEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8766:13)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8738:970)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8730:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8693:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8750:17)
+    at recursivelyTraversePassiveMountEffects (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8676:316)
+    at commitPassiveMountOnFiber (http://localhost:3000/_next/static/chunks/0ka1_next_dist_compiled_react-dom_0gb3.pk._.js:8750:17)
+[   39311ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[   39480ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[   39631ms] [LOG] [Fast Refresh] done in 265ms @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[   40050ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[   40083ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[   40197ms] [WARNING] Image with src "/Logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio. @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[   53568ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=mVGZx3P3iLhhJQFgTDCcf' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_0j-4epe._.js:13299
+[   54570ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=mVGZx3P3iLhhJQFgTDCcf' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_0j-4epe._.js:13299
+[   55571ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=mVGZx3P3iLhhJQFgTDCcf' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_0j-4epe._.js:13299
+[   56572ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=mVGZx3P3iLhhJQFgTDCcf' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_0j-4epe._.js:13299
+[   57574ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=mVGZx3P3iLhhJQFgTDCcf' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_0j-4epe._.js:13299
+[   62575ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=mVGZx3P3iLhhJQFgTDCcf' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_0j-4epe._.js:13299
+[   67577ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=mVGZx3P3iLhhJQFgTDCcf' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_0j-4epe._.js:13299
+[   72578ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=mVGZx3P3iLhhJQFgTDCcf' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_0j-4epe._.js:13299
+[   77580ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=mVGZx3P3iLhhJQFgTDCcf' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_0j-4epe._.js:13299
+[   82581ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=mVGZx3P3iLhhJQFgTDCcf' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_0j-4epe._.js:13299
+[   87583ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=mVGZx3P3iLhhJQFgTDCcf' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_0j-4epe._.js:13299
+[   92585ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=mVGZx3P3iLhhJQFgTDCcf' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_client_0j-4epe._.js:13299
+[  189370ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[  189497ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
+[  189586ms] [WARNING] Image with src "/Logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio. @ http://localhost:3000/_next/static/chunks/0ka1_next_dist_0ssaz0k._.js:2431
