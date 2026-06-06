@@ -92,7 +92,6 @@ function ChatWindow({
   return (
     <motion.div
       key={chat.id + "-window"}
-      layoutId={prefersReduced ? undefined : `chat-${chat.id}`}
       initial={prefersReduced ? { opacity: 0 } : { opacity: 0, scale: 0.92, y: 20 }}
       animate={prefersReduced ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
       exit={prefersReduced ? { opacity: 0 } : { opacity: 0, scale: 0.92, y: 20 }}
@@ -188,10 +187,13 @@ function ChatBubble({
   const mobileBottomOffset = 80 + bubbleIndex * 72; // above bottom nav
 
   const handleDragEnd = useCallback(
-    (_event: MouseEvent | TouchEvent | PointerEvent, info: { point: { x: number; y: number } }) => {
-      onDragEnd({ x: info.point.x, y: info.point.y });
+    (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number; y: number } }) => {
+      // Accumulate the RELATIVE drag delta onto the current transform so the
+      // bubble stays on-screen. info.point is an absolute page coordinate and
+      // would fling the bubble far off-viewport when stored as an x/y transform.
+      onDragEnd({ x: defaultX + info.offset.x, y: defaultY + info.offset.y });
     },
-    [onDragEnd]
+    [onDragEnd, defaultX, defaultY]
   );
 
   const labelInitials = chat.label
@@ -204,7 +206,6 @@ function ChatBubble({
     <motion.div
       ref={dragRef}
       key={chat.id + "-bubble"}
-      layoutId={prefersReduced ? undefined : `chat-${chat.id}`}
       drag={!isMobile}
       dragMomentum={false}
       dragConstraints={
