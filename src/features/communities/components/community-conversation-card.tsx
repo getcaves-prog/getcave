@@ -29,8 +29,6 @@ interface CommunityConversationCardProps {
   communityName: string;
   /** Current user for presence tracking + chat-head write permission. */
   user: { id: string; username: string } | null;
-  /** Opens the multi-channel manager (e.g. from the "..." menu fallback). */
-  onOpenChannels?: () => void;
 }
 
 // ─── CONVERSACIÓN card ───────────────────────────────────────────────────────
@@ -41,7 +39,6 @@ export function CommunityConversationCard({
   communityId,
   communityName,
   user,
-  onOpenChannels,
 }: CommunityConversationCardProps) {
   const prefersReducedMotion = useReducedMotion();
   const openChat = useOpenChatsStore((s) => s.openChat);
@@ -142,38 +139,20 @@ export function CommunityConversationCard({
         </p>
       )}
 
-      {/* Actions */}
-      <div className="flex items-center gap-2">
-        <motion.button
-          type="button"
-          onClick={handleEnter}
-          whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
-          transition={{ type: "spring", stiffness: 400, damping: 20 }}
-          className="flex-1 h-[44px] rounded-full bg-cave-white text-cave-black font-bold uppercase tracking-[0.12em] text-xs font-[family-name:var(--font-space-mono)] flex items-center justify-center gap-2"
-        >
-          Entrar al chat
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12" />
-            <polyline points="12 5 19 12 12 19" />
-          </svg>
-        </motion.button>
-        {onOpenChannels && (
-          <button
-            type="button"
-            onClick={onOpenChannels}
-            className="h-[44px] w-[44px] rounded-full border border-cave-ash/60 text-cave-fog hover:text-cave-light hover:border-cave-fog/60 transition-colors flex items-center justify-center flex-shrink-0"
-            aria-label="Ver canales"
-            title="Canales"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="4" y1="9" x2="20" y2="9" />
-              <line x1="4" y1="15" x2="20" y2="15" />
-              <line x1="10" y1="3" x2="8" y2="21" />
-              <line x1="16" y1="3" x2="14" y2="21" />
-            </svg>
-          </button>
-        )}
-      </div>
+      {/* Actions — single full-width CTA. Channels stay reachable from the "..." menu. */}
+      <motion.button
+        type="button"
+        onClick={handleEnter}
+        whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        className="w-full h-[44px] rounded-full bg-cave-white text-cave-black font-bold uppercase tracking-[0.12em] text-xs font-[family-name:var(--font-space-mono)] flex items-center justify-center gap-2"
+      >
+        Entrar al chat
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </motion.button>
     </section>
   );
 }

@@ -311,39 +311,110 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
       {/* ── Centered content column (mobile-first, capped on desktop) ──────── */}
       <div className="max-w-2xl mx-auto px-4 sm:px-5">
         {/* ── Section 2: Identity block ───────────────────────────────────── */}
-        {/* Avatar overlaps the banner bottom edge */}
-        <div className="relative -mt-12 mb-4">
-          <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-[#050505] bg-cave-stone ring-2 ring-cave-ash/40">
-            {community.avatar_url ? (
-              <Image
-                src={community.avatar_url}
-                alt={community.name}
-                fill
-                className="object-cover"
-                unoptimized
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-cave-smoke">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
+        {/* Horizontal composition: avatar LEFT · name+count+stack column ·
+            join/leave button RIGHT (top-aligned with the name). The avatar
+            still overlaps the banner bottom edge via -mt. */}
+        <div className="-mt-12 mb-5">
+          <div className="flex items-start gap-3 sm:gap-4">
+            {/* Avatar (left) — overlaps banner */}
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-4 border-[#050505] bg-cave-stone ring-2 ring-cave-ash/40 flex-shrink-0">
+              {community.avatar_url ? (
+                <Image
+                  src={community.avatar_url}
+                  alt={community.name}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-cave-smoke">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            {/* Name + count + member stack (column, beside the avatar).
+                pt aligns the text baseline with the bottom half of the avatar
+                that sits below the banner edge. */}
+            <div className="flex-1 min-w-0 pt-12 sm:pt-14">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  {/* Name */}
+                  <h1 className="text-xl sm:text-2xl font-bold text-cave-white font-[family-name:var(--font-space-mono)] tracking-tight leading-tight truncate">
+                    {community.name}
+                  </h1>
+
+                  {/* Member count */}
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    {formatMemberCount(community.member_count ?? 0)} miembros
+                  </p>
+
+                  {/* Member avatar stack — under the count.
+                      Render whenever at least one member avatar exists. */}
+                  {members.length > 0 && (
+                    <div className="mt-2.5">
+                      <MemberAvatarStack
+                        members={members}
+                        totalCount={community.member_count ?? members.length}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Join / Leave (right, top-aligned with the name) */}
+                <div className="flex-shrink-0">
+                  {isMember ? (
+                    <div className="flex flex-col items-end gap-1.5">
+                      <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-cave-white/40 bg-cave-white/10">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span className="text-[11px] text-cave-white font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)]">
+                          Unido
+                        </span>
+                      </div>
+                      <motion.button
+                        type="button"
+                        onClick={handleLeave}
+                        disabled={leaving}
+                        whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                        className="h-9 px-4 rounded-full border border-cave-ash text-cave-smoke text-[11px] font-[family-name:var(--font-space-mono)] uppercase tracking-[0.1em] hover:border-[#FF2D7B]/60 hover:text-[#FF2D7B] transition-colors disabled:opacity-40"
+                      >
+                        {leaving ? "Saliendo..." : "Salir"}
+                      </motion.button>
+                    </div>
+                  ) : (
+                    <motion.button
+                      type="button"
+                      onClick={handleJoin}
+                      disabled={joining}
+                      whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                      className="h-10 px-6 sm:px-8 rounded-full bg-cave-white text-cave-black font-bold uppercase tracking-[0.15em] text-xs sm:text-sm font-[family-name:var(--font-space-mono)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {joining ? "Uniéndose..." : "Unirse"}
+                    </motion.button>
+                  )}
+                </div>
               </div>
-            )}
+            </div>
           </div>
-        </div>
 
-        <div className="mb-5">
-          {/* Name */}
-          <h1 className="text-2xl font-bold text-cave-white font-[family-name:var(--font-space-mono)] tracking-tight leading-tight mb-2">
-            {community.name}
-          </h1>
-
-          {/* Seeded badge — shown when is_seeded=true, sets honest expectations */}
+          {/* Seeded badge — chip below the identity row, sets honest expectations */}
           {community.is_seeded && (
-            <div className="mb-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-cave-ash/60 bg-cave-stone/60">
+            <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-cave-ash/60 bg-cave-stone/60">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cave-fog flex-shrink-0">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
@@ -362,61 +433,6 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
               )}
             </div>
           )}
-
-          {/* Member count */}
-          <p className="flex items-center gap-1.5 text-xs text-cave-smoke font-[family-name:var(--font-space-mono)] mb-3">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            {formatMemberCount(community.member_count ?? 0)} miembros
-          </p>
-
-          {/* Member avatar stack */}
-          {members.length > 0 && (
-            <div className="mb-4">
-              <MemberAvatarStack members={members} totalCount={community.member_count ?? members.length} />
-            </div>
-          )}
-
-          {/* Join / Leave */}
-          <div className="flex flex-wrap items-center gap-2">
-            {isMember ? (
-              <>
-                <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-cave-white/40 bg-cave-white/10">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span className="text-xs text-cave-white font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)]">
-                    Unido
-                  </span>
-                </div>
-                <motion.button
-                  type="button"
-                  onClick={handleLeave}
-                  disabled={leaving}
-                  whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                  className="h-[42px] px-5 rounded-full border border-cave-ash text-cave-smoke text-xs font-[family-name:var(--font-space-mono)] uppercase tracking-[0.1em] hover:border-[#FF2D7B]/60 hover:text-[#FF2D7B] transition-colors disabled:opacity-40"
-                >
-                  {leaving ? "Saliendo..." : "Salir"}
-                </motion.button>
-              </>
-            ) : (
-              <motion.button
-                type="button"
-                onClick={handleJoin}
-                disabled={joining}
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
-                transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                className="h-[48px] px-10 rounded-full bg-cave-white text-cave-black font-bold uppercase tracking-[0.15em] text-sm font-[family-name:var(--font-space-mono)] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {joining ? "Uniéndose..." : "Unirse"}
-              </motion.button>
-            )}
-          </div>
 
           {actionError && (
             <p className="mt-2 text-xs text-[#FF2D7B] font-[family-name:var(--font-space-mono)]">
@@ -452,7 +468,6 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
             communityId={community.id}
             communityName={community.name}
             user={presenceUser}
-            onOpenChannels={() => setChannelsOpen(true)}
           />
 
           {/* Section 5: Próximo evento (featured) — hidden when none */}
