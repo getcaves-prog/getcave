@@ -63,6 +63,7 @@ export interface CreatePollInput {
   title?: string;
   body: string;
   options: string[]; // 2..10 non-empty strings
+  expiresAt?: string | null; // ISO 8601 UTC — optional poll deadline
 }
 
 /** Per-option result row returned by getPollResults */
@@ -76,6 +77,17 @@ export interface PollOptionResult {
 export interface PollResults {
   broadcastId: string;
   options: PollOptionResult[];
+  myVotedOptionId: string | null;
+}
+
+/** Active poll summary returned by getActivePoll — null when no active poll */
+export interface ActivePoll {
+  broadcastId: string;
+  title: string | null;
+  body: string;
+  expiresAt: string | null;
+  options: PollOptionResult[];
+  totalVotes: number;
   myVotedOptionId: string | null;
 }
 

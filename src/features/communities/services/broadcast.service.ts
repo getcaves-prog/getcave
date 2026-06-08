@@ -1,9 +1,11 @@
 import { createClient } from "@/shared/lib/supabase/client";
 import type { Json, Tables } from "@/shared/types/database.types";
 import type {
+  ActivePoll,
   Broadcast,
   CreateBroadcastInput,
   CreatePollInput,
+  PollOptionResult,
   PollResults,
 } from "../types/community.types";
 
@@ -100,6 +102,7 @@ export async function createPoll(
       title: input.title ?? null,
       body: input.body,
       metadata: null,
+      expires_at: input.expiresAt ?? null,
     })
     .select()
     .single();
@@ -212,6 +215,103 @@ export async function getPollResults(broadcastId: string): Promise<PollResults> 
       voteCount: voteCountMap.get(opt.id) ?? 0,
       myVote: myVotedOptionId === opt.id,
     })),
+    myVotedOptionId,
+  };
+}
+
+// ─── getActivePoll ─────────────────────────────────────────────────────────
+// Returns the most recent non-expired poll for the community, with options
+// and vote totals — ready for the community card widget.
+//
+// "Active" = kind='poll' AND (expires_at IS NULL OR expires_at > now()).
+// DECISION: we use a DB-side `gt` filter for expires_at so the freshness
+// check happens at query time, not in JS. We can't filter "IS NULL OR >"
+// directly via supabase-js chaining, so we use two separate queries (one for
+// null, one for future) merged in memory — OR we rely on the fact that the
+// Supabase PostgREST API supports `.or()`.
+// Using `.or()` keeps it a single round-trip and is type-safe enough for this.
+// Returns null if no active poll exists for the community.
+export async function getActivePoll(communityId: string): Promise<ActivePoll | null> {
+  const supabase = createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const currentUserId = user?.id ?? null;
+
+  // Query: most recent active poll — expires_at IS NULL OR expires_at > now()
+  const { data: broadcastRows, error: broadcastError } = await supabase
+    .from("broadcasts")
+    .select("id, title, body, expires_at")
+    .eq("community_id", communityId)
+    .eq("kind", "poll")
+    .or("expires_at.is.null,expires_at.gt." + new Date().toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (broadcastError) {
+    throw new Error(`Failed to get active poll: ${broadcastError.message}`);
+  }
+
+  if (!broadcastRows || broadcastRows.length === 0) return null;
+
+  const broadcast = broadcastRows[0] as {
+    id: string;
+    title: string | null;
+    body: string;
+    expires_at: string | null;
+  };
+
+  // Fetch options
+  const { data: optionRows, error: optionsError } = await supabase
+    .from("broadcast_poll_options")
+    .select("id, broadcast_id, label, position")
+    .eq("broadcast_id", broadcast.id)
+    .order("position", { ascending: true });
+
+  if (optionsError) {
+    throw new Error(`Failed to get poll options: ${optionsError.message}`);
+  }
+
+  const options = (optionRows ?? []) as Tables<"broadcast_poll_options">[];
+
+  // Fetch all votes for this broadcast
+  const { data: voteRows, error: votesError } = await supabase
+    .from("broadcast_poll_votes")
+    .select("id, broadcast_id, option_id, user_id")
+    .eq("broadcast_id", broadcast.id);
+
+  if (votesError) {
+    throw new Error(`Failed to get poll votes: ${votesError.message}`);
+  }
+
+  const votes = (voteRows ?? []) as Tables<"broadcast_poll_votes">[];
+
+  // Aggregate
+  const voteCountMap = new Map<string, number>();
+  let myVotedOptionId: string | null = null;
+
+  for (const vote of votes) {
+    voteCountMap.set(vote.option_id, (voteCountMap.get(vote.option_id) ?? 0) + 1);
+    if (currentUserId && vote.user_id === currentUserId) {
+      myVotedOptionId = vote.option_id;
+    }
+  }
+
+  const optionResults: PollOptionResult[] = options.map((opt) => ({
+    optionId: opt.id,
+    label: opt.label,
+    voteCount: voteCountMap.get(opt.id) ?? 0,
+    myVote: myVotedOptionId === opt.id,
+  }));
+
+  return {
+    broadcastId: broadcast.id,
+    title: broadcast.title,
+    body: broadcast.body,
+    expiresAt: broadcast.expires_at,
+    options: optionResults,
+    totalVotes: votes.length,
     myVotedOptionId,
   };
 }

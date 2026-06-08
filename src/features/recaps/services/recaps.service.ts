@@ -2,6 +2,48 @@ import { createClient } from "@/shared/lib/supabase/client";
 import type { EventMedia } from "../types/recaps.types";
 import { MAX_RECAP_FILE_SIZE_BYTES } from "../types/recaps.types";
 
+// ─── listCommunityRecaps ───────────────────────────────────────────────────
+// Returns the most recent event_media items across all flyers that belong to
+// the given community. Two-query approach:
+//   1. Fetch flyer ids for the community.
+//   2. Fetch event_media where flyer_id IN (...), ordered newest-first.
+// DECISION: two queries over a server-side JOIN keeps this in the type-safe
+// supabase-js API and matches the codebase pattern used in getPollResults.
+// Returns an empty array if the community has no flyers.
+export async function listCommunityRecaps(
+  communityId: string,
+  limit: number = 12
+): Promise<EventMedia[]> {
+  const supabase = createClient();
+
+  // Step 1: get flyer ids for this community
+  const { data: flyerRows, error: flyerError } = await supabase
+    .from("flyers")
+    .select("id")
+    .eq("community_id", communityId);
+
+  if (flyerError) {
+    throw new Error(`Failed to get community flyers: ${flyerError.message}`);
+  }
+
+  const flyerIds = (flyerRows ?? []).map((f) => f.id);
+  if (flyerIds.length === 0) return [];
+
+  // Step 2: fetch event_media for those flyers
+  const { data, error } = await supabase
+    .from("event_media")
+    .select("*")
+    .in("flyer_id", flyerIds)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(`Failed to get community recaps: ${error.message}`);
+  }
+
+  return (data ?? []) as EventMedia[];
+}
+
 // ─── listEventMedia ────────────────────────────────────────────────────────
 // Returns all media for a flyer, newest first. Public read — no auth required.
 export async function listEventMedia(flyerId: string): Promise<EventMedia[]> {
