@@ -5,6 +5,7 @@ import {
   createPoll,
   votePoll,
   getPollResults,
+  getActivePoll,
 } from "./broadcast.service";
 
 // ─── Mock Supabase client ──────────────────────────────────────────────────
@@ -375,6 +376,219 @@ describe("getPollResults", () => {
 
     await expect(getPollResults("b1")).rejects.toThrow(
       "Failed to get poll results: DB error"
+    );
+  });
+});
+
+// ─── createPoll with expiresAt ─────────────────────────────────────────────
+describe("createPoll — expiresAt", () => {
+  const mockBroadcast = {
+    id: "poll-exp",
+    community_id: "comm-1",
+    author_id: "user-1",
+    kind: "poll",
+    title: "With deadline",
+    body: "Vote before it closes",
+    metadata: null,
+    expires_at: "2026-06-15T00:00:00Z",
+    created_at: "2026-06-08T12:00:00Z",
+    updated_at: "2026-06-08T12:00:00Z",
+  };
+
+  it("passes expiresAt to the broadcasts insert payload", async () => {
+    let capturedBroadcastInsert: unknown = null;
+
+    mockFrom.mockImplementation((table: string) => {
+      if (table === "broadcasts") {
+        const localSingle = vi.fn().mockResolvedValue({ data: mockBroadcast, error: null });
+        const localSelect = vi.fn().mockReturnValue({ single: localSingle });
+        const localInsert = vi.fn().mockImplementation((payload) => {
+          capturedBroadcastInsert = payload;
+          return { select: localSelect };
+        });
+        return { insert: localInsert };
+      }
+      if (table === "broadcast_poll_options") {
+        return { insert: vi.fn().mockResolvedValue({ error: null }) };
+      }
+      return {};
+    });
+
+    await createPoll("comm-1", {
+      body: "Vote before it closes",
+      options: ["Option A", "Option B"],
+      expiresAt: "2026-06-15T00:00:00Z",
+    });
+
+    expect(capturedBroadcastInsert).toMatchObject({
+      expires_at: "2026-06-15T00:00:00Z",
+    });
+  });
+
+  it("sends expires_at as null when expiresAt is omitted", async () => {
+    let capturedBroadcastInsert: unknown = null;
+
+    mockFrom.mockImplementation((table: string) => {
+      if (table === "broadcasts") {
+        const localSingle = vi.fn().mockResolvedValue({ data: mockBroadcast, error: null });
+        const localSelect = vi.fn().mockReturnValue({ single: localSingle });
+        const localInsert = vi.fn().mockImplementation((payload) => {
+          capturedBroadcastInsert = payload;
+          return { select: localSelect };
+        });
+        return { insert: localInsert };
+      }
+      if (table === "broadcast_poll_options") {
+        return { insert: vi.fn().mockResolvedValue({ error: null }) };
+      }
+      return {};
+    });
+
+    await createPoll("comm-1", {
+      body: "No deadline",
+      options: ["A", "B"],
+    });
+
+    expect(capturedBroadcastInsert).toMatchObject({ expires_at: null });
+  });
+});
+
+// ─── getActivePoll ─────────────────────────────────────────────────────────
+describe("getActivePoll", () => {
+  const broadcastRow = {
+    id: "poll-active",
+    title: "Best night?",
+    body: "Vote!",
+    expires_at: null,
+  };
+
+  const optionRows = [
+    { id: "opt-1", broadcast_id: "poll-active", label: "Viernes", position: 0 },
+    { id: "opt-2", broadcast_id: "poll-active", label: "Sábado", position: 1 },
+  ];
+
+  const voteRows = [
+    { id: "v1", broadcast_id: "poll-active", option_id: "opt-1", user_id: "user-2" },
+    { id: "v2", broadcast_id: "poll-active", option_id: "opt-2", user_id: "user-1" },
+  ];
+
+  // Wires the three-query chain: broadcasts, options, votes
+  function setupActivePoll(
+    broadcastResult: { data: unknown; error: unknown },
+    optionsResult = { data: optionRows, error: null } as { data: unknown; error: unknown },
+    votesResult = { data: voteRows, error: null } as { data: unknown; error: unknown }
+  ) {
+    mockFrom.mockImplementation((table: string) => {
+      if (table === "broadcasts") {
+        // select(...).eq(...).eq(...).or(...).order(...).limit(...)
+        const mockLimitB = vi.fn().mockResolvedValue(broadcastResult);
+        const mockOrderB = vi.fn().mockReturnValue({ limit: mockLimitB });
+        const mockOrB = vi.fn().mockReturnValue({ order: mockOrderB });
+        const mockEqKind = vi.fn().mockReturnValue({ or: mockOrB });
+        const mockEqComm = vi.fn().mockReturnValue({ eq: mockEqKind });
+        const mockSelectB = vi.fn().mockReturnValue({ eq: mockEqComm });
+        return { select: mockSelectB };
+      }
+      if (table === "broadcast_poll_options") {
+        const mockOrderOpts = vi.fn().mockResolvedValue(optionsResult);
+        const mockEqOpts = vi.fn().mockReturnValue({ order: mockOrderOpts });
+        const mockSelectOpts = vi.fn().mockReturnValue({ eq: mockEqOpts });
+        return { select: mockSelectOpts };
+      }
+      if (table === "broadcast_poll_votes") {
+        const mockEqVotes = vi.fn().mockResolvedValue(votesResult);
+        const mockSelectVotes = vi.fn().mockReturnValue({ eq: mockEqVotes });
+        return { select: mockSelectVotes };
+      }
+      return {};
+    });
+  }
+
+  it("returns null when no active poll exists for the community", async () => {
+    setupActivePoll({ data: [], error: null });
+
+    const result = await getActivePoll("comm-1");
+
+    expect(result).toBeNull();
+  });
+
+  it("returns null when broadcastRows is null", async () => {
+    setupActivePoll({ data: null, error: null });
+
+    const result = await getActivePoll("comm-1");
+
+    expect(result).toBeNull();
+  });
+
+  it("returns the active poll with options, vote counts and totalVotes", async () => {
+    setupActivePoll({ data: [broadcastRow], error: null });
+
+    const result = await getActivePoll("comm-1");
+
+    expect(result).not.toBeNull();
+    expect(result!.broadcastId).toBe("poll-active");
+    expect(result!.title).toBe("Best night?");
+    expect(result!.options).toHaveLength(2);
+    expect(result!.totalVotes).toBe(2);
+  });
+
+  it("marks myVotedOptionId correctly for the current user", async () => {
+    setupActivePoll({ data: [broadcastRow], error: null });
+
+    const result = await getActivePoll("comm-1");
+
+    // user-1 voted for opt-2
+    expect(result!.myVotedOptionId).toBe("opt-2");
+    const sabado = result!.options.find((o) => o.optionId === "opt-2");
+    expect(sabado!.myVote).toBe(true);
+  });
+
+  it("sets myVotedOptionId to null when user is not authenticated", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null } });
+    setupActivePoll({ data: [broadcastRow], error: null });
+
+    const result = await getActivePoll("comm-1");
+
+    expect(result!.myVotedOptionId).toBeNull();
+  });
+
+  it("exposes expiresAt from the broadcast row", async () => {
+    const withDeadline = { ...broadcastRow, expires_at: "2026-06-15T00:00:00Z" };
+    setupActivePoll({ data: [withDeadline], error: null });
+
+    const result = await getActivePoll("comm-1");
+
+    expect(result!.expiresAt).toBe("2026-06-15T00:00:00Z");
+  });
+
+  it("throws on broadcasts query error", async () => {
+    setupActivePoll({ data: null, error: { message: "timeout" } });
+
+    await expect(getActivePoll("comm-1")).rejects.toThrow(
+      "Failed to get active poll: timeout"
+    );
+  });
+
+  it("throws on poll options query error", async () => {
+    setupActivePoll(
+      { data: [broadcastRow], error: null },
+      { data: null, error: { message: "options error" } }
+    );
+
+    await expect(getActivePoll("comm-1")).rejects.toThrow(
+      "Failed to get poll options: options error"
+    );
+  });
+
+  it("throws on votes query error", async () => {
+    setupActivePoll(
+      { data: [broadcastRow], error: null },
+      { data: optionRows, error: null },
+      { data: null, error: { message: "votes error" } }
+    );
+
+    await expect(getActivePoll("comm-1")).rejects.toThrow(
+      "Failed to get poll votes: votes error"
     );
   });
 });

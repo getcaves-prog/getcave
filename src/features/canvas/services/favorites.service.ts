@@ -1,6 +1,23 @@
 import { createClient } from "@/shared/lib/supabase/client";
 import type { Flyer } from "../types/canvas.types";
 
+// ─── getFlyerSaveCount ────────────────────────────────────────────────────────
+// Calls the flyer_save_count RPC (SECURITY DEFINER) so both anon and
+// authenticated callers can read the aggregate count without RLS blocking them.
+export async function getFlyerSaveCount(flyerId: string): Promise<number> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("flyer_save_count", {
+    p_flyer_id: flyerId,
+  });
+
+  if (error) {
+    throw new Error(`Failed to get flyer save count: ${error.message}`);
+  }
+
+  return (data as number) ?? 0;
+}
+
 export async function toggleSaveFlyer(flyerId: string): Promise<boolean> {
   const supabase = createClient();
   const {

@@ -108,6 +108,7 @@ export type Database = {
           body: string
           community_id: string
           created_at: string
+          expires_at: string | null
           id: string
           kind: string
           metadata: Json | null
@@ -119,6 +120,7 @@ export type Database = {
           body: string
           community_id: string
           created_at?: string
+          expires_at?: string | null
           id?: string
           kind?: string
           metadata?: Json | null
@@ -130,6 +132,7 @@ export type Database = {
           body?: string
           community_id?: string
           created_at?: string
+          expires_at?: string | null
           id?: string
           kind?: string
           metadata?: Json | null
@@ -1089,6 +1092,7 @@ export type Database = {
           total_count: number
         }[]
       }
+      flyer_save_count: { Args: { p_flyer_id: string }; Returns: number }
       get_invitation_status: {
         Args: { p_flyer_id: string }
         Returns: {
