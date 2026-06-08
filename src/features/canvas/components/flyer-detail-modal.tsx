@@ -20,9 +20,6 @@ import { QrPasscodeModal } from "@/features/invitations/components/qr-passcode-m
 import { QrDisplayModal } from "@/features/invitations/components/qr-display-modal";
 import { getInvitationStatus, getMyInviteForFlyer, verifyAndGetInvite } from "@/features/invitations/services/invitation.service";
 import type { GenerateInviteResult, QrInvite } from "@/features/invitations/types/invitation.types";
-// Cross-feature: Recaps are presented via a lateral modal (not inline accordion).
-// RecapsModal wraps RecapsGallery — no chat logic duplicated here.
-import { RecapsModal } from "./recaps-modal";
 import { SectionHeading } from "@/shared/components/ui/section-heading";
 import type { LayoutFlyer, NearbyFlyer } from "../types/canvas.types";
 
@@ -87,15 +84,6 @@ function ChatIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
-  );
-}
-
-function MapPinIcon() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-      <circle cx="12" cy="10" r="3" />
     </svg>
   );
 }
@@ -168,7 +156,6 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
   const [showQrPasscode, setShowQrPasscode] = useState(false);
   const [showQrDisplay, setShowQrDisplay] = useState(false);
   const [qrResult, setQrResult] = useState<GenerateInviteResult | null>(null);
-  const [showRecaps, setShowRecaps] = useState(false);
   const viewTrackedRef = useRef(false);
   const openChat = useOpenChatsStore((s) => s.openChat);
 
@@ -195,10 +182,15 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
 
   const hasExtraContent = !!(flyer.description || flyer.social_copy);
 
-  // ── Place/community pill label ─────────────────────────────────────────
-  // community_id exists on flyer but we have no getCommunityById service without
-  // scope creep — fall back to zone_name. A future enhancement can add the fetch.
-  const placePillLabel = flyer.zone_name ?? getFlyerDisplayName(flyer);
+  // ── Publisher pill label ───────────────────────────────────────────────
+  // Shows who published this flyer. Uses @username once creator is loaded.
+  // community_id is available on the flyer (flyers.community_id) but fetching
+  // the community name would require a new service call — deferred to a future
+  // enhancement once community_id is exposed in the feed query + a lightweight
+  // getCommunityById service is added.
+  const publisherPillLabel = creator
+    ? `@${creator.username}`
+    : getFlyerDisplayName(flyer);
 
   const handleCarouselScroll = useCallback(() => {
     const el = carouselRef.current;
@@ -390,7 +382,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
       >
         <div className="min-h-full flex flex-col items-center justify-center px-4 py-16 md:px-8">
           <motion.div
-            className="relative w-full max-w-[420px] md:max-w-[780px]"
+            className="relative w-full max-w-lg mx-auto"
             onClick={(e) => e.stopPropagation()}
             initial={{ scale: 0.92, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -399,13 +391,13 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
             style={{ willChange: "transform, opacity" }}
           >
             {/* ═══════════════════════════════════════════════════════════════
-                Desktop: side-by-side layout (image left, content right)
-                Mobile:  stacked layout (image top, content below)
+                Stacked layout — image on top, content below. Same on mobile
+                and desktop. Centered column via max-w-lg mx-auto above.
             ═══════════════════════════════════════════════════════════════ */}
-            <div className="md:flex md:gap-6 md:items-start">
+            <div className="flex flex-col">
 
               {/* ── Image carousel ─────────────────────────── */}
-              <div className={`relative w-full md:w-[340px] md:flex-none overflow-hidden rounded-2xl ${flyer.is_promoted ? "ring-1 ring-amber-500/30" : ""}`}>
+              <div className={`relative w-full overflow-hidden rounded-2xl ${flyer.is_promoted ? "ring-1 ring-amber-500/30" : ""}`}>
                 {/* Slides */}
                 <div
                   ref={carouselRef}
@@ -425,7 +417,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                         src={src}
                         alt={i === 0 ? (flyer.title ?? "Event flyer") : `Foto ${i}`}
                         fill
-                        sizes="(min-width: 768px) 340px, 420px"
+                        sizes="(min-width: 1024px) 512px, 100vw"
                         className="object-cover"
                         loading={i === 0 ? "eager" : "lazy"}
                         unoptimized
@@ -487,22 +479,23 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                 )}
               </div>
 
-              {/* ── Right column (desktop) / Below image (mobile) ─────────── */}
-              <div className="flex-1 min-w-0 flex flex-col gap-3 mt-3 md:mt-0">
+              {/* ── Content (below image on both mobile and desktop) ──────── */}
+              <div className="flex flex-col gap-3 mt-3">
 
-                {/* ── 1. Place / community pill ───────────────────────────────
-                     Full-width-ish dark rounded pill — zone_name or fallback.
-                     On desktop it sits at the top of the right column.
+                {/* ── 1. Publisher pill ──────────────────────────────────────
+                     Shows who published: @username once creator loads,
+                     fallback to display name while loading.
+                     Zone + date remain in the meta block below.
                 ─────────────────────────────────────────────────────────── */}
                 <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-cave-stone border border-cave-ash/50">
                   <span className="text-cave-smoke shrink-0">
-                    <MapPinIcon />
+                    <PersonIcon />
                   </span>
                   <span
                     className="text-[12px] font-bold uppercase tracking-[0.16em] text-cave-white truncate"
                     style={{ fontFamily: "var(--font-space-mono)" }}
                   >
-                    {placePillLabel}
+                    {publisherPillLabel}
                   </span>
                 </div>
 
@@ -732,45 +725,7 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                   </div>
                 )}
 
-                {/* ── 7. Recaps lateral modal trigger ──────────────────────── */}
-                <motion.button
-                  type="button"
-                  onClick={() => setShowRecaps(true)}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 22 }}
-                  className="w-full flex items-center justify-between px-5 py-4 rounded-2xl bg-cave-stone/60 border border-cave-ash/40 hover:border-cave-ash/70 hover:bg-cave-stone/80 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-cave-ash/30 group-hover:bg-cave-ash/50 transition-colors">
-                      <svg
-                        width="15" height="15" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                        className="text-cave-white"
-                      >
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <polyline points="21 15 16 10 5 21" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col items-start gap-0.5">
-                      <span className="text-[11px] uppercase tracking-[0.2em] text-cave-white font-[family-name:var(--font-space-mono)]">
-                        Recaps
-                      </span>
-                      <span className="text-[10px] text-cave-ash font-[family-name:var(--font-inter)]">
-                        Fotos y videos del evento
-                      </span>
-                    </div>
-                  </div>
-                  <svg
-                    width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                    className="text-cave-smoke group-hover:text-cave-fog transition-colors"
-                  >
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </motion.button>
-
-                {/* ── 8. Más hoy carousel ───────────────────────────────────── */}
+                {/* ── 7. Más hoy carousel ───────────────────────────────────── */}
                 <MasHoyCarousel
                   flyers={masHoyFlyers}
                   onFlyerSelect={onFlyerSelect ?? (() => {})}
@@ -781,17 +736,6 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
           </motion.div>
         </div>
       </div>
-
-      {/* Recaps lateral modal */}
-      <AnimatePresence>
-        {showRecaps && (
-          <RecapsModal
-            flyerId={flyer.id}
-            isOwner={isOwner}
-            onClose={() => setShowRecaps(false)}
-          />
-        )}
-      </AnimatePresence>
 
       {/* QR modals */}
       <AnimatePresence>
