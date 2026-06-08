@@ -311,13 +311,13 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
       {/* ── Centered content column (mobile-first, capped on desktop) ──────── */}
       <div className="max-w-2xl mx-auto px-4 sm:px-5">
         {/* ── Section 2: Identity block ───────────────────────────────────── */}
-        {/* Horizontal composition: avatar LEFT · name+count+stack column ·
-            join/leave button RIGHT (top-aligned with the name). The avatar
-            still overlaps the banner bottom edge via -mt. */}
-        <div className="-mt-12 mb-5">
+        {/* Horizontal composition: avatar LEFT, top-aligned with the name ·
+            column (name + count + stack + description + location) · single
+            join/leave TOGGLE button RIGHT, top-aligned with the name. */}
+        <div className="mt-4 mb-5">
           <div className="flex items-start gap-3 sm:gap-4">
-            {/* Avatar (left) — overlaps banner */}
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-4 border-[#050505] bg-cave-stone ring-2 ring-cave-ash/40 flex-shrink-0">
+            {/* Avatar (left) — top-aligned with the name */}
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-[#050505] bg-cave-stone ring-2 ring-cave-ash/40 flex-shrink-0">
               {community.avatar_url ? (
                 <Image
                   src={community.avatar_url}
@@ -338,10 +338,10 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
               )}
             </div>
 
-            {/* Name + count + member stack (column, beside the avatar).
-                pt aligns the text baseline with the bottom half of the avatar
-                that sits below the banner edge. */}
-            <div className="flex-1 min-w-0 pt-12 sm:pt-14">
+            {/* Column beside the avatar: name · count · stack · description ·
+                location. Top-aligned with the avatar. */}
+            <div className="flex-1 min-w-0">
+              {/* Top row: name (+ count + stack) on the left, toggle on right */}
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   {/* Name */}
@@ -372,34 +372,26 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
                   )}
                 </div>
 
-                {/* Join / Leave (right, top-aligned with the name) */}
+                {/* Join / Leave — SINGLE TOGGLE button (right, top-aligned with
+                    the name). Member → outline "Unido" (click leaves);
+                    not member → solid "Unirse" (click joins). No check icon. */}
                 <div className="flex-shrink-0">
                   {isMember ? (
-                    <div className="flex flex-col items-end gap-1.5">
-                      <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-cave-white/40 bg-cave-white/10">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                        <span className="text-[11px] text-cave-white font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-space-mono)]">
-                          Unido
-                        </span>
-                      </div>
-                      <motion.button
-                        type="button"
-                        onClick={handleLeave}
-                        disabled={leaving}
-                        whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                        className="h-9 px-4 rounded-full border border-cave-ash text-cave-smoke text-[11px] font-[family-name:var(--font-space-mono)] uppercase tracking-[0.1em] hover:border-[#FF2D7B]/60 hover:text-[#FF2D7B] transition-colors disabled:opacity-40"
-                      >
-                        {leaving ? "Saliendo..." : "Salir"}
-                      </motion.button>
-                    </div>
+                    <motion.button
+                      type="button"
+                      onClick={handleLeave}
+                      disabled={leaving || joining}
+                      whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                      className="h-10 px-6 sm:px-8 rounded-full border border-cave-white/40 bg-cave-white/10 text-cave-white font-bold uppercase tracking-[0.15em] text-xs sm:text-sm font-[family-name:var(--font-space-mono)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {leaving ? "Saliendo..." : "Unido"}
+                    </motion.button>
                   ) : (
                     <motion.button
                       type="button"
                       onClick={handleJoin}
-                      disabled={joining}
+                      disabled={joining || leaving}
                       whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
                       transition={{ type: "spring", stiffness: 400, damping: 20 }}
                       className="h-10 px-6 sm:px-8 rounded-full bg-cave-white text-cave-black font-bold uppercase tracking-[0.15em] text-xs sm:text-sm font-[family-name:var(--font-space-mono)] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -409,56 +401,57 @@ export function CommunityProfile({ slug }: CommunityProfileProps) {
                   )}
                 </div>
               </div>
+
+              {/* Description + location — inside the column, indented under the
+                  name (beside the avatar), per the mockup. */}
+              {(community.description || community.city) && (
+                <div className="mt-3">
+                  {community.description && (
+                    <p className="text-sm text-cave-fog leading-6 font-[family-name:var(--font-inter)] mb-2">
+                      {community.description}
+                    </p>
+                  )}
+                  {community.city && (
+                    <p className="flex items-center gap-1.5 text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                      {community.city}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Seeded badge — chip in the column, under the location */}
+              {community.is_seeded && (
+                <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-cave-ash/60 bg-cave-stone/60">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cave-fog flex-shrink-0">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span className="text-[10px] text-cave-fog font-[family-name:var(--font-space-mono)] leading-none">
+                    No oficial · Gestionada por CAVES
+                  </span>
+                  {community.source_platform && (
+                    <>
+                      <span className="text-cave-ash/40 text-[10px]">·</span>
+                      <span className="text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)] leading-none capitalize">
+                        desde {community.source_platform}
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {actionError && (
+                <p className="mt-2 text-xs text-[#FF2D7B] font-[family-name:var(--font-space-mono)]">
+                  {actionError}
+                </p>
+              )}
             </div>
           </div>
-
-          {/* Seeded badge — chip below the identity row, sets honest expectations */}
-          {community.is_seeded && (
-            <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-cave-ash/60 bg-cave-stone/60">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cave-fog flex-shrink-0">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              <span className="text-[10px] text-cave-fog font-[family-name:var(--font-space-mono)] leading-none">
-                No oficial · Gestionada por CAVES
-              </span>
-              {community.source_platform && (
-                <>
-                  <span className="text-cave-ash/40 text-[10px]">·</span>
-                  <span className="text-[10px] text-cave-smoke font-[family-name:var(--font-space-mono)] leading-none capitalize">
-                    desde {community.source_platform}
-                  </span>
-                </>
-              )}
-            </div>
-          )}
-
-          {actionError && (
-            <p className="mt-2 text-xs text-[#FF2D7B] font-[family-name:var(--font-space-mono)]">
-              {actionError}
-            </p>
-          )}
-
-          {/* ── Section 3: Description + location ──────────────────────────── */}
-          {(community.description || community.city) && (
-            <div className="mt-5">
-              {community.description && (
-                <p className="text-sm text-cave-fog leading-6 font-[family-name:var(--font-inter)] mb-2">
-                  {community.description}
-                </p>
-              )}
-              {community.city && (
-                <p className="flex items-center gap-1.5 text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
-                  {community.city}
-                </p>
-              )}
-            </div>
-          )}
         </div>
 
         {/* ── Section blocks ──────────────────────────────────────────────── */}
