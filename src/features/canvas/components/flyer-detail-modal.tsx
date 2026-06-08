@@ -487,17 +487,34 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                      fallback to display name while loading.
                      Zone + date remain in the meta block below.
                 ─────────────────────────────────────────────────────────── */}
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-cave-stone border border-cave-ash/50">
-                  <span className="text-cave-smoke shrink-0">
-                    <PersonIcon />
-                  </span>
-                  <span
-                    className="text-[12px] font-bold uppercase tracking-[0.16em] text-cave-white truncate"
-                    style={{ fontFamily: "var(--font-space-mono)" }}
+                {creator ? (
+                  <Link
+                    href={`/profile/${creator.username}`}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-cave-stone border border-cave-ash/50 hover:border-cave-fog hover:bg-cave-rock transition-colors"
                   >
-                    {publisherPillLabel}
-                  </span>
-                </div>
+                    <span className="text-cave-smoke shrink-0">
+                      <PersonIcon />
+                    </span>
+                    <span
+                      className="text-[12px] font-bold uppercase tracking-[0.16em] text-cave-white truncate"
+                      style={{ fontFamily: "var(--font-space-mono)" }}
+                    >
+                      {publisherPillLabel}
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-cave-stone border border-cave-ash/50">
+                    <span className="text-cave-smoke shrink-0">
+                      <PersonIcon />
+                    </span>
+                    <span
+                      className="text-[12px] font-bold uppercase tracking-[0.16em] text-cave-white truncate"
+                      style={{ fontFamily: "var(--font-space-mono)" }}
+                    >
+                      {publisherPillLabel}
+                    </span>
+                  </div>
+                )}
 
                 {/* ── 2. Meta + metrics row ───────────────────────────────────
                      LEFT col: zone · day · time + creator username (small)
@@ -518,14 +535,6 @@ export function FlyerDetailModal({ flyer, allFlyers, onClose, onFlyerSelect }: F
                       >
                         {flyer.event_time}
                       </p>
-                    )}
-                    {creator && (
-                      <Link
-                        href={`/profile/${creator.username}`}
-                        className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-cave-fog hover:text-cave-white transition-colors font-[family-name:var(--font-space-mono)] leading-none"
-                      >
-                        @{creator.username}
-                      </Link>
                     )}
                   </div>
 
