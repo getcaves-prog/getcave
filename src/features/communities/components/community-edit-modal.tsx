@@ -473,7 +473,7 @@ export function CommunityEditModal({
               }}
               maxLength={500}
               rows={3}
-              className="w-full rounded-xl bg-cave-ash px-4 py-3 text-cave-light placeholder:text-cave-smoke border border-cave-rock focus:border-neon-green focus:ring-2 focus:ring-neon-green/20 focus:outline-none transition-colors resize-none"
+              className="w-full rounded-xl bg-cave-ash px-4 py-3 text-cave-light placeholder:text-cave-smoke border border-cave-rock focus:border-[#FFFFFF] focus:ring-2 focus:ring-[#FFFFFF]/20 focus:outline-none transition-colors resize-none"
             />
             <div className="flex justify-between items-center">
               {errors.description && (
