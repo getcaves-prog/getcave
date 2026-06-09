@@ -1,5 +1,5 @@
 import { createClient } from "@/shared/lib/supabase/client";
-import type { EventMedia } from "../types/recaps.types";
+import type { EventMedia, MyRecap } from "../types/recaps.types";
 import { MAX_RECAP_FILE_SIZE_BYTES } from "../types/recaps.types";
 
 // ─── listCommunityRecaps ───────────────────────────────────────────────────
@@ -42,6 +42,120 @@ export async function listCommunityRecaps(
   }
 
   return (data ?? []) as EventMedia[];
+}
+
+// ─── listMyRecaps ─────────────────────────────────────────────────────────
+// Returns event_media items from events the user attended, enriched with
+// flyer title, event_date, and community name. Four-query approach:
+//   Q1: event_attendance WHERE user_id = userId → distinct flyer_id[].
+//   Q2: event_media WHERE flyer_id IN (...) ORDER BY created_at DESC LIMIT N.
+//   Q3: batch-fetch flyers (id, title, event_date, community_id).
+//   Q4: batch-fetch communities (id, name) for distinct non-null community_ids.
+// Returns [] when the user has no attendance or no media exists.
+// DECISION: separate queries over server-side JOINs keeps this in the
+// type-safe supabase-js API and matches the established codebase pattern.
+export async function listMyRecaps(
+  userId: string,
+  limit: number = 12
+): Promise<MyRecap[]> {
+  const supabase = createClient();
+
+  // Q1: flyer_ids the user attended
+  const { data: attendanceRows, error: attendanceError } = await supabase
+    .from("event_attendance")
+    .select("flyer_id")
+    .eq("user_id", userId);
+
+  if (attendanceError) {
+    throw new Error(`Failed to get my recaps: ${attendanceError.message}`);
+  }
+
+  const rows = attendanceRows ?? [];
+  if (rows.length === 0) return [];
+
+  const flyerIds = [...new Set(rows.map((r) => r.flyer_id))];
+
+  // Q2: event_media for those flyers, newest-first, limited
+  const { data: mediaRows, error: mediaError } = await supabase
+    .from("event_media")
+    .select("id, flyer_id, media_url, thumbnail_url, media_type, created_at")
+    .in("flyer_id", flyerIds)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (mediaError) {
+    throw new Error(`Failed to get my recaps: ${mediaError.message}`);
+  }
+
+  const media = mediaRows ?? [];
+  if (media.length === 0) return [];
+
+  // Q3: batch-fetch flyer metadata (title, event_date, community_id)
+  const mediaFlyerIds = [...new Set(media.map((m) => m.flyer_id))];
+
+  const { data: flyerRows } = await supabase
+    .from("flyers")
+    .select("id, title, event_date, community_id")
+    .in("id", mediaFlyerIds);
+
+  const flyerMap = new Map<string, {
+    title: string | null;
+    event_date: string | null;
+    community_id: string | null;
+  }>();
+
+  if (flyerRows) {
+    for (const f of flyerRows) {
+      flyerMap.set(f.id, {
+        title: f.title,
+        event_date: f.event_date,
+        community_id: f.community_id,
+      });
+    }
+  }
+
+  // Q4: batch-fetch communities for distinct non-null community_ids
+  const communityIds = [
+    ...new Set(
+      Array.from(flyerMap.values())
+        .map((f) => f.community_id)
+        .filter((id): id is string => id !== null)
+    ),
+  ];
+
+  const communityMap = new Map<string, string>(); // id → name
+
+  if (communityIds.length > 0) {
+    const { data: communities } = await supabase
+      .from("communities")
+      .select("id, name")
+      .in("id", communityIds);
+
+    if (communities) {
+      for (const c of communities) {
+        communityMap.set(c.id, c.name);
+      }
+    }
+  }
+
+  // Map into MyRecap shape
+  return media.map((m): MyRecap => {
+    const flyer = flyerMap.get(m.flyer_id);
+    const communityName = flyer?.community_id
+      ? (communityMap.get(flyer.community_id) ?? null)
+      : null;
+
+    return {
+      id: m.id,
+      media_url: m.media_url,
+      thumbnail_url: m.thumbnail_url,
+      media_type: m.media_type,
+      flyer_id: m.flyer_id,
+      flyer_title: flyer?.title ?? null,
+      event_date: flyer?.event_date ?? null,
+      community_name: communityName,
+    };
+  });
 }
 
 // ─── listEventMedia ────────────────────────────────────────────────────────

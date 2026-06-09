@@ -37,6 +37,10 @@ export interface MyEvent {
   going_solo: boolean;
   /** When the user RSVP'd */
   rsvp_at: string;
+  /** Display name of the community this flyer belongs to (null if none) */
+  community_name: string | null;
+  /** URL slug of the community this flyer belongs to (null if none) */
+  community_slug: string | null;
 }
 
 export interface MyEventsResult {
