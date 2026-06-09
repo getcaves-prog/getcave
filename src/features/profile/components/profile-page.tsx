@@ -322,6 +322,13 @@ export function ProfilePage({ username }: ProfilePageProps) {
       <footer className="border-t border-cave-ash/60 px-6 py-5 flex flex-col items-center gap-3">
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <Link
+            href="/communities"
+            className="text-xs tracking-[0.2em] text-cave-smoke uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+          >
+            Comunidades
+          </Link>
+          <span className="text-cave-ash text-xs">·</span>
+          <Link
             href="/terms"
             className="text-xs tracking-[0.2em] text-cave-smoke uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
           >
