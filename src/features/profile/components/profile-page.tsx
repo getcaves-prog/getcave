@@ -6,32 +6,24 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { createClient } from "@/shared/lib/supabase/client";
-import {
-  getProfileByUsername,
-  getUserFlyers,
-} from "@/features/profile/services/profile.service";
+import { getProfileByUsername } from "@/features/profile/services/profile.service";
 import { ProfileEditModal } from "@/features/profile/components/profile-edit-modal";
-import { MyFlyerCard } from "@/features/profile/components/my-flyer-card";
-import { AttendeeList } from "@/features/invitations/components/attendee-list";
-import { MyCommunityList } from "@/features/profile/components/my-communities-list";
-import { MyEventsList } from "@/features/profile/components/my-events-list";
-import { MyConversationsList } from "@/features/profile/components/my-conversations-list";
-import { ActivityFeed } from "@/features/profile/components/activity-feed";
 import { useMyActivity } from "@/features/profile/hooks/use-my-activity";
-import { getMyFlyers } from "@/features/profile/services/my-flyers.service";
+import { useMyRecaps } from "@/features/profile/hooks/use-my-recaps";
 import { getSavedFlyers } from "@/features/canvas/services/favorites.service";
-import { SectionHeading } from "@/shared/components/ui/section-heading";
-import { ForYouEditor } from "@/features/profile/components/for-you-editor";
+import { ProfileStatsRow } from "@/features/profile/components/profile-stats-row";
+import { NoDmsBanner } from "@/features/profile/components/no-dms-banner";
+import { OrganizerCtaCard } from "@/features/profile/components/organizer-cta-card";
+import { ProfileUpcomingCarousel } from "@/features/profile/components/profile-upcoming-carousel";
+import { ProfileCommunitiesCarousel } from "@/features/profile/components/profile-communities-carousel";
+import { ProfileRecapsCarousel } from "@/features/profile/components/profile-recaps-carousel";
+import { ProfileSettingsDrawer } from "@/features/profile/components/profile-settings-drawer";
 import type { Tables } from "@/shared/types/database.types";
 
 type Profile = Pick<
   Tables<"profiles">,
   "id" | "username" | "avatar_url" | "bio" | "city" | "role" | "created_at"
 >;
-
-type Flyer = Tables<"flyers">;
-
-type Tab = "flyers" | "my-flyers" | "saved" | "communities" | "events" | "conversations" | "activity" | "for-you";
 
 interface ProfilePageProps {
   username: string;
@@ -40,19 +32,17 @@ interface ProfilePageProps {
 export function ProfilePage({ username }: ProfilePageProps) {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [publicFlyers, setPublicFlyers] = useState<Flyer[]>([]);
-  const [myFlyers, setMyFlyers] = useState<Flyer[]>([]);
-  const [savedFlyers, setSavedFlyers] = useState<Flyer[]>([]);
+  const [savedFlyers, setSavedFlyers] = useState<Tables<"flyers">[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<Tab>("my-flyers");
   const [editOpen, setEditOpen] = useState(false);
-  const [selectedFlyer, setSelectedFlyer] = useState<Flyer | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
   const isOwnProfile = user?.id === profile?.id;
 
-  // ── Community retention data — loaded only for own profile ────────────────
-  const activityData = useMyActivity(isOwnProfile ? user?.id : undefined);
+  // ── Retention data — loaded for the profile being viewed ──────────────────
+  const activityData = useMyActivity(profile?.id);
+  const { recaps } = useMyRecaps(profile?.id);
 
   useEffect(() => {
     if (!user) return;
@@ -68,35 +58,20 @@ export function ProfilePage({ username }: ProfilePageProps) {
   const loadProfile = useCallback(async () => {
     setLoading(true);
     const profileData = await getProfileByUsername(username);
-    if (!profileData) {
-      setLoading(false);
-      return;
-    }
-    setProfile(profileData);
-
-    const flyersData = await getUserFlyers(profileData.id);
-
-    setPublicFlyers(flyersData);
+    setProfile(profileData ?? null);
     setLoading(false);
   }, [username]);
-
-  const loadMyFlyers = useCallback(async () => {
-    if (!isOwnProfile) return;
-    const data = await getMyFlyers();
-    setMyFlyers(data);
-  }, [isOwnProfile]);
 
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
 
-  // Load both my flyers and saved on mount (for counts in stats)
+  // Saved flyers — private, own profile only (for the stats tile)
   const own = isOwnProfile;
   useEffect(() => {
     if (!own) return;
-    loadMyFlyers();
     getSavedFlyers().then(setSavedFlyers);
-  }, [own, loadMyFlyers]);
+  }, [own]);
 
   const handleSignOut = useCallback(async () => {
     const supabase = createClient();
@@ -108,11 +83,6 @@ export function ProfilePage({ username }: ProfilePageProps) {
     setEditOpen(false);
     loadProfile();
   }, [loadProfile]);
-
-  const handleMyFlyerChange = useCallback(() => {
-    loadMyFlyers();
-    loadProfile();
-  }, [loadMyFlyers, loadProfile]);
 
   if (loading) {
     return (
@@ -126,21 +96,31 @@ export function ProfilePage({ username }: ProfilePageProps) {
     return (
       <div className="min-h-dvh bg-cave-black flex flex-col items-center justify-center gap-4 px-6">
         <p className="text-cave-fog font-[family-name:var(--font-space-mono)] text-sm">
-          User not found
+          Usuario no encontrado
         </p>
         <Link
           href="/"
           className="rounded-full bg-cave-white text-cave-black px-6 py-2.5 text-sm font-medium"
         >
-          Back to Canvas
+          Volver al canvas
         </Link>
       </div>
     );
   }
 
-  const memberSince = new Date(profile.created_at).toLocaleDateString(
-    "en-US",
-    { month: "short", year: "numeric" }
+  // ── Derived values ─────────────────────────────────────────────────────────
+  const isOrganizer = activityData.communities.some((c) => c.role === "owner");
+  const roleLabel = isOrganizer ? "Organizador" : "Explorador";
+
+  const eventsAttended =
+    activityData.events.upcoming.length + activityData.events.past.length;
+  const communitiesActive = activityData.communities.length;
+  const monthsExploring = Math.max(
+    0,
+    Math.floor(
+      (Date.now() - new Date(profile.created_at).getTime()) /
+        (1000 * 60 * 60 * 24 * 30)
+    )
   );
 
   return (
@@ -148,40 +128,28 @@ export function ProfilePage({ username }: ProfilePageProps) {
       {/* Grain overlay */}
       <div className="grain-overlay" />
 
-      {/* Header bar — full width */}
+      {/* ── Header: logo left, settings gear right (own only) ─────────────── */}
       <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-cave-black/80 backdrop-blur-md safe-area-top">
-        <Link
-          href="/"
-          className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
-          aria-label="Back to canvas"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
+        <Link href="/" aria-label="Caves" className="flex items-center">
+          <Image
+            src="/Logo.png"
+            alt="Caves"
+            width={92}
+            height={33}
+            className="h-auto w-[92px]"
+            priority
+          />
         </Link>
-
-        <span className="font-[family-name:var(--font-space-mono)] text-sm text-cave-white">
-          Profile
-        </span>
 
         {isOwnProfile ? (
           <button
-            onClick={() => setEditOpen(true)}
+            onClick={() => setSettingsOpen(true)}
             className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
-            aria-label="Edit profile"
+            aria-label="Ajustes"
           >
             <svg
-              width="16"
-              height="16"
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -189,8 +157,8 @@ export function ProfilePage({ username }: ProfilePageProps) {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
           </button>
         ) : (
@@ -198,427 +166,119 @@ export function ProfilePage({ username }: ProfilePageProps) {
         )}
       </header>
 
-      {/* Content — centered, narrower */}
-      <div className="mx-auto w-[85%] max-w-[800px]">
-
-      {/* Profile info */}
-      <div className="flex flex-col items-center px-6 pt-4 pb-6">
-        {/* Avatar */}
-        <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-cave-ash mb-4">
-          {profile.avatar_url ? (
-            <Image
-              src={profile.avatar_url}
-              alt={profile.username}
-              fill
-              className="object-cover"
-              unoptimized
-            />
-          ) : (
-            <div className="w-full h-full bg-cave-stone flex items-center justify-center">
-              <svg
-                width="36"
-                height="36"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-cave-smoke"
-              >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </div>
-          )}
-        </div>
-
-        {/* Username with decorative element */}
-        <div className="flex flex-col items-center mb-1">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-8 h-px bg-gradient-to-r from-transparent via-cave-ash to-transparent" />
-            <span className="text-xs text-cave-smoke font-[family-name:var(--font-space-mono)] uppercase tracking-widest">member</span>
-            <div className="w-8 h-px bg-gradient-to-r from-transparent via-cave-ash to-transparent" />
-          </div>
-          <h1 className="text-2xl text-cave-white font-[family-name:var(--font-space-mono)] font-bold tracking-tight">
-            @{profile.username}
-          </h1>
-        </div>
-
-        {/* Bio */}
-        {profile.bio && (
-          <p className="text-sm text-cave-fog text-center max-w-[280px] mb-2">
-            {profile.bio}
-          </p>
-        )}
-
-        {/* City + Member since */}
-        <div className="flex items-center gap-3 text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
-          {profile.city && (
-            <>
-              <span className="flex items-center gap-1">
-                <svg
-                  width="10"
-                  height="10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                {profile.city}
-              </span>
-              <span className="text-cave-ash">|</span>
-            </>
-          )}
-          <span>Since {memberSince}</span>
-        </div>
-      </div>
-
-      {/* Sign out + admin — own profile only */}
-      {isOwnProfile && (
-        <div className="flex items-center justify-center gap-4 mb-4">
-          {isAdmin && (
-            <Link
-              href="/admin"
-              className="flex items-center gap-1.5 text-xs text-cave-smoke hover:text-cave-fog transition-colors font-[family-name:var(--font-space-mono)]"
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" />
-              </svg>
-              Admin
-            </Link>
-          )}
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-1.5 text-xs text-cave-smoke hover:text-cave-fog transition-colors font-[family-name:var(--font-space-mono)]"
-          >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-            Sign out
-          </button>
-        </div>
-      )}
-
-      {/* Tabs — own profile only */}
-      {isOwnProfile && (
-        <>
-          {/* Row 1: Flyers + Saved (original stats) */}
-          <div className="grid grid-cols-2 border-y border-cave-ash mx-4 mb-0">
-            <button
-              onClick={() => setActiveTab("my-flyers")}
-              className={`flex flex-col items-center py-4 transition-colors ${
-                activeTab === "my-flyers" ? "text-cave-white" : "text-cave-smoke hover:text-cave-fog"
-              }`}
-            >
-              <span className="text-lg font-[family-name:var(--font-space-mono)] font-bold">
-                {myFlyers.length}
-              </span>
-              <span className="text-xs font-[family-name:var(--font-space-mono)]">
-                Flyers
-              </span>
-              {activeTab === "my-flyers" && <div className="w-8 h-[2px] bg-cave-white rounded-full mt-2" />}
-            </button>
-            <button
-              onClick={() => setActiveTab("saved")}
-              className={`flex flex-col items-center py-4 border-l border-cave-ash transition-colors ${
-                activeTab === "saved" ? "text-cave-white" : "text-cave-smoke hover:text-cave-fog"
-              }`}
-            >
-              <span className="text-lg font-[family-name:var(--font-space-mono)] font-bold">
-                {savedFlyers.length}
-              </span>
-              <span className="text-xs font-[family-name:var(--font-space-mono)]">
-                Guardados
-              </span>
-              {activeTab === "saved" && <div className="w-8 h-[2px] bg-cave-white rounded-full mt-2" />}
-            </button>
-          </div>
-
-          {/* Row 2: Community retention tabs — horizontal scroll */}
-          <div className="flex items-center gap-0 border-b border-cave-ash mx-4 mb-4 overflow-x-auto scrollbar-none">
-            {(
-              [
-                { id: "communities", label: "Comunidades", count: activityData.communities.length },
-                { id: "events", label: "Eventos", count: activityData.events.upcoming.length + activityData.events.past.length },
-                { id: "conversations", label: "Chats", count: activityData.conversations.length },
-                { id: "activity", label: "Actividad", count: null },
-                { id: "for-you", label: "For You", count: null },
-              ] as const
-            ).map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    relative flex items-center gap-1.5 flex-shrink-0 px-3 py-3.5 text-xs font-[family-name:var(--font-space-mono)] transition-colors whitespace-nowrap
-                    ${isActive ? "text-[#FFFFFF]" : "text-cave-smoke hover:text-cave-fog"}
-                  `}
-                >
-                  {tab.label}
-                  {tab.count !== null && tab.count > 0 && (
-                    <span className={`text-[10px] px-1 py-0.5 rounded ${isActive ? "bg-[#FFFFFF]/15 text-[#FFFFFF]" : "bg-cave-ash/40 text-cave-smoke"}`}>
-                      {tab.count}
-                    </span>
-                  )}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#FFFFFF] rounded-t-full" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </>
-      )}
-
-
-      {/* Community retention sections — own profile only */}
-      {isOwnProfile && activeTab === "communities" && (
-        <MyCommunityList
-          communities={activityData.communities}
-          loading={activityData.loading}
-        />
-      )}
-      {isOwnProfile && activeTab === "events" && (
-        <MyEventsList
-          events={activityData.events}
-          loading={activityData.loading}
-        />
-      )}
-      {isOwnProfile && activeTab === "conversations" && (
-        <MyConversationsList
-          conversations={activityData.conversations}
-          loading={activityData.loading}
-        />
-      )}
-      {isOwnProfile && activeTab === "activity" && (
-        <ActivityFeed
-          items={activityData.recentActivity}
-          loading={activityData.loading}
-        />
-      )}
-      {isOwnProfile && activeTab === "for-you" && (
-        <div className="px-4 pb-8">
-          <SectionHeading className="mb-4">For You</SectionHeading>
-          <ForYouEditor />
-        </div>
-      )}
-
-      {/* Flyer grid / list */}
-      {!isOwnProfile ? (
-        <div className="grid grid-cols-3 gap-1 px-1 pb-8">
-          {publicFlyers.length === 0 ? (
-            <div className="col-span-3 py-12 text-center text-cave-fog text-sm font-[family-name:var(--font-space-mono)]">
-              No flyers yet
-            </div>
-          ) : (
-            publicFlyers.map((flyer) => (
-              <div key={flyer.id} className="relative aspect-[7/10] overflow-hidden bg-cave-stone">
+      {/* Content — centered, sensible max-width for desktop */}
+      <div className="mx-auto w-full max-w-[760px] px-4 sm:px-6 pb-12">
+        {/* ── Identity block ──────────────────────────────────────────────── */}
+        <section className="flex flex-col sm:flex-row sm:items-stretch gap-4 pt-5">
+          {/* Left: photo + identity */}
+          <div className="flex items-start gap-4 flex-1">
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-cave-ash shrink-0">
+              {profile.avatar_url ? (
                 <Image
-                  src={flyer.image_url}
-                  alt={flyer.title ?? "Flyer"}
+                  src={profile.avatar_url}
+                  alt={profile.username}
                   fill
-                  sizes="33vw"
                   className="object-cover"
                   unoptimized
                 />
-              </div>
-            ))
-          )}
-        </div>
-      ) : activeTab === "my-flyers" ? (
-        <div className="flex flex-col gap-3 px-4 pb-8">
-          {myFlyers.length === 0 ? (
-            <div className="py-12 text-center text-cave-fog text-sm font-[family-name:var(--font-space-mono)]">
-              No flyers yet
-            </div>
-          ) : (
-            myFlyers.map((flyer) => (
-              <div key={flyer.id} className="flex flex-col gap-3">
-                <MyFlyerCard
-                  flyer={flyer}
-                  onChange={handleMyFlyerChange}
-                />
-                <AttendeeList flyerId={flyer.id} flyerTitle={flyer.title} />
-              </div>
-            ))
-          )}
-        </div>
-      ) : activeTab === "saved" ? (
-        <div className="grid grid-cols-3 gap-1 px-1 pb-8">
-          {savedFlyers.length === 0 ? (
-            <div className="col-span-3 py-12 text-center text-cave-fog text-sm font-[family-name:var(--font-space-mono)]">
-              No saved flyers yet
-            </div>
-          ) : (
-            savedFlyers.map((flyer) => (
-              <div key={flyer.id} className="relative aspect-[7/10] overflow-hidden bg-cave-stone group">
-                <button
-                  onClick={() => setSelectedFlyer(flyer)}
-                  className="absolute inset-0 z-0"
-                >
-                  <Image
-                    src={flyer.image_url}
-                    alt={flyer.title ?? "Flyer"}
-                    fill
-                    sizes="33vw"
-                    className="object-cover"
-                    unoptimized
-                  />
-                </button>
-                {/* Unsave button */}
-                <button
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    const { toggleSaveFlyer } = await import("@/features/canvas/services/favorites.service");
-                    await toggleSaveFlyer(flyer.id);
-                    setSavedFlyers((prev) => prev.filter((f) => f.id !== flyer.id));
-                  }}
-                  className="absolute top-1.5 right-1.5 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-cave-black/70 text-cave-white md:opacity-0 md:group-hover:opacity-100 transition-opacity"
-                  aria-label="Remove from saved"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+              ) : (
+                <div className="w-full h-full bg-cave-stone flex items-center justify-center">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-cave-smoke">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
                   </svg>
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      ) : null}
+                </div>
+              )}
+            </div>
 
-      {/* Flyer detail modal */}
-      <AnimatePresence>
-        {selectedFlyer && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="absolute inset-0 backdrop-blur-2xl"
-              onClick={() => setSelectedFlyer(null)}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              style={{
-                background:
-                  "radial-gradient(ellipse at center, rgba(5,5,5,0.7) 0%, rgba(5,5,5,0.92) 70%, rgba(0,0,0,0.97) 100%)",
-                WebkitBackdropFilter: "blur(40px)",
-              }}
-            />
+            <div className="min-w-0 pt-1">
+              <h1 className="text-xl sm:text-2xl text-cave-white font-[family-name:var(--font-space-mono)] font-bold tracking-tight truncate">
+                {profile.username}
+              </h1>
 
-            <motion.div
-              className="relative z-10 flex flex-col items-center max-w-[420px] w-full"
-              initial={{ scale: 0.15, opacity: 0, y: 40 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.15, opacity: 0, y: 40 }}
-              transition={{
-                type: "spring",
-                stiffness: 240,
-                damping: 26,
-                mass: 0.9,
-              }}
-            >
-              <button
-                onClick={() => setSelectedFlyer(null)}
-                className="absolute -top-3 -right-3 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-cave-black/90 border border-cave-ash/40 text-cave-fog hover:text-cave-white transition-colors"
-                aria-label="Close"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-
-              <div
-                className="relative w-full overflow-hidden"
-                style={{ aspectRatio: "7 / 10" }}
-              >
-                <Image
-                  src={selectedFlyer.image_url}
-                  alt={selectedFlyer.title ?? "Flyer"}
-                  fill
-                  sizes="420px"
-                  className="object-cover"
-                  loading="eager"
-                  unoptimized
-                />
-              </div>
-
-              {/* Flyer info below image */}
-              <div className="w-full mt-4 px-2">
-                {selectedFlyer.title && (
-                  <p className="text-sm text-cave-white font-medium mb-1">
-                    {selectedFlyer.title}
-                  </p>
-                )}
-                {selectedFlyer.address && (
-                  <p className="text-xs text-cave-fog flex items-center gap-1">
-                    <svg
-                      width="10"
-                      height="10"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                      <circle cx="12" cy="10" r="3" />
+              {/* Role label + edit pencil (own only) */}
+              <div className="mt-1 flex items-center gap-1.5">
+                <span className="text-xs uppercase tracking-[0.12em] text-cave-fog font-[family-name:var(--font-space-mono)]">
+                  {roleLabel}
+                </span>
+                {isOwnProfile && (
+                  <button
+                    onClick={() => setEditOpen(true)}
+                    className="flex items-center justify-center w-6 h-6 text-cave-smoke hover:text-cave-white transition-colors"
+                    aria-label="Editar perfil"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                     </svg>
-                    {selectedFlyer.address}
-                  </p>
+                  </button>
                 )}
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
+              {profile.city && (
+                <p className="mt-1.5 flex items-center gap-1 text-xs text-cave-smoke font-[family-name:var(--font-space-mono)]">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                  {profile.city}
+                </p>
+              )}
+
+              {profile.bio && (
+                <p className="mt-2 text-sm text-cave-fog font-[family-name:var(--font-inter)] leading-relaxed max-w-[320px]">
+                  {profile.bio}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Right (desktop) / below (mobile): organizer CTA — own & not organizer */}
+          {isOwnProfile && !isOrganizer && (
+            <div className="sm:w-[280px] sm:shrink-0">
+              <OrganizerCtaCard />
+            </div>
+          )}
+        </section>
+
+        {/* ── Stats row ───────────────────────────────────────────────────── */}
+        <div className="mt-6">
+          <ProfileStatsRow
+            eventsAttended={eventsAttended}
+            communitiesActive={communitiesActive}
+            monthsExploring={monthsExploring}
+            saved={isOwnProfile ? savedFlyers.length : undefined}
+          />
+        </div>
+
+        {/* ── No-DMs banner ───────────────────────────────────────────────── */}
+        <div className="mt-4">
+          <NoDmsBanner />
+        </div>
+
+        {/* ── Sections ────────────────────────────────────────────────────── */}
+        <div className="mt-8 flex flex-col gap-8">
+          <ProfileUpcomingCarousel events={activityData.events.upcoming} />
+          <ProfileCommunitiesCarousel communities={activityData.communities} />
+          <ProfileRecapsCarousel recaps={recaps} />
+        </div>
       </div>
 
-      {/* Edit profile modal */}
+      {/* ── Settings drawer — own profile only ──────────────────────────────── */}
+      {isOwnProfile && (
+        <ProfileSettingsDrawer
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          isAdmin={isAdmin}
+          conversations={activityData.conversations}
+          recentActivity={activityData.recentActivity}
+          activityLoading={activityData.loading}
+          onEditProfile={() => setEditOpen(true)}
+          onSignOut={handleSignOut}
+        />
+      )}
+
+      {/* ── Edit profile modal ──────────────────────────────────────────────── */}
       <AnimatePresence>
         {editOpen && (
           <motion.div
