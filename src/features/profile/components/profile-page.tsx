@@ -250,7 +250,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
           {/* Right: organizer CTA — own profile & not yet organizer.
               Same row as identity (mockup): compact card on phones, ~320px desktop. */}
           {isOwnProfile && !isOrganizer && (
-            <div className="w-[200px] shrink-0 sm:w-[360px]">
+            <div className="w-[150px] shrink-0 sm:w-[320px]">
               <OrganizerCtaCard />
             </div>
           )}
