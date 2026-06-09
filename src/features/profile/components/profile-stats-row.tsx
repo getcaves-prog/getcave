@@ -3,6 +3,7 @@
 interface StatTile {
   value: string | number;
   label: string;
+  bookmark?: boolean;
 }
 
 interface ProfileStatsRowProps {
@@ -13,8 +14,9 @@ interface ProfileStatsRowProps {
   saved?: number;
 }
 
-// ─── Stats row — 4 sober tiles (Space Mono numbers, small labels) ────────────
-// On public profiles, omit `saved` to drop the private tile (renders 3 tiles).
+// ─── Stats row — flat row of 4 (big white number, small mono label) ──────────
+// No card backgrounds: just numbers + labels separated by thin dividers.
+// On public profiles, omit `saved` to drop the private tile (renders 3 items).
 export function ProfileStatsRow({
   eventsAttended,
   communitiesActive,
@@ -28,17 +30,35 @@ export function ProfileStatsRow({
   ];
 
   if (saved !== undefined) {
-    tiles.push({ value: `🔖 ${saved}`, label: "guardados" });
+    tiles.push({ value: saved, label: "guardados", bookmark: true });
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-      {tiles.map((tile) => (
+    <div className="flex items-stretch">
+      {tiles.map((tile, i) => (
         <div
           key={tile.label}
-          className="flex flex-col items-center justify-center rounded-xl border border-cave-ash/50 bg-cave-stone px-3 py-4 text-center"
+          className={`flex flex-1 flex-col items-center justify-start px-1.5 text-center sm:px-3 ${
+            i > 0 ? "border-l border-cave-ash/50" : ""
+          }`}
         >
-          <span className="text-xl text-cave-white font-[family-name:var(--font-space-mono)] font-bold tracking-tight">
+          <span className="flex items-center gap-1 text-2xl text-cave-white font-[family-name:var(--font-space-mono)] font-bold tracking-tight">
+            {tile.bookmark && (
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-cave-fog"
+                aria-hidden="true"
+              >
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+              </svg>
+            )}
             {tile.value}
           </span>
           <span className="mt-1 text-[10px] uppercase tracking-[0.1em] text-cave-smoke font-[family-name:var(--font-space-mono)] leading-tight">
