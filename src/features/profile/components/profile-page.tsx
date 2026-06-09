@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { createClient } from "@/shared/lib/supabase/client";
-import { getProfileByUsername } from "@/features/profile/services/profile.service";
+import { getProfileByUsername, getUserFlyers } from "@/features/profile/services/profile.service";
 import { ProfileEditModal } from "@/features/profile/components/profile-edit-modal";
 import { useMyActivity } from "@/features/profile/hooks/use-my-activity";
 import { useMyRecaps } from "@/features/profile/hooks/use-my-recaps";
@@ -18,6 +18,7 @@ import { OrganizerCtaCard } from "@/features/profile/components/organizer-cta-ca
 import { ProfileUpcomingCarousel } from "@/features/profile/components/profile-upcoming-carousel";
 import { ProfileCommunitiesCarousel } from "@/features/profile/components/profile-communities-carousel";
 import { ProfileRecapsCarousel } from "@/features/profile/components/profile-recaps-carousel";
+import { ProfileFlyersCarousel } from "@/features/profile/components/profile-flyers-carousel";
 import { ProfileSettingsDrawer } from "@/features/profile/components/profile-settings-drawer";
 import type { Tables } from "@/shared/types/database.types";
 
@@ -35,6 +36,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [savedFlyers, setSavedFlyers] = useState<Tables<"flyers">[]>([]);
+  const [userFlyers, setUserFlyers] = useState<Tables<"flyers">[]>([]);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -74,6 +76,12 @@ export function ProfilePage({ username }: ProfilePageProps) {
     if (!own) return;
     getSavedFlyers().then(setSavedFlyers);
   }, [own]);
+
+  // Flyers the viewed user has published (approved) — shown as a carousel
+  useEffect(() => {
+    if (!profile?.id) return;
+    getUserFlyers(profile.id).then(setUserFlyers);
+  }, [profile?.id]);
 
   const handleSignOut = useCallback(async () => {
     const supabase = createClient();
@@ -274,6 +282,10 @@ export function ProfilePage({ username }: ProfilePageProps) {
         {/* ── Sections ────────────────────────────────────────────────────── */}
         <div className="mt-8 flex flex-col gap-8">
           <ProfileUpcomingCarousel events={activityData.events.upcoming} />
+          <ProfileFlyersCarousel
+            flyers={userFlyers}
+            title={isOwnProfile ? "Mis flyers" : "Flyers publicados"}
+          />
           <ProfileCommunitiesCarousel communities={activityData.communities} />
           <ProfileRecapsCarousel recaps={recaps} />
         </div>
