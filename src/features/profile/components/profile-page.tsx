@@ -168,11 +168,11 @@ export function ProfilePage({ username }: ProfilePageProps) {
 
       {/* Content — centered, sensible max-width for desktop */}
       <div className="mx-auto w-full max-w-[760px] px-4 sm:px-6 pb-12">
-        {/* ── Identity block ──────────────────────────────────────────────── */}
-        <section className="flex flex-col sm:flex-row sm:items-stretch gap-4 pt-5">
+        {/* ── Identity block + organizer CTA (same row, mockup) ───────────── */}
+        <section className="flex flex-row items-stretch gap-3 sm:gap-4 pt-5">
           {/* Left: photo + identity */}
-          <div className="flex items-start gap-4 flex-1">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-cave-ash shrink-0">
+          <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+            <div className="relative w-16 h-16 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-cave-ash shrink-0">
               {profile.avatar_url ? (
                 <Image
                   src={profile.avatar_url}
@@ -233,9 +233,10 @@ export function ProfilePage({ username }: ProfilePageProps) {
             </div>
           </div>
 
-          {/* Right (desktop) / below (mobile): organizer CTA — own & not organizer */}
+          {/* Right: organizer CTA — own profile & not yet organizer.
+              Same row as identity (mockup): compact card on phones, ~320px desktop. */}
           {isOwnProfile && !isOrganizer && (
-            <div className="sm:w-[280px] sm:shrink-0">
+            <div className="w-[150px] shrink-0 sm:w-[320px]">
               <OrganizerCtaCard />
             </div>
           )}
