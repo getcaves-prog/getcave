@@ -81,11 +81,13 @@ export async function getMyCommunities(userId: string): Promise<MyCommunity[]> {
 }
 
 // ─── getMyEvents ──────────────────────────────────────────────────────────
-// DECISION: 2-query pattern.
+// DECISION: 3-query pattern (extension of the 2-query pattern).
 // Q1: event_attendance rows for user_id, ordered by created_at desc.
-// Q2: batch-fetch flyer rows by flyer_id.
+// Q2: batch-fetch flyer rows (including community_id) by flyer_id.
+// Q3: batch-fetch communities (id, name, slug) for distinct non-null community_ids.
 // Split upcoming/past by comparing flyer.event_date vs today (YYYY-MM-DD).
 // Null event_date → treated as past (no date = indeterminate = not upcoming).
+// Events with no community_id get community_name=null, community_slug=null.
 export async function getMyEvents(userId: string): Promise<MyEventsResult> {
   const supabase = createClient();
 
@@ -104,12 +106,12 @@ export async function getMyEvents(userId: string): Promise<MyEventsResult> {
   const rows = attendanceRows ?? [];
   if (rows.length === 0) return { upcoming: [], past: [] };
 
-  // Q2: batch-fetch flyer rows
+  // Q2: batch-fetch flyer rows (include community_id for Q3)
   const flyerIds = rows.map((r) => r.flyer_id);
 
   const { data: flyers } = await supabase
     .from("flyers")
-    .select("id, title, image_url, event_date, event_time, address")
+    .select("id, title, image_url, event_date, event_time, address, community_id")
     .in("id", flyerIds);
 
   const flyerMap = new Map<string, {
@@ -119,11 +121,36 @@ export async function getMyEvents(userId: string): Promise<MyEventsResult> {
     event_date: string | null;
     event_time: string | null;
     address: string | null;
+    community_id: string | null;
   }>();
 
   if (flyers) {
     for (const f of flyers) {
       flyerMap.set(f.id, f);
+    }
+  }
+
+  // Q3: batch-fetch communities for distinct non-null community_ids
+  const communityIds = [
+    ...new Set(
+      Array.from(flyerMap.values())
+        .map((f) => f.community_id)
+        .filter((id): id is string => id !== null)
+    ),
+  ];
+
+  const communityMap = new Map<string, { name: string; slug: string }>();
+
+  if (communityIds.length > 0) {
+    const { data: communities } = await supabase
+      .from("communities")
+      .select("id, name, slug")
+      .in("id", communityIds);
+
+    if (communities) {
+      for (const c of communities) {
+        communityMap.set(c.id, { name: c.name, slug: c.slug });
+      }
     }
   }
 
@@ -136,6 +163,10 @@ export async function getMyEvents(userId: string): Promise<MyEventsResult> {
     const flyer = flyerMap.get(row.flyer_id);
     if (!flyer) continue;
 
+    const community = flyer.community_id
+      ? (communityMap.get(flyer.community_id) ?? null)
+      : null;
+
     const event: MyEvent = {
       id: flyer.id,
       title: flyer.title,
@@ -145,6 +176,8 @@ export async function getMyEvents(userId: string): Promise<MyEventsResult> {
       address: flyer.address,
       going_solo: row.going_solo,
       rsvp_at: row.created_at,
+      community_name: community?.name ?? null,
+      community_slug: community?.slug ?? null,
     };
 
     // Null event_date → past bucket

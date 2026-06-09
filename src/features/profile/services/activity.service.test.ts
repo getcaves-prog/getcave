@@ -199,6 +199,7 @@ describe("getMyEvents", () => {
       event_date: futureDate,
       event_time: "22:00",
       address: "Av. Corrientes 123",
+      community_id: "comm-1",
     },
     {
       id: "flyer-2",
@@ -207,13 +208,22 @@ describe("getMyEvents", () => {
       event_date: pastDate,
       event_time: null,
       address: null,
+      community_id: null,
     },
+  ];
+
+  const communityRows = [
+    { id: "comm-1", name: "Techno Cave", slug: "techno-cave" },
   ];
 
   function setupMyEvents(
     attendanceResult: { data: unknown; error: unknown },
     flyersResult: { data: unknown; error: unknown } = {
       data: flyerRows,
+      error: null,
+    },
+    communitiesResult: { data: unknown; error: unknown } = {
+      data: communityRows,
       error: null,
     }
   ) {
@@ -227,17 +237,24 @@ describe("getMyEvents", () => {
         const mockSelectLocal = vi.fn().mockReturnValue({ in: mockInLocal });
         return { select: mockSelectLocal };
       }
+      if (table === "communities") {
+        const mockInLocal = vi.fn().mockResolvedValue(communitiesResult);
+        const mockSelectLocal = vi.fn().mockReturnValue({ in: mockInLocal });
+        return { select: mockSelectLocal };
+      }
       return { select: mockSelect };
     });
   }
 
-  it("queries event_attendance then batch-fetches flyers", async () => {
+  it("queries event_attendance then batch-fetches flyers and communities", async () => {
     setupMyEvents({ data: attendanceRows, error: null });
 
     await getMyEvents("user-1");
 
-    expect(mockFrom.mock.calls[0][0]).toBe("event_attendance");
-    expect(mockFrom.mock.calls[1][0]).toBe("flyers");
+    const tablesCalled = mockFrom.mock.calls.map((c) => c[0]);
+    expect(tablesCalled[0]).toBe("event_attendance");
+    expect(tablesCalled[1]).toBe("flyers");
+    expect(tablesCalled).toContain("communities");
   });
 
   it("splits events into upcoming and past by event_date vs today", async () => {
@@ -300,6 +317,7 @@ describe("getMyEvents", () => {
         event_date: null,
         event_time: null,
         address: null,
+        community_id: null,
       },
     ];
     mockFrom.mockImplementation((table: string) => {
@@ -321,6 +339,47 @@ describe("getMyEvents", () => {
 
     expect(result.upcoming).toHaveLength(0);
     expect(result.past).toHaveLength(1);
+  });
+
+  it("maps community_name and community_slug onto each MyEvent", async () => {
+    setupMyEvents({ data: attendanceRows, error: null });
+
+    const result = await getMyEvents("user-1");
+
+    // flyer-1 belongs to comm-1 → should have community info
+    expect(result.upcoming[0].community_name).toBe("Techno Cave");
+    expect(result.upcoming[0].community_slug).toBe("techno-cave");
+
+    // flyer-2 has null community_id → community fields should be null
+    expect(result.past[0].community_name).toBeNull();
+    expect(result.past[0].community_slug).toBeNull();
+  });
+
+  it("sets community_name and community_slug to null when community cannot be resolved", async () => {
+    setupMyEvents(
+      { data: attendanceRows, error: null },
+      { data: flyerRows, error: null },
+      { data: [], error: null } // community fetch returns empty
+    );
+
+    const result = await getMyEvents("user-1");
+
+    expect(result.upcoming[0].community_name).toBeNull();
+    expect(result.upcoming[0].community_slug).toBeNull();
+  });
+
+  it("skips communities query when all flyers have null community_id", async () => {
+    const noCommunityFlyers = flyerRows.map((f) => ({ ...f, community_id: null }));
+    setupMyEvents(
+      { data: attendanceRows, error: null },
+      { data: noCommunityFlyers, error: null }
+    );
+
+    await getMyEvents("user-1");
+
+    const tablesCalled = mockFrom.mock.calls.map((c) => c[0]);
+    // communities should NOT be called when there are no community_ids
+    expect(tablesCalled).not.toContain("communities");
   });
 
   it("throws descriptive error on attendance query failure", async () => {

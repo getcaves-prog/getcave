@@ -4,6 +4,7 @@ import {
   uploadRecapMedia,
   deleteRecapMedia,
   listCommunityRecaps,
+  listMyRecaps,
 } from "./recaps.service";
 
 // ─── Mock Supabase client ──────────────────────────────────────────────────
@@ -467,6 +468,262 @@ describe("listCommunityRecaps", () => {
 
     await expect(listCommunityRecaps("community-1")).rejects.toThrow(
       "Failed to get community recaps: Timeout"
+    );
+  });
+});
+
+// ─── listMyRecaps ──────────────────────────────────────────────────────────
+describe("listMyRecaps", () => {
+  const attendanceRows = [
+    { flyer_id: "flyer-1" },
+    { flyer_id: "flyer-2" },
+  ];
+
+  const mediaRows = [
+    {
+      id: "m1",
+      flyer_id: "flyer-1",
+      media_url: "https://cdn.example.com/recaps/img1.jpg",
+      thumbnail_url: null,
+      media_type: "image",
+      created_at: "2026-06-07T12:00:00Z",
+    },
+    {
+      id: "m2",
+      flyer_id: "flyer-2",
+      media_url: "https://cdn.example.com/recaps/vid2.mp4",
+      thumbnail_url: "https://cdn.example.com/recaps/vid2-thumb.jpg",
+      media_type: "video",
+      created_at: "2026-06-06T10:00:00Z",
+    },
+  ];
+
+  const flyerData = [
+    { id: "flyer-1", title: "Cave Night", event_date: "2026-06-07", community_id: "comm-1" },
+    { id: "flyer-2", title: "Dark Rave", event_date: "2026-06-06", community_id: null },
+  ];
+
+  const communityData = [
+    { id: "comm-1", name: "Techno Cave" },
+  ];
+
+  /**
+   * Wire the four-query chain for listMyRecaps.
+   *
+   * Call order:
+   *   1. event_attendance — select("flyer_id").eq(...)
+   *   2. event_media      — select(...).in(...).order(...).limit(...)
+   *   3. flyers           — select(...).in(...)
+   *   4. communities      — select(...).in(...)  (only when community_ids present)
+   */
+  function setupHappyPath(opts?: {
+    attendance?: typeof attendanceRows;
+    media?: typeof mediaRows;
+    flyers?: typeof flyerData;
+    communities?: typeof communityData;
+    limit?: number;
+  }) {
+    const a = opts?.attendance ?? attendanceRows;
+    const med = opts?.media ?? mediaRows;
+    const fl = opts?.flyers ?? flyerData;
+    const comm = opts?.communities ?? communityData;
+
+    // Q1: event_attendance — eq chain (no order/limit needed in query)
+    const mockAttEq = vi.fn().mockResolvedValue({ data: a, error: null });
+    const mockAttSelect = vi.fn().mockReturnValue({ eq: mockAttEq });
+
+    // Q2: event_media — in().order().limit()
+    const mockMediaLimit = vi.fn().mockResolvedValue({ data: med, error: null });
+    const mockMediaOrder = vi.fn().mockReturnValue({ limit: mockMediaLimit });
+    const mockMediaIn = vi.fn().mockReturnValue({ order: mockMediaOrder });
+    const mockMediaSelect = vi.fn().mockReturnValue({ in: mockMediaIn });
+
+    // Q3: flyers — in()
+    const mockFlyersIn = vi.fn().mockResolvedValue({ data: fl, error: null });
+    const mockFlyersSelect = vi.fn().mockReturnValue({ in: mockFlyersIn });
+
+    // Q4: communities — in()
+    const mockCommIn = vi.fn().mockResolvedValue({ data: comm, error: null });
+    const mockCommSelect = vi.fn().mockReturnValue({ in: mockCommIn });
+
+    mockFrom
+      .mockReturnValueOnce({ select: mockAttSelect })   // event_attendance
+      .mockReturnValueOnce({ select: mockMediaSelect }) // event_media
+      .mockReturnValueOnce({ select: mockFlyersSelect }) // flyers
+      .mockReturnValueOnce({ select: mockCommSelect });  // communities
+
+    return { mockAttEq, mockMediaIn, mockMediaOrder, mockMediaLimit, mockFlyersIn, mockCommIn };
+  }
+
+  it("queries event_attendance, event_media, flyers, and communities in order", async () => {
+    setupHappyPath();
+
+    await listMyRecaps("user-1");
+
+    const tables = mockFrom.mock.calls.map((c) => c[0]);
+    expect(tables[0]).toBe("event_attendance");
+    expect(tables[1]).toBe("event_media");
+    expect(tables[2]).toBe("flyers");
+    expect(tables[3]).toBe("communities");
+  });
+
+  it("maps flyer_title and community_name onto each MyRecap", async () => {
+    setupHappyPath();
+
+    const result = await listMyRecaps("user-1");
+
+    expect(result).toHaveLength(2);
+
+    // m1 → flyer-1 → Cave Night + Techno Cave
+    expect(result[0].id).toBe("m1");
+    expect(result[0].flyer_title).toBe("Cave Night");
+    expect(result[0].community_name).toBe("Techno Cave");
+    expect(result[0].event_date).toBe("2026-06-07");
+
+    // m2 → flyer-2 → Dark Rave + no community
+    expect(result[1].id).toBe("m2");
+    expect(result[1].flyer_title).toBe("Dark Rave");
+    expect(result[1].community_name).toBeNull();
+  });
+
+  it("returns [] when user has no attendance rows", async () => {
+    const mockAttEq = vi.fn().mockResolvedValue({ data: [], error: null });
+    const mockAttSelect = vi.fn().mockReturnValue({ eq: mockAttEq });
+    mockFrom.mockReturnValueOnce({ select: mockAttSelect });
+
+    const result = await listMyRecaps("user-1");
+
+    expect(result).toEqual([]);
+    // Should not proceed to event_media query
+    expect(mockFrom).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns [] when event_media returns no rows for attended flyers", async () => {
+    const mockAttEq = vi.fn().mockResolvedValue({ data: attendanceRows, error: null });
+    const mockAttSelect = vi.fn().mockReturnValue({ eq: mockAttEq });
+
+    const mockMediaLimit = vi.fn().mockResolvedValue({ data: [], error: null });
+    const mockMediaOrder = vi.fn().mockReturnValue({ limit: mockMediaLimit });
+    const mockMediaIn = vi.fn().mockReturnValue({ order: mockMediaOrder });
+    const mockMediaSelect = vi.fn().mockReturnValue({ in: mockMediaIn });
+
+    mockFrom
+      .mockReturnValueOnce({ select: mockAttSelect })
+      .mockReturnValueOnce({ select: mockMediaSelect });
+
+    const result = await listMyRecaps("user-1");
+
+    expect(result).toEqual([]);
+    // Should not proceed to flyers/communities queries
+    expect(mockFrom).toHaveBeenCalledTimes(2);
+  });
+
+  it("respects the limit parameter on event_media query", async () => {
+    const { mockMediaLimit } = setupHappyPath({ limit: 5 });
+
+    await listMyRecaps("user-1", 5);
+
+    expect(mockMediaLimit).toHaveBeenCalledWith(5);
+  });
+
+  it("returns media ordered by created_at descending", async () => {
+    const { mockMediaOrder } = setupHappyPath();
+
+    await listMyRecaps("user-1");
+
+    expect(mockMediaOrder).toHaveBeenCalledWith("created_at", { ascending: false });
+  });
+
+  it("sets community_name to null when community cannot be resolved", async () => {
+    setupHappyPath({ communities: [] });
+
+    const result = await listMyRecaps("user-1");
+
+    // flyer-1 has community_id comm-1 but it wasn't found
+    expect(result[0].community_name).toBeNull();
+  });
+
+  it("skips communities query when all flyers have null community_id", async () => {
+    const noCommunityFlyers = flyerData.map((f) => ({ ...f, community_id: null }));
+
+    const mockAttEq = vi.fn().mockResolvedValue({ data: attendanceRows, error: null });
+    const mockAttSelect = vi.fn().mockReturnValue({ eq: mockAttEq });
+
+    const mockMediaLimit = vi.fn().mockResolvedValue({ data: mediaRows, error: null });
+    const mockMediaOrder = vi.fn().mockReturnValue({ limit: mockMediaLimit });
+    const mockMediaIn = vi.fn().mockReturnValue({ order: mockMediaOrder });
+    const mockMediaSelect = vi.fn().mockReturnValue({ in: mockMediaIn });
+
+    const mockFlyersIn = vi.fn().mockResolvedValue({ data: noCommunityFlyers, error: null });
+    const mockFlyersSelect = vi.fn().mockReturnValue({ in: mockFlyersIn });
+
+    mockFrom
+      .mockReturnValueOnce({ select: mockAttSelect })
+      .mockReturnValueOnce({ select: mockMediaSelect })
+      .mockReturnValueOnce({ select: mockFlyersSelect });
+    // No 4th mockReturnValueOnce → communities should NOT be called
+
+    const result = await listMyRecaps("user-1");
+
+    expect(mockFrom).toHaveBeenCalledTimes(3);
+    expect(result.every((r) => r.community_name === null)).toBe(true);
+  });
+
+  it("de-duplicates flyer_ids before querying event_media", async () => {
+    // Two attendance rows for the same flyer
+    const dupAttendance = [{ flyer_id: "flyer-1" }, { flyer_id: "flyer-1" }];
+
+    const mockAttEq = vi.fn().mockResolvedValue({ data: dupAttendance, error: null });
+    const mockAttSelect = vi.fn().mockReturnValue({ eq: mockAttEq });
+
+    const mockMediaLimit = vi.fn().mockResolvedValue({ data: [mediaRows[0]], error: null });
+    const mockMediaOrder = vi.fn().mockReturnValue({ limit: mockMediaLimit });
+    const mockMediaIn = vi.fn().mockReturnValue({ order: mockMediaOrder });
+    const mockMediaSelect = vi.fn().mockReturnValue({ in: mockMediaIn });
+
+    const mockFlyersIn = vi.fn().mockResolvedValue({ data: [flyerData[0]], error: null });
+    const mockFlyersSelect = vi.fn().mockReturnValue({ in: mockFlyersIn });
+
+    const mockCommIn = vi.fn().mockResolvedValue({ data: communityData, error: null });
+    const mockCommSelect = vi.fn().mockReturnValue({ in: mockCommIn });
+
+    mockFrom
+      .mockReturnValueOnce({ select: mockAttSelect })
+      .mockReturnValueOnce({ select: mockMediaSelect })
+      .mockReturnValueOnce({ select: mockFlyersSelect })
+      .mockReturnValueOnce({ select: mockCommSelect });
+
+    await listMyRecaps("user-1");
+
+    // event_media should be queried with de-duped flyer_ids: ["flyer-1"]
+    expect(mockMediaIn).toHaveBeenCalledWith("flyer_id", ["flyer-1"]);
+  });
+
+  it("throws on event_attendance query error", async () => {
+    const mockAttEq = vi.fn().mockResolvedValue({ data: null, error: { message: "RLS denied" } });
+    const mockAttSelect = vi.fn().mockReturnValue({ eq: mockAttEq });
+    mockFrom.mockReturnValueOnce({ select: mockAttSelect });
+
+    await expect(listMyRecaps("user-1")).rejects.toThrow(
+      "Failed to get my recaps: RLS denied"
+    );
+  });
+
+  it("throws on event_media query error", async () => {
+    const mockAttEq = vi.fn().mockResolvedValue({ data: attendanceRows, error: null });
+    const mockAttSelect = vi.fn().mockReturnValue({ eq: mockAttEq });
+
+    const mockMediaLimit = vi.fn().mockResolvedValue({ data: null, error: { message: "Timeout" } });
+    const mockMediaOrder = vi.fn().mockReturnValue({ limit: mockMediaLimit });
+    const mockMediaIn = vi.fn().mockReturnValue({ order: mockMediaOrder });
+    const mockMediaSelect = vi.fn().mockReturnValue({ in: mockMediaIn });
+
+    mockFrom
+      .mockReturnValueOnce({ select: mockAttSelect })
+      .mockReturnValueOnce({ select: mockMediaSelect });
+
+    await expect(listMyRecaps("user-1")).rejects.toThrow(
+      "Failed to get my recaps: Timeout"
     );
   });
 });
