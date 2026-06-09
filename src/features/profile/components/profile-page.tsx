@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { createClient } from "@/shared/lib/supabase/client";
@@ -30,6 +31,7 @@ interface ProfilePageProps {
 }
 
 export function ProfilePage({ username }: ProfilePageProps) {
+  const router = useRouter();
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [savedFlyers, setSavedFlyers] = useState<Tables<"flyers">[]>([]);
@@ -129,8 +131,20 @@ export function ProfilePage({ username }: ProfilePageProps) {
       <div className="grain-overlay" />
 
       {/* ── Header: logo left, settings gear right (own only) ─────────────── */}
-      <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-cave-black/80 backdrop-blur-md safe-area-top">
-        <Link href="/" aria-label="Caves" className="flex items-center">
+      <header className="sticky top-0 z-40 relative flex items-center justify-between px-4 py-3 bg-cave-black/80 backdrop-blur-md safe-area-top">
+        {/* Back arrow (left) */}
+        <button
+          onClick={() => router.back()}
+          className="flex items-center justify-center w-10 h-10 text-cave-fog hover:text-cave-white transition-colors"
+          aria-label="Volver"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        {/* Logo (centered) */}
+        <Link href="/" aria-label="Caves" className="absolute left-1/2 -translate-x-1/2 flex items-center">
           <Image
             src="/Logo.png"
             alt="Caves"
@@ -307,6 +321,13 @@ export function ProfilePage({ username }: ProfilePageProps) {
 
       <footer className="border-t border-cave-ash/60 px-6 py-5 flex flex-col items-center gap-3">
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          <Link
+            href="/communities"
+            className="text-xs tracking-[0.2em] text-cave-smoke uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+          >
+            Comunidades
+          </Link>
+          <span className="text-cave-ash text-xs">·</span>
           <Link
             href="/terms"
             className="text-xs tracking-[0.2em] text-cave-smoke uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
