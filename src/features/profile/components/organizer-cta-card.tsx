@@ -7,18 +7,21 @@ export function OrganizerCtaCard() {
   return (
     <Link
       href="/communities/new"
-      className="group block rounded-xl border border-cave-ash bg-cave-dark px-4 py-4 transition-colors hover:border-cave-smoke active:scale-[0.99]"
+      className="group block h-full rounded-xl border border-cave-ash bg-cave-dark px-4 py-3.5 transition-colors hover:border-cave-smoke active:scale-[0.99]"
     >
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-sm text-cave-white font-[family-name:var(--font-space-mono)] font-bold uppercase tracking-[0.08em]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 text-sm text-cave-white font-[family-name:var(--font-space-mono)] font-bold uppercase tracking-[0.08em] leading-snug">
+            <span aria-hidden="true" className="text-cave-fog">
+              ✦
+            </span>
             Conviértete en organizador
           </p>
           <p className="mt-1 text-xs text-cave-fog font-[family-name:var(--font-inter)] leading-relaxed">
             Crea y gestiona tu comunidad, eventos y experiencias
           </p>
         </div>
-        <span className="text-lg text-cave-fog transition-transform group-hover:translate-x-0.5 group-hover:text-cave-white">
+        <span className="shrink-0 text-lg text-cave-fog transition-transform group-hover:translate-x-0.5 group-hover:text-cave-white">
           →
         </span>
       </div>
