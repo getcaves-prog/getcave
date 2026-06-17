@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { MyConversationsList } from "@/features/profile/components/my-conversations-list";
 import { ActivityFeed } from "@/features/profile/components/activity-feed";
 import { ForYouEditor } from "@/features/profile/components/for-you-editor";
+import { COMMUNITIES_ENABLED } from "@/shared/config/features";
 import type {
   MyConversation,
   ActivityItem,
@@ -134,14 +135,16 @@ export function ProfileSettingsDrawer({
                   label="Editar intereses (For You)"
                   onClick={() => setPanel("for-you")}
                 />
-                <Link
-                  href="/communities"
-                  onClick={close}
-                  className="flex items-center justify-between rounded-xl border border-cave-ash/50 bg-cave-dark px-4 py-3.5 text-sm text-cave-light font-[family-name:var(--font-space-mono)] transition-colors hover:border-cave-smoke hover:text-cave-white"
-                >
-                  Explorar comunidades
-                  <span className="text-cave-smoke">→</span>
-                </Link>
+                {COMMUNITIES_ENABLED && (
+                  <Link
+                    href="/communities"
+                    onClick={close}
+                    className="flex items-center justify-between rounded-xl border border-cave-ash/50 bg-cave-dark px-4 py-3.5 text-sm text-cave-light font-[family-name:var(--font-space-mono)] transition-colors hover:border-cave-smoke hover:text-cave-white"
+                  >
+                    Explorar comunidades
+                    <span className="text-cave-smoke">→</span>
+                  </Link>
+                )}
                 {isAdmin && (
                   <Link
                     href="/admin"

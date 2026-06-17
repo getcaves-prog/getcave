@@ -20,6 +20,7 @@ import { ProfileCommunitiesCarousel } from "@/features/profile/components/profil
 import { ProfileRecapsCarousel } from "@/features/profile/components/profile-recaps-carousel";
 import { ProfileFlyersCarousel } from "@/features/profile/components/profile-flyers-carousel";
 import { ProfileSettingsDrawer } from "@/features/profile/components/profile-settings-drawer";
+import { COMMUNITIES_ENABLED } from "@/shared/config/features";
 import type { Tables } from "@/shared/types/database.types";
 
 type Profile = Pick<
@@ -257,7 +258,7 @@ export function ProfilePage({ username }: ProfilePageProps) {
 
           {/* Right: organizer CTA — own profile & not yet organizer.
               Same row as identity (mockup): compact card on phones, ~320px desktop. */}
-          {isOwnProfile && !isOrganizer && (
+          {COMMUNITIES_ENABLED && isOwnProfile && !isOrganizer && (
             <div className="w-[200px] shrink-0 sm:w-[360px]">
               <OrganizerCtaCard />
             </div>
@@ -286,7 +287,9 @@ export function ProfilePage({ username }: ProfilePageProps) {
             flyers={userFlyers}
             title={isOwnProfile ? "Mis flyers" : "Flyers publicados"}
           />
-          <ProfileCommunitiesCarousel communities={activityData.communities} />
+          {COMMUNITIES_ENABLED && (
+            <ProfileCommunitiesCarousel communities={activityData.communities} />
+          )}
           <ProfileRecapsCarousel recaps={recaps} />
         </div>
       </div>
@@ -333,13 +336,17 @@ export function ProfilePage({ username }: ProfilePageProps) {
 
       <footer className="border-t border-cave-ash/60 px-6 py-5 flex flex-col items-center gap-3">
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-          <Link
-            href="/communities"
-            className="text-xs tracking-[0.2em] text-cave-smoke uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
-          >
-            Comunidades
-          </Link>
-          <span className="text-cave-ash text-xs">·</span>
+          {COMMUNITIES_ENABLED && (
+            <>
+              <Link
+                href="/communities"
+                className="text-xs tracking-[0.2em] text-cave-smoke uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
+              >
+                Comunidades
+              </Link>
+              <span className="text-cave-ash text-xs">·</span>
+            </>
+          )}
           <Link
             href="/terms"
             className="text-xs tracking-[0.2em] text-cave-smoke uppercase transition-colors hover:text-cave-white font-[family-name:var(--font-space-mono)]"
