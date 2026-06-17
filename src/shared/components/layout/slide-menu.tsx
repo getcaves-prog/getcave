@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { COMMUNITIES_ENABLED } from "@/shared/config/features";
 import type { User } from "@/features/auth/types/auth.types";
 
 interface SlideMenuProps {
@@ -103,22 +104,24 @@ export function SlideMenu({ isOpen, onClose, user, onSignOut }: SlideMenuProps) 
 
             {/* Menu items */}
             <ul className="px-4 space-y-2">
-              {/* Comunidades — siempre visible */}
-              <li>
-                <Link
-                  href="/communities"
-                  onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-cave-light font-[family-name:var(--font-space-mono)] text-sm tracking-wide hover:bg-cave-ash hover:text-cave-white transition-colors"
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                  Comunidades
-                </Link>
-              </li>
+              {/* Comunidades — hidden while COMMUNITIES_ENABLED is false */}
+              {COMMUNITIES_ENABLED && (
+                <li>
+                  <Link
+                    href="/communities"
+                    onClick={onClose}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-cave-light font-[family-name:var(--font-space-mono)] text-sm tracking-wide hover:bg-cave-ash hover:text-cave-white transition-colors"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    Comunidades
+                  </Link>
+                </li>
+              )}
 
               {user ? (
                 <li>
