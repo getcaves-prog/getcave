@@ -4,7 +4,7 @@ export async function getProfileByUsername(username: string) {
   const supabase = createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("id, username, avatar_url, bio, city, role, created_at")
+    .select("id, username, display_name, avatar_url, bio, city, role, created_at")
     .eq("username", username)
     .single();
   return data;
