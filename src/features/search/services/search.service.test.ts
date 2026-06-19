@@ -4,6 +4,7 @@ import { searchFlyers } from "./search.service";
 // Mirror the exact mock pattern from canvas.service.test.ts
 const mockFrom = vi.fn();
 const mockSelect = vi.fn();
+const mockEq = vi.fn();
 const mockOr = vi.fn();
 const mockOrder = vi.fn();
 const mockLimit = vi.fn();
@@ -16,11 +17,12 @@ vi.mock("@/shared/lib/supabase/client", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  // Chain: from().select().or().order().limit()
+  // Chain: from().select().eq().or().order().limit()
   mockLimit.mockResolvedValue({ data: [], error: null });
   mockOrder.mockReturnValue({ limit: mockLimit });
   mockOr.mockReturnValue({ order: mockOrder });
-  mockSelect.mockReturnValue({ or: mockOr });
+  mockEq.mockReturnValue({ or: mockOr });
+  mockSelect.mockReturnValue({ eq: mockEq });
   mockFrom.mockReturnValue({ select: mockSelect });
 });
 
@@ -48,6 +50,7 @@ describe("searchFlyers", () => {
     expect(mockSelect).toHaveBeenCalledWith(
       "id, title, description, image_url, event_date, event_time, address, created_at, status, user_id"
     );
+    expect(mockEq).toHaveBeenCalledWith("status", "approved");
     expect(mockOr).toHaveBeenCalledWith(
       "title.ilike.%reggaeton%,description.ilike.%reggaeton%"
     );

@@ -57,6 +57,7 @@ export async function searchFlyers(
   const { data, error } = await supabase
     .from("flyers")
     .select(SEARCH_SELECT)
+    .eq("status", "approved")
     .or(`title.ilike.%${clean}%,description.ilike.%${clean}%`)
     .order("created_at", { ascending: false })
     .limit(limit);
