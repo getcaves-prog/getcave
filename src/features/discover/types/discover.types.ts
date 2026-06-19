@@ -18,6 +18,19 @@ export interface ScrapedFlyer extends NearbyFlyer {
   external_url: string | null;
 }
 
+/**
+ * True when a flyer is an external scraped event (Facebook / Instagram) rather
+ * than a real DB flyer. Detected via `status: "external"` + a `source` field.
+ */
+export function isScrapedFlyer(
+  flyer: NearbyFlyer & { source?: unknown; external_url?: unknown }
+): flyer is ScrapedFlyer {
+  return (
+    flyer.status === "external" &&
+    (flyer.source === "facebook" || flyer.source === "instagram")
+  );
+}
+
 /** Fields a caller provides to build a ScrapedFlyer. The rest are filled in. */
 export interface ScrapedFlyerInput {
   id: string;
