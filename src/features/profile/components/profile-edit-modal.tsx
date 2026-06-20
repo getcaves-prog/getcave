@@ -10,6 +10,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 
 const profileSchema = z.object({
+  display_name: z.string().max(60, "El nombre debe tener máximo 60 caracteres").optional(),
   username: z
     .string()
     .min(3, "Username must be at least 3 characters")
@@ -30,6 +31,7 @@ interface ProfileEditModalProps {
 export function ProfileEditModal({ onBack, onClose }: ProfileEditModalProps) {
   const { user } = useAuth();
 
+  const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [city, setCity] = useState("");
@@ -51,11 +53,12 @@ export function ProfileEditModal({ onBack, onClose }: ProfileEditModalProps) {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("profiles")
-        .select("username, bio, city, avatar_url")
+        .select("username, display_name, bio, city, avatar_url")
         .eq("id", user.id)
         .single();
 
       if (!error && data) {
+        setDisplayName(data.display_name || "");
         setUsername(data.username || "");
         setBio(data.bio || "");
         setCity(data.city || "");
@@ -88,6 +91,7 @@ export function ProfileEditModal({ onBack, onClose }: ProfileEditModalProps) {
     setSaveError(null);
 
     const validation = profileSchema.safeParse({
+      display_name: displayName || undefined,
       username,
       bio: bio || undefined,
       city: city || undefined,
@@ -135,6 +139,7 @@ export function ProfileEditModal({ onBack, onClose }: ProfileEditModalProps) {
       const { error: updateError } = await supabase
         .from("profiles")
         .update({
+          display_name: displayName || null,
           username,
           bio: bio || null,
           city: city || null,
@@ -156,7 +161,7 @@ export function ProfileEditModal({ onBack, onClose }: ProfileEditModalProps) {
       );
       setSaving(false);
     }
-  }, [username, bio, city, avatarFile, avatarUrl, user, onClose]);
+  }, [displayName, username, bio, city, avatarFile, avatarUrl, user, onClose]);
 
   const displayAvatar = avatarPreview || avatarUrl;
 
@@ -267,6 +272,20 @@ export function ProfileEditModal({ onBack, onClose }: ProfileEditModalProps) {
             </svg>
           </div>
         </button>
+      </div>
+
+      {/* Display name */}
+      <div className="mb-4">
+        <Input
+          label="Nombre"
+          placeholder="Tu nombre"
+          value={displayName}
+          onChange={(e) => {
+            setDisplayName(e.target.value);
+            setErrors((prev) => ({ ...prev, display_name: "" }));
+          }}
+          error={errors.display_name}
+        />
       </div>
 
       {/* Username */}
