@@ -890,6 +890,7 @@ export type Database = {
           bio: string | null
           city: string | null
           created_at: string
+          display_name: string | null
           id: string
           onboarding_completed_at: string | null
           phone: string | null
@@ -904,6 +905,7 @@ export type Database = {
           bio?: string | null
           city?: string | null
           created_at?: string
+          display_name?: string | null
           id: string
           onboarding_completed_at?: string | null
           phone?: string | null
@@ -918,6 +920,7 @@ export type Database = {
           bio?: string | null
           city?: string | null
           created_at?: string
+          display_name?: string | null
           id?: string
           onboarding_completed_at?: string | null
           phone?: string | null

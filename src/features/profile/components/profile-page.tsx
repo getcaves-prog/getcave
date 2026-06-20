@@ -25,7 +25,7 @@ import type { Tables } from "@/shared/types/database.types";
 
 type Profile = Pick<
   Tables<"profiles">,
-  "id" | "username" | "avatar_url" | "bio" | "city" | "role" | "created_at"
+  "id" | "username" | "display_name" | "avatar_url" | "bio" | "city" | "role" | "created_at"
 >;
 
 interface ProfilePageProps {
@@ -216,8 +216,15 @@ export function ProfilePage({ username }: ProfilePageProps) {
 
             <div className="min-w-0 pt-1">
               <h1 className="text-xl sm:text-2xl text-cave-white font-[family-name:var(--font-space-mono)] font-bold tracking-tight truncate">
-                {profile.username}
+                {profile.display_name || profile.username}
               </h1>
+
+              {/* Handle — only when a display name is present (avoids dupes) */}
+              {profile.display_name && (
+                <p className="text-sm text-cave-smoke font-[family-name:var(--font-space-mono)] truncate">
+                  @{profile.username}
+                </p>
+              )}
 
               {/* Role label + edit pencil (own only) */}
               <div className="mt-1 flex items-center gap-1.5">
