@@ -9,6 +9,7 @@ import { useActionModalStore } from "@/shared/stores/action-modal.store";
 import { CanvasFlyer } from "./canvas-flyer";
 import { FlyerGrid } from "./flyer-grid";
 import { FlyerDetailModal } from "./flyer-detail-modal";
+import { isScrapedFlyer } from "@/features/discover/types/discover.types";
 import {
   CANVAS_LIMITS,
   GRID_CONFIG,
@@ -77,8 +78,29 @@ function generateVisibleFlyers(
   return result;
 }
 
-export function InfiniteCanvas() {
-  const { flyers, loading, error, mode } = useFlyers();
+interface InfiniteCanvasProps {
+  /**
+   * Optional controlled list. When provided, the canvas renders THESE flyers
+   * and skips its own geolocation-based query. When omitted, behavior is
+   * unchanged (home page). The DisplayMode logic still applies to this list.
+   */
+  flyers?: NearbyFlyer[];
+  /** External loading flag (e.g. scraped second pass on /descubrir). */
+  loading?: boolean;
+  /** Heading shown in the empty state when using a controlled list. */
+  emptyLabel?: string;
+}
+
+export function InfiniteCanvas({
+  flyers: controlledFlyers,
+  loading: controlledLoading,
+  emptyLabel,
+}: InfiniteCanvasProps = {}) {
+  const { flyers, loading, error, mode } = useFlyers({
+    controlledFlyers,
+    controlledLoading,
+  });
+  const isControlled = controlledFlyers !== undefined;
   const { springX, springY, springScale, bind, jumpTo, transformRef } = useCanvasGestures();
   const incrementImagesLoaded = useCanvasReadyStore((s) => s.incrementImagesLoaded);
   const openActionModal = useActionModalStore((s) => s.open);
@@ -192,6 +214,15 @@ export function InfiniteCanvas() {
       const rawIndex = ((row * 7919 + col * 104729) % flyers.length + flyers.length) % flyers.length;
       const flyer = flyers[rawIndex];
 
+      // Scraped FB/IG events open their source URL in a new tab instead of the
+      // in-app flyer detail modal (there is no `/flyer/[id]` for them).
+      if (isScrapedFlyer(flyer)) {
+        if (flyer.external_url) {
+          window.open(flyer.external_url, "_blank", "noopener,noreferrer");
+        }
+        return;
+      }
+
       setSelectedFlyer({
         ...flyer,
         grid_id: `${col},${row}`,
@@ -213,7 +244,12 @@ export function InfiniteCanvas() {
     );
   }
 
-  if (loading) {
+  // In controlled mode, never block the already-rendered flyers with the
+  // full-screen spinner — the page owns the subtle "scraping" indicator. Only
+  // show the blocking spinner when there's nothing to display yet.
+  const showBlockingLoader = loading && (!isControlled || flyers.length === 0);
+
+  if (showBlockingLoader) {
     return (
       <div
         className="w-screen flex items-center justify-center bg-cave-black"
@@ -228,6 +264,30 @@ export function InfiniteCanvas() {
   }
 
   if (mode === "empty") {
+    // Controlled (e.g. /descubrir search with 0 results): friendly empty state,
+    // no upload CTA — the caller owns the surrounding UI.
+    if (isControlled) {
+      return (
+        <div
+          className="flex w-full flex-col items-center justify-center px-8"
+          style={{ minHeight: "40vh" }}
+        >
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cave-rock">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-cave-fog">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.3-4.3" />
+            </svg>
+          </div>
+          <h2 className="mb-2 text-center text-lg text-cave-white font-[family-name:var(--font-space-mono)]">
+            {emptyLabel ?? "Sin resultados"}
+          </h2>
+          <p className="max-w-[280px] text-center text-sm text-cave-fog">
+            No encontramos eventos para tu búsqueda. Probá con otras palabras.
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div
         className="w-screen flex flex-col items-center justify-center px-8 bg-cave-black"
