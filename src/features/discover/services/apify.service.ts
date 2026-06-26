@@ -66,15 +66,32 @@ export interface ScrapeEventsParams {
 }
 
 /**
+ * Normalize a free-text query into a single Instagram hashtag token:
+ * lowercase, strip accents (NFD), remove every non-alphanumeric char (this also
+ * removes spaces and a leading '#'). Returns "" when nothing usable remains.
+ */
+export function toHashtag(query: string): string {
+  return query
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "") // strip diacritic marks
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, ""); // drop spaces, '#', punctuation
+}
+
+/**
  * Scrape events from Facebook + Instagram via Apify and normalize them into the
  * canvas flyer shape.
  *
  * Reads APIFY_TOKEN, APIFY_FB_ACTOR_ID, APIFY_IG_ACTOR_ID from the environment.
  * When the token is missing the feature is simply off (returns []).
  *
- * NOTE: The exact `input` keys an actor expects depend on the chosen Apify
- * actor. The shape below (`search` / `location` / `maxItems`) is generic; adjust
- * it to match the actors you configure via APIFY_FB_ACTOR_ID / APIFY_IG_ACTOR_ID.
+ * Per-platform input shapes (confirmed via live Apify runs):
+ *   - Facebook  → apify/facebook-events-scraper:
+ *       { searchQueries: ["<query city>"], maxEvents: 30 }
+ *       (uses SEARCH QUERIES — free text = user query + city)
+ *   - Instagram → apify/instagram-hashtag-scraper:
+ *       { hashtags: ["<tag>"], resultsType: "posts", resultsLimit: 30 }
+ *       (uses HASHTAGS — the normalized user query via toHashtag())
  */
 export async function scrapeEvents({
   query,
@@ -86,16 +103,30 @@ export async function scrapeEvents({
   const fbActor = process.env.APIFY_FB_ACTOR_ID;
   const igActor = process.env.APIFY_IG_ACTOR_ID;
 
-  // Generic actor input — keys depend on the chosen actor (see NOTE above).
-  const input = {
-    search: query,
-    location: city ?? "",
-    maxItems: MAX_ITEMS_PER_ACTOR,
-  };
-
   const jobs: Array<Promise<ScrapedFlyer[]>> = [];
-  if (fbActor) jobs.push(runAndNormalize(fbActor, input, "facebook"));
-  if (igActor) jobs.push(runAndNormalize(igActor, input, "instagram"));
+
+  if (fbActor) {
+    // Facebook events scraper: free-text search = "<query> <city>".
+    const searchText = [query, city].filter(Boolean).join(" ").trim();
+    const fbInput = {
+      searchQueries: [searchText],
+      maxEvents: MAX_ITEMS_PER_ACTOR,
+    };
+    jobs.push(runAndNormalize(fbActor, fbInput, "facebook"));
+  }
+
+  if (igActor) {
+    // Instagram hashtag scraper: query normalized to a single hashtag token.
+    const hashtag = toHashtag(query);
+    if (hashtag) {
+      const igInput = {
+        hashtags: [hashtag],
+        resultsType: "posts",
+        resultsLimit: MAX_ITEMS_PER_ACTOR,
+      };
+      jobs.push(runAndNormalize(igActor, igInput, "instagram"));
+    }
+  }
 
   const settled = await Promise.allSettled(jobs);
 

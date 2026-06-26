@@ -41,6 +41,7 @@ export interface ScrapedFlyerInput {
   event_date?: string | null;
   event_time?: string | null;
   address?: string | null;
+  description?: string | null;
 }
 
 /**
@@ -65,7 +66,7 @@ export function createScrapedFlyer(input: ScrapedFlyerInput): ScrapedFlyer {
     community_id: null,
     is_promoted: false,
     promoted_until: null,
-    description: null,
+    description: input.description ?? null,
     social_copy: null,
     canvas_x: 0,
     canvas_y: 0,
