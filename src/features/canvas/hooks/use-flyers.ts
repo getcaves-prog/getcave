@@ -32,7 +32,21 @@ function resolveDisplayMode(count: number): DisplayMode {
   return "canvas";
 }
 
-export function useFlyers() {
+export interface UseFlyersOptions {
+  /**
+   * When provided, the canvas renders THIS controlled list instead of running
+   * its own location-based query. Used by `/descubrir`. When `undefined`, the
+   * hook keeps its original geolocation-driven behavior (home page).
+   */
+  controlledFlyers?: NearbyFlyer[];
+  /** External loading flag merged into the returned `loading` when controlled. */
+  controlledLoading?: boolean;
+}
+
+export function useFlyers(options: UseFlyersOptions = {}) {
+  const { controlledFlyers, controlledLoading } = options;
+  const isControlled = controlledFlyers !== undefined;
+
   const [flyers, setFlyers] = useState<NearbyFlyer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +59,9 @@ export function useFlyers() {
   const { user } = useAuth();
 
   useEffect(() => {
+    // Controlled mode: caller owns the list — skip the location fetch entirely.
+    if (isControlled) return;
+
     // Wait for geolocation to resolve before fetching
     if (locationLoading) return;
 
@@ -141,7 +158,18 @@ export function useFlyers() {
     return () => {
       cancelled = true;
     };
-  }, [latitude, longitude, locationLoading, selectedCategoryId, user]);
+  }, [isControlled, latitude, longitude, locationLoading, selectedCategoryId, user]);
+
+  // Controlled mode: derive everything from the provided list. The DisplayMode
+  // logic (>=8 canvas / 1-7 grid / 0 empty) applies to the controlled list too.
+  if (isControlled) {
+    return {
+      flyers: controlledFlyers,
+      loading: controlledLoading ?? false,
+      error: null,
+      mode: resolveDisplayMode(controlledFlyers.length),
+    };
+  }
 
   return { flyers, loading, error, mode };
 }

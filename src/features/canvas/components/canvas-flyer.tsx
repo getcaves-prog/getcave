@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { getOptimizedImageUrl } from "@/shared/lib/utils/image";
+import { proxiedImageUrl } from "@/features/discover/services/image-proxy";
+import { isScrapedFlyer } from "@/features/discover/types/discover.types";
 import type { LayoutFlyer } from "../types/canvas.types";
 
 const IMAGE_LOAD_TIMEOUT_MS = 8_000;
@@ -18,13 +20,23 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
   const imgRef = useRef<HTMLImageElement | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Serve optimized thumbnail — 2x the display size for retina, quality 60
+  const scraped = isScrapedFlyer(flyer);
+
+  // Scraped FB/IG CDN images load through our proxy; DB flyers use the
+  // Supabase image-transform thumbnail (2x display size, quality 60).
   const optimizedUrl = useMemo(
-    () => getOptimizedImageUrl(flyer.image_url, flyer.layout_width * 2, 60),
-    [flyer.image_url, flyer.layout_width],
+    () =>
+      scraped
+        ? proxiedImageUrl(flyer.image_url)
+        : getOptimizedImageUrl(flyer.image_url, flyer.layout_width * 2, 60),
+    [scraped, flyer.image_url, flyer.layout_width],
   );
 
   const [imageSrc, setImageSrc] = useState(optimizedUrl);
+
+  // Retry/fallback target: for scraped flyers the raw FB/IG URL is hotlink
+  // blocked, so we must keep using the proxy on retry.
+  const fallbackUrl = scraped ? proxiedImageUrl(flyer.image_url) : flyer.image_url;
 
   const clearLoadTimeout = useCallback(() => {
     if (timeoutRef.current) {
@@ -40,14 +52,14 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
       if (!retried) {
         // Retry with original URL (no transforms) as fallback
         setRetried(true);
-        setImageSrc(flyer.image_url);
+        setImageSrc(fallbackUrl);
       } else {
         setImageError(true);
       }
     }, IMAGE_LOAD_TIMEOUT_MS);
 
     return clearLoadTimeout;
-  }, [imageSrc, imageLoaded, imageError, retried, flyer.image_url, clearLoadTimeout]);
+  }, [imageSrc, imageLoaded, imageError, retried, fallbackUrl, clearLoadTimeout]);
 
   const handleImageLoad = useCallback(() => {
     clearLoadTimeout();
@@ -68,11 +80,11 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
     if (!retried) {
       // Fallback to original URL without transforms
       setRetried(true);
-      setImageSrc(flyer.image_url);
+      setImageSrc(fallbackUrl);
     } else {
       setImageError(true);
     }
-  }, [retried, flyer.image_url, clearLoadTimeout]);
+  }, [retried, fallbackUrl, clearLoadTimeout]);
 
   return (
     <div
@@ -107,6 +119,15 @@ export function CanvasFlyer({ flyer, onImageLoad }: CanvasFlyerProps) {
           loading="eager"
           decoding="async"
         />
+      )}
+
+      {scraped && !imageError && (
+        <span
+          className="absolute left-1.5 top-1.5 rounded-sm bg-cave-black/70 px-1.5 py-0.5 text-[9px] font-[family-name:var(--font-space-mono)] uppercase tracking-wide text-cave-light backdrop-blur-sm"
+          style={{ opacity: imageLoaded ? 1 : 0, transition: "opacity 0.15s" }}
+        >
+          vía {(flyer as LayoutFlyer & { source?: string }).source === "instagram" ? "Instagram" : "Facebook"}
+        </span>
       )}
     </div>
   );
