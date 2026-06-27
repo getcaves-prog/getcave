@@ -137,14 +137,14 @@ export async function scrapeEvents({
   }
 
   if (igActor) {
-    // Instagram hashtag scraper: localize by folding the city INTO each hashtag
-    // (e.g. "techno" + "monterrey" → "technomonterrey") so we get local posts
-    // instead of global noise. One hashtag per expanded term, deduped and capped
-    // — multiple hashtags in ONE run.
+    // Instagram hashtag scraper: use GENERAL hashtags (the city is NOT folded in)
+    // so they actually have content — city-specific tags like "animecucuta" don't
+    // exist and return nothing. Localization happens AFTER via filterByLocation +
+    // the nearest/related fallback. One hashtag per expanded term, deduped/capped.
     const seen = new Set<string>();
     const hashtags: string[] = [];
     for (const t of terms) {
-      const tag = toHashtag([t, city].filter(Boolean).join(" "));
+      const tag = toHashtag(t);
       if (!tag || seen.has(tag)) continue;
       seen.add(tag);
       hashtags.push(tag);
