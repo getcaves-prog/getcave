@@ -139,7 +139,7 @@ describe("scrapeEvents", () => {
       maxEvents: 30,
     });
     expect(JSON.parse(igCall![1].body)).toEqual({
-      hashtags: ["techno"],
+      hashtags: ["technomonterrey"],
       resultsType: "posts",
       resultsLimit: 30,
     });
