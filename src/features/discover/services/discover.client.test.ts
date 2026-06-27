@@ -6,7 +6,10 @@ const fetchMock = vi.fn();
 beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
   fetchMock.mockReset();
-  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ events: [] }) });
+  fetchMock.mockResolvedValue({
+    ok: true,
+    json: async () => ({ events: [], localized: true }),
+  });
 });
 
 afterEach(() => {
@@ -14,9 +17,9 @@ afterEach(() => {
 });
 
 describe("discoverEvents", () => {
-  it("returns [] without fetching for an empty query", async () => {
+  it("returns empty events (localized:true) without fetching for an empty query", async () => {
     const result = await discoverEvents("   ");
-    expect(result).toEqual([]);
+    expect(result).toEqual({ events: [], localized: true });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -42,25 +45,40 @@ describe("discoverEvents", () => {
     });
   });
 
-  it("returns the events array from the response", async () => {
+  it("returns the events array and localized flag from the response", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      json: async () => ({ events: [{ id: "a" }] }),
+      json: async () => ({ events: [{ id: "a" }], localized: false }),
     });
     const result = await discoverEvents("salsa", undefined, {
       lat: 1,
       lng: 2,
     });
-    expect(result).toEqual([{ id: "a" }]);
+    expect(result).toEqual({ events: [{ id: "a" }], localized: false });
   });
 
-  it("returns [] on a non-ok response", async () => {
+  it("defaults localized to true when the response omits it", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ events: [{ id: "a" }] }),
+    });
+    const result = await discoverEvents("salsa");
+    expect(result.localized).toBe(true);
+  });
+
+  it("returns empty events (localized:true) on a non-ok response", async () => {
     fetchMock.mockResolvedValue({ ok: false, json: async () => ({}) });
-    expect(await discoverEvents("salsa")).toEqual([]);
+    expect(await discoverEvents("salsa")).toEqual({
+      events: [],
+      localized: true,
+    });
   });
 
-  it("returns [] when fetch throws", async () => {
+  it("returns empty events (localized:true) when fetch throws", async () => {
     fetchMock.mockRejectedValue(new Error("network"));
-    expect(await discoverEvents("salsa")).toEqual([]);
+    expect(await discoverEvents("salsa")).toEqual({
+      events: [],
+      localized: true,
+    });
   });
 });

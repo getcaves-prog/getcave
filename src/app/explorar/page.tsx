@@ -8,6 +8,7 @@ import { InfiniteCanvas } from "@/features/canvas/components/infinite-canvas";
 import { CanvasHeader } from "@/shared/components/layout/canvas-header";
 import { InlineAuthModal } from "@/features/auth/components/inline-auth-modal";
 import { ScrapingIndicator } from "@/features/discover/components/scraping-indicator";
+import { FallbackNotice } from "@/features/discover/components/fallback-notice";
 import { useDiscover } from "@/features/discover/hooks/use-discover";
 import { useGeolocation } from "@/shared/hooks/use-geolocation";
 import { useLocationStore } from "@/shared/stores/location.store";
@@ -47,7 +48,7 @@ function ExplorarInner() {
   const locationName = useLocationStore((s) => s.locationName);
 
   // Discover (?q=) two-pass DB + scraped flow — only used in discover mode.
-  const { results, loading, scraping, search } = useDiscover();
+  const { results, loading, scraping, localized, search } = useDiscover();
 
   // Register push notifications on mount (Capacitor only, fire and forget)
   useEffect(() => {
@@ -141,6 +142,8 @@ function ExplorarInner() {
   }, [introComplete]);
 
   const hasResults = results.length > 0;
+  // Non-local fallback: results exist but none matched the user's location.
+  const showFallbackNotice = isDiscoverMode && hasResults && !localized;
 
   return (
     <main
@@ -164,6 +167,15 @@ function ExplorarInner() {
           <InfiniteCanvas />
         )}
       </div>
+
+      {/* Non-local fallback notice — floats above the canvas, never blocks it. */}
+      <AnimatePresence>
+        {showFallbackNotice && (
+          <div className="pointer-events-none absolute inset-x-0 top-16 z-40 px-4">
+            <FallbackNotice city={guessCity(locationName)} />
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Non-blocking scraped-pass indicator (discover mode only). */}
       <AnimatePresence>
