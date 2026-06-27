@@ -19,7 +19,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockSearchFlyers.mockResolvedValue([]);
   mockSearchNearbyFlyers.mockResolvedValue([]);
-  mockDiscoverEvents.mockResolvedValue([]);
+  mockDiscoverEvents.mockResolvedValue({ events: [], localized: true });
 });
 
 describe("useDiscover", () => {
@@ -86,9 +86,10 @@ describe("useDiscover", () => {
     mockSearchNearbyFlyers.mockResolvedValue([
       { id: "db-1", title: "Local Techno", event_date: "2026-07-01" },
     ]);
-    mockDiscoverEvents.mockResolvedValue([
-      { id: "scraped-1", title: "Scraped Rave", event_date: "2026-07-02" },
-    ]);
+    mockDiscoverEvents.mockResolvedValue({
+      events: [{ id: "scraped-1", title: "Scraped Rave", event_date: "2026-07-02" }],
+      localized: true,
+    });
 
     const { result } = renderHook(() => useDiscover());
 
@@ -104,5 +105,50 @@ describe("useDiscover", () => {
     });
     expect(result.current.results.map((r) => r.id)).toContain("db-1");
     expect(result.current.results.map((r) => r.id)).toContain("scraped-1");
+  });
+
+  it("defaults localized to true before any search", () => {
+    const { result } = renderHook(() => useDiscover());
+    expect(result.current.localized).toBe(true);
+  });
+
+  it("sets localized:false when the scraped pass falls back to non-local events", async () => {
+    mockDiscoverEvents.mockResolvedValue({
+      events: [{ id: "scraped-1", title: "Far Rave", event_date: "2026-07-02" }],
+      localized: false,
+    });
+
+    const { result } = renderHook(() => useDiscover());
+
+    await act(async () => {
+      await result.current.search("anime", "Cúcuta", { lat: 7.8, lng: -72.5 });
+    });
+
+    await waitFor(() => {
+      expect(result.current.localized).toBe(false);
+    });
+  });
+
+  it("resets localized to true on a new search", async () => {
+    mockDiscoverEvents.mockResolvedValue({
+      events: [{ id: "scraped-1", title: "Far Rave", event_date: "2026-07-02" }],
+      localized: false,
+    });
+
+    const { result } = renderHook(() => useDiscover());
+
+    await act(async () => {
+      await result.current.search("anime", "Cúcuta", { lat: 7.8, lng: -72.5 });
+    });
+    await waitFor(() => expect(result.current.localized).toBe(false));
+
+    mockDiscoverEvents.mockResolvedValue({ events: [], localized: true });
+    await act(async () => {
+      await result.current.search("techno", "Monterrey", {
+        lat: 25.6,
+        lng: -100.3,
+      });
+    });
+    await waitFor(() => expect(result.current.localized).toBe(true));
   });
 });

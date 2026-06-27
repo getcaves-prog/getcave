@@ -89,6 +89,12 @@ export interface UseDiscoverResult {
   /** True once a search has been submitted at least once. */
   searched: boolean;
   /**
+   * Whether the scraped results match the user's location. `false` signals a
+   * fallback (nearest/related events shown because nothing matched locally);
+   * the UI shows a non-blocking notice in that case. Defaults to `true`.
+   */
+  localized: boolean;
+  /**
    * Runs the two-pass search: DB instant, then merge scraped events.
    * When `location` is provided, the DB pass is location-aware (nearby only);
    * otherwise it falls back to a global text search.
@@ -113,6 +119,7 @@ export function useDiscover(): UseDiscoverResult {
   const [loading, setLoading] = useState(false);
   const [scraping, setScraping] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [localized, setLocalized] = useState(true);
 
   // Guards against out-of-order responses when the user searches again quickly.
   const requestIdRef = useRef(0);
@@ -129,6 +136,7 @@ export function useDiscover(): UseDiscoverResult {
       setLoading(true);
       setScraping(true);
       setResults([]);
+      setLocalized(true);
 
       // Pass 1 — DB results, shown immediately. Location-aware when coordinates
       // are known (nearby only); global text search otherwise.
@@ -150,9 +158,11 @@ export function useDiscover(): UseDiscoverResult {
 
       // Pass 2 — scraped events, merged in (deduped). Never blocks pass 1. The
       // user coords flow through so the server drops non-local scraped events.
-      const scraped = await discoverEvents(clean, city, location);
+      const { events: scraped, localized: scrapedLocalized } =
+        await discoverEvents(clean, city, location);
 
       if (isStale()) return;
+      setLocalized(scrapedLocalized);
       if (scraped.length > 0) {
         setResults((prev) => mergeDedup(prev, scraped));
       }
@@ -161,5 +171,5 @@ export function useDiscover(): UseDiscoverResult {
     []
   );
 
-  return { results, loading, scraping, searched, search };
+  return { results, loading, scraping, searched, localized, search };
 }

@@ -19,11 +19,37 @@ interface DiscoverResponse {
   events: ScrapedFlyer[];
   cached: boolean;
   source: "apify" | "off";
+  /**
+   * Whether the returned events are filtered to the user's location.
+   * `false` signals a fallback: nothing matched the location filter, so we
+   * returned the raw (nearest/related) set instead of a blank result.
+   */
+  localized: boolean;
+}
+
+/**
+ * Apply the location filter with graceful fallback: when the filter drops
+ * everything but there were raw events, return the raw set (`localized:false`)
+ * so the user sees related events instead of a blank "Sin resultados".
+ */
+function localizeOrFallback(
+  raw: ScrapedFlyer[],
+  filter: { city?: string; lat?: number; lng?: number }
+): { events: ScrapedFlyer[]; localized: boolean } {
+  const filtered = filterByLocation(raw, filter);
+  if (filtered.length > 0) return { events: filtered, localized: true };
+  if (raw.length > 0) return { events: raw, localized: false };
+  return { events: [], localized: true };
 }
 
 /** Best-effort discovery: always 200, never throws to the client. */
 export async function POST(request: Request): Promise<NextResponse> {
-  const off: DiscoverResponse = { events: [], cached: false, source: "off" };
+  const off: DiscoverResponse = {
+    events: [],
+    cached: false,
+    source: "off",
+    localized: true,
+  };
 
   let query = "";
   let city: string | undefined;
@@ -57,6 +83,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       events: [],
       cached: false,
       source: tokenPresent ? "apify" : "off",
+      localized: true,
     } satisfies DiscoverResponse);
   }
 
@@ -72,10 +99,12 @@ export async function POST(request: Request): Promise<NextResponse> {
   // location filter runs per-request below.
   const cached = getCached(key);
   if (cached) {
+    const { events, localized } = localizeOrFallback(cached, { city, lat, lng });
     return NextResponse.json({
-      events: filterByLocation(cached, { city, lat, lng }),
+      events,
       cached: true,
       source: "apify",
+      localized,
     } satisfies DiscoverResponse);
   }
 
@@ -83,10 +112,12 @@ export async function POST(request: Request): Promise<NextResponse> {
     // RAW scrape (no coords) — cached as-is, then filtered per-request.
     const raw = await scrapeEvents({ query, city });
     setCached(key, raw);
+    const { events, localized } = localizeOrFallback(raw, { city, lat, lng });
     return NextResponse.json({
-      events: filterByLocation(raw, { city, lat, lng }),
+      events,
       cached: false,
       source: "apify",
+      localized,
     } satisfies DiscoverResponse);
   } catch {
     // Scrape failure -> still 200 with empty events.
@@ -94,6 +125,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       events: [],
       cached: false,
       source: "apify",
+      localized: true,
     } satisfies DiscoverResponse);
   }
 }
