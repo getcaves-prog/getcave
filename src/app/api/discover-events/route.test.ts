@@ -8,6 +8,19 @@ const { scrapeEventsMock, getCachedMock, setCachedMock } = vi.hoisted(() => ({
 
 vi.mock("@/features/discover/services/apify.service", () => ({
   scrapeEvents: scrapeEventsMock,
+  // Real-ish filter: drop FB events outside the radius; keep everything else.
+  // Mirrors the production contract closely enough for route assertions.
+  filterByLocation: (
+    flyers: Array<{ _lat?: number; _city?: string }>,
+    { lat, city }: { city?: string; lat?: number; lng?: number }
+  ) => {
+    if (typeof lat !== "number") return flyers;
+    return flyers.filter((f) => {
+      if (typeof f._lat === "number") return Math.abs(f._lat - lat) < 1;
+      if (f._city && city) return f._city.toLowerCase() === city.toLowerCase();
+      return true;
+    });
+  },
 }));
 
 vi.mock("@/features/discover/services/cache", () => ({
@@ -77,11 +90,68 @@ describe("POST /api/discover-events", () => {
     expect(json.events).toEqual(flyers);
     expect(json.cached).toBe(false);
     expect(json.source).toBe("apify");
+    // RAW scrape (no coords) so the cache is shared across nearby users.
     expect(scrapeEventsMock).toHaveBeenCalledWith({
       query: "Techno",
       city: "Monterrey",
     });
+    // The cache stores the RAW (unfiltered) scrape.
     expect(setCachedMock).toHaveBeenCalledWith("techno|monterrey", flyers);
+  });
+
+  it("filters the fresh scrape per-request by user coords", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    // Two FB events: one near the user (lat≈7.8) and one far (lat≈40).
+    const raw = [
+      { id: "near", _lat: 7.89 },
+      { id: "far", _lat: 40.4 },
+    ];
+    scrapeEventsMock.mockResolvedValue(raw);
+
+    const res = await POST(
+      makeRequest({ query: "salsa", city: "Cúcuta", lat: 7.8939, lng: -72.5078 })
+    );
+    const json = await res.json();
+
+    // The full raw set is cached; only the near event is returned.
+    expect(setCachedMock).toHaveBeenCalledWith("salsa|cúcuta", raw);
+    expect(json.events.map((e: { id: string }) => e.id)).toEqual(["near"]);
+  });
+
+  it("filters a CACHE HIT per-request (cache holds raw, filter after)", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    const cachedRaw = [
+      { id: "near", _lat: 7.89 },
+      { id: "far", _lat: 40.4 },
+    ];
+    getCachedMock.mockReturnValue(cachedRaw);
+
+    const res = await POST(
+      makeRequest({ query: "salsa", lat: 7.8939, lng: -72.5078 })
+    );
+    const json = await res.json();
+
+    expect(scrapeEventsMock).not.toHaveBeenCalled();
+    expect(json.cached).toBe(true);
+    expect(json.events.map((e: { id: string }) => e.id)).toEqual(["near"]);
+  });
+
+  it("ignores non-numeric lat/lng (no filtering applied)", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    const raw = [
+      { id: "near", _lat: 7.89 },
+      { id: "far", _lat: 40.4 },
+    ];
+    scrapeEventsMock.mockResolvedValue(raw);
+
+    const res = await POST(makeRequest({ query: "salsa", lat: "x", lng: null }));
+    const json = await res.json();
+
+    // No coords → no filter → both events returned.
+    expect(json.events.map((e: { id: string }) => e.id)).toEqual([
+      "near",
+      "far",
+    ]);
   });
 
   it("returns cached events without scraping on a cache hit", async () => {

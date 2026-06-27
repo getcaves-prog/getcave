@@ -115,6 +115,32 @@ describe("normalizeApifyEvent — facebook", () => {
     const b = normalizeApifyEvent(fbEvent(), "facebook");
     expect(a?.id).toBe(b?.id);
   });
+
+  it("captures location.latitude/longitude as internal geo signals", () => {
+    const result = normalizeApifyEvent(fbEvent(), "facebook");
+    expect(result?._lat).toBe(25.6);
+    expect(result?._lng).toBe(-100.3);
+  });
+
+  it("leaves geo signals unset when location has no coordinates", () => {
+    const result = normalizeApifyEvent(
+      fbEvent({ location: { name: "Club Vibra", city: "Monterrey" } }),
+      "facebook"
+    );
+    expect(result?._lat).toBeUndefined();
+    expect(result?._lng).toBeUndefined();
+  });
+
+  it("leaves geo signals unset when coordinates are non-numeric", () => {
+    const result = normalizeApifyEvent(
+      fbEvent({
+        location: { name: "Club Vibra", latitude: "x", longitude: null },
+      }),
+      "facebook"
+    );
+    expect(result?._lat).toBeUndefined();
+    expect(result?._lng).toBeUndefined();
+  });
 });
 
 describe("normalizeApifyEvent — instagram", () => {
@@ -179,6 +205,12 @@ describe("normalizeApifyEvent — instagram", () => {
         "instagram"
       )
     ).toBeNull();
+  });
+
+  it("does not set internal coordinates (IG posts have no reliable geo)", () => {
+    const result = normalizeApifyEvent(igPost(), "instagram");
+    expect(result?._lat).toBeUndefined();
+    expect(result?._lng).toBeUndefined();
   });
 
   it("keeps a Video post as long as it has a thumbnail", () => {

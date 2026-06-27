@@ -52,7 +52,7 @@ describe("useDiscover", () => {
     expect(mockSearchNearbyFlyers).not.toHaveBeenCalled();
   });
 
-  it("still passes the city to the scraped discoverEvents pass", async () => {
+  it("passes the city AND the user coords to the scraped discoverEvents pass", async () => {
     const { result } = renderHook(() => useDiscover());
 
     await act(async () => {
@@ -62,7 +62,24 @@ describe("useDiscover", () => {
       });
     });
 
-    expect(mockDiscoverEvents).toHaveBeenCalledWith("techno", "Monterrey");
+    expect(mockDiscoverEvents).toHaveBeenCalledWith("techno", "Monterrey", {
+      lat: 25.6,
+      lng: -100.3,
+    });
+  });
+
+  it("passes undefined coords to discoverEvents when no location is known", async () => {
+    const { result } = renderHook(() => useDiscover());
+
+    await act(async () => {
+      await result.current.search("techno", "Monterrey");
+    });
+
+    expect(mockDiscoverEvents).toHaveBeenCalledWith(
+      "techno",
+      "Monterrey",
+      undefined
+    );
   });
 
   it("shows DB nearby results then merges scraped events (two-pass)", async () => {

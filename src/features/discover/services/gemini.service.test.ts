@@ -210,6 +210,40 @@ describe("enrichFlyersWithGemini", () => {
     expect(text).not.toContain("31.");
   });
 
+  it("includes a nullable city field in the response schema", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "key-123");
+    fetchMock.mockResolvedValue(geminiResponse([]));
+
+    await enrichFlyersWithGemini([igFlyer()]);
+
+    const [, init] = fetchMock.mock.calls[0];
+    const body = JSON.parse(init.body);
+    const cityProp =
+      body.generationConfig.responseSchema.items.properties.city;
+    expect(cityProp).toEqual({ type: "STRING", nullable: true });
+  });
+
+  it("stores the Gemini-detected city as the internal _city signal", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "key-123");
+    fetchMock.mockResolvedValue(
+      geminiResponse([{ index: 0, city: "Monterrey" }])
+    );
+
+    const [result] = await enrichFlyersWithGemini([igFlyer()]);
+    expect(result._city).toBe("Monterrey");
+  });
+
+  it("leaves _city unset when Gemini returns no city (uncertain stays)", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "key-123");
+    fetchMock.mockResolvedValue(
+      geminiResponse([{ index: 0, city: null, title: "Enriched" }])
+    );
+
+    const [result] = await enrichFlyersWithGemini([igFlyer()]);
+    expect(result._city).toBeUndefined();
+    expect(result.title).toBe("Enriched");
+  });
+
   it("ignores Gemini items whose index is out of range", async () => {
     vi.stubEnv("GEMINI_API_KEY", "key-123");
     const flyer = igFlyer({ title: "original" });

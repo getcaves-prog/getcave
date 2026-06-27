@@ -19,6 +19,20 @@ function pickString(
   return null;
 }
 
+/** Reads a finite-number-valued property from a record, trying aliases in order. */
+function pickNumber(
+  obj: Record<string, unknown>,
+  keys: string[]
+): number | null {
+  for (const key of keys) {
+    const value = obj[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+  }
+  return null;
+}
+
 /** Converts a raw date-ish string into an ISO date (YYYY-MM-DD), or null. */
 function toIsoDate(raw: string | null): string | null {
   if (!raw) return null;
@@ -99,6 +113,10 @@ function normalizeFacebookEvent(
     pickString(obj, ["address"]) ??
     (location ? pickString(location, ["name", "city"]) : null);
 
+  // Real coordinates (when present) feed the discovery location filter.
+  const lat = location ? pickNumber(location, ["latitude"]) : null;
+  const lng = location ? pickNumber(location, ["longitude"]) : null;
+
   const idSeed = externalUrl ?? title;
 
   return createScrapedFlyer({
@@ -111,6 +129,8 @@ function normalizeFacebookEvent(
     event_time: eventTime,
     address,
     description,
+    _lat: lat ?? undefined,
+    _lng: lng ?? undefined,
   });
 }
 

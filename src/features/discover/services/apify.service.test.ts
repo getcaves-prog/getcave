@@ -228,6 +228,195 @@ describe("scrapeEvents", () => {
     expect(result).toHaveLength(1);
   });
 
+  it("does NOT filter by location when no user coords are provided", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    vi.stubEnv("APIFY_FB_ACTOR_ID", "fb~actor");
+
+    // A FB event in Madrid (far from anything) — must survive without coords.
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => [
+        fbItem({
+          url: "https://facebook.com/events/madrid",
+          location: { name: "Sala", latitude: 40.4168, longitude: -3.7038 },
+        }),
+      ],
+    });
+
+    const result = await scrapeEvents({ query: "salsa" });
+    expect(result).toHaveLength(1);
+  });
+
+  it("keeps FB events within the radius and drops far ones (Haversine)", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    vi.stubEnv("APIFY_FB_ACTOR_ID", "fb~actor");
+
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => [
+        fbItem({
+          name: "Near Event",
+          url: "https://facebook.com/events/near",
+          location: { name: "Local", latitude: 25.69, longitude: -100.31 },
+        }),
+        fbItem({
+          name: "Far Event",
+          url: "https://facebook.com/events/far",
+          location: { name: "Madrid", latitude: 40.4168, longitude: -3.7038 },
+        }),
+      ],
+    });
+
+    // User in Monterrey.
+    const result = await scrapeEvents({
+      query: "salsa",
+      lat: 25.6866,
+      lng: -100.3161,
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0].title).toBe("Near Event");
+  });
+
+  it("keeps FB events with NO coords when coords filter is active", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    vi.stubEnv("APIFY_FB_ACTOR_ID", "fb~actor");
+
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => [
+        fbItem({
+          url: "https://facebook.com/events/nocoords",
+          location: { name: "Somewhere", city: "Unknown" },
+        }),
+      ],
+    });
+
+    // No coords on the event and no Gemini city → uncertain → kept.
+    const result = await scrapeEvents({
+      query: "salsa",
+      lat: 25.6866,
+      lng: -100.3161,
+      city: "Monterrey",
+    });
+    expect(result).toHaveLength(1);
+  });
+
+  it("drops IG posts whose Gemini city does not match the user city", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    vi.stubEnv("APIFY_IG_ACTOR_ID", "ig~actor");
+    vi.stubEnv("GEMINI_API_KEY", "gkey");
+
+    fetchMock.mockImplementation((url: string) => {
+      if (url.includes("ig~actor")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => [igItem({ url: "https://instagram.com/p/spain" })],
+        });
+      }
+      // Gemini: detected city = Madrid (mismatch vs user's Monterrey).
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  { text: JSON.stringify([{ index: 0, city: "Madrid" }]) },
+                ],
+              },
+            },
+          ],
+        }),
+      });
+    });
+
+    const result = await scrapeEvents({
+      query: "salsa",
+      city: "Monterrey",
+      lat: 25.6866,
+      lng: -100.3161,
+    });
+    expect(result).toEqual([]);
+  });
+
+  it("keeps IG posts whose Gemini city matches the user city (contains-match)", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    vi.stubEnv("APIFY_IG_ACTOR_ID", "ig~actor");
+    vi.stubEnv("GEMINI_API_KEY", "gkey");
+
+    fetchMock.mockImplementation((url: string) => {
+      if (url.includes("ig~actor")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => [igItem({ url: "https://instagram.com/p/mty" })],
+        });
+      }
+      // Accent/case-insensitive: "Monterrey, N.L." contains "Monterrey".
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: JSON.stringify([
+                      { index: 0, city: "Monterrey, N.L." },
+                    ]),
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+      });
+    });
+
+    const result = await scrapeEvents({
+      query: "salsa",
+      city: "Montérrey",
+      lat: 25.6866,
+      lng: -100.3161,
+    });
+    expect(result).toHaveLength(1);
+  });
+
+  it("keeps IG posts when Gemini returns no city (uncertain stays)", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    vi.stubEnv("APIFY_IG_ACTOR_ID", "ig~actor");
+    vi.stubEnv("GEMINI_API_KEY", "gkey");
+
+    fetchMock.mockImplementation((url: string) => {
+      if (url.includes("ig~actor")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => [igItem({ url: "https://instagram.com/p/unknown" })],
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          candidates: [
+            {
+              content: {
+                parts: [{ text: JSON.stringify([{ index: 0, city: null }]) }],
+              },
+            },
+          ],
+        }),
+      });
+    });
+
+    const result = await scrapeEvents({
+      query: "salsa",
+      city: "Monterrey",
+      lat: 25.6866,
+      lng: -100.3161,
+    });
+    expect(result).toHaveLength(1);
+  });
+
   it("drops un-normalizable items (canceled FB event)", async () => {
     vi.stubEnv("APIFY_TOKEN", "tok-123");
     vi.stubEnv("APIFY_FB_ACTOR_ID", "fb~actor");
