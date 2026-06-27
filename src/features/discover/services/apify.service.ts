@@ -1,5 +1,6 @@
 // Server-only: reads APIFY_* secrets from process.env (never NEXT_PUBLIC_*).
 // Must only be imported from server code (the discover-events route handler).
+import { expandQuery } from "@/features/discover/services/expand-query";
 import { enrichFlyersWithGemini } from "@/features/discover/services/gemini.service";
 import { haversineKm } from "@/features/discover/services/haversine";
 import { normalizeApifyEvent } from "@/features/discover/services/normalize";
@@ -12,6 +13,8 @@ const APIFY_BASE = "https://api.apify.com/v2/acts";
 const DEFAULT_TIMEOUT_MS = 60_000;
 const MAX_RESULTS = 40;
 const MAX_ITEMS_PER_ACTOR = 30;
+/** Cap on distinct IG hashtags sent in a single run (matches query expansion). */
+const MAX_HASHTAGS = 4;
 
 /** Default attendable radius (km) for the location filter. */
 export const DEFAULT_RADIUS_KM = 80;
@@ -116,25 +119,37 @@ export async function scrapeEvents({
 
   const jobs: Array<Promise<ScrapedFlyer[]>> = [];
 
+  // Broaden coverage: expand the query into a few related terms (original first)
+  // so one run hits nearby concepts (e.g. "salsa" → also "baile", "bachata").
+  const terms = expandQuery(query);
+
   if (fbActor) {
-    // Facebook events scraper: free-text search = "<query> <city>".
-    const searchText = [query, city].filter(Boolean).join(" ").trim();
+    // Facebook events scraper: free-text search = "<term> <city>" per term.
+    // The actor accepts an ARRAY → ONE run, broader coverage.
+    const searchQueries = terms.map((t) =>
+      [t, city].filter(Boolean).join(" ").trim()
+    );
     const fbInput = {
-      searchQueries: [searchText],
+      searchQueries,
       maxEvents: MAX_ITEMS_PER_ACTOR,
     };
     jobs.push(runAndNormalize(fbActor, fbInput, "facebook"));
   }
 
   if (igActor) {
-    // Instagram hashtag scraper: localize by folding the city INTO the hashtag
+    // Instagram hashtag scraper: localize by folding the city INTO each hashtag
     // (e.g. "techno" + "monterrey" → "technomonterrey") so we get local posts
-    // instead of global #techno noise. With a city we use ONLY the local tag;
-    // without a city we fall back to the bare query tag.
-    const localHashtag = toHashtag([query, city].filter(Boolean).join(" "));
-    const hashtags = (
-      city ? [localHashtag] : [toHashtag(query)]
-    ).filter(Boolean) as string[];
+    // instead of global noise. One hashtag per expanded term, deduped and capped
+    // — multiple hashtags in ONE run.
+    const seen = new Set<string>();
+    const hashtags: string[] = [];
+    for (const t of terms) {
+      const tag = toHashtag([t, city].filter(Boolean).join(" "));
+      if (!tag || seen.has(tag)) continue;
+      seen.add(tag);
+      hashtags.push(tag);
+      if (hashtags.length >= MAX_HASHTAGS) break;
+    }
     if (hashtags.length > 0) {
       const igInput = {
         hashtags,
@@ -161,10 +176,46 @@ export async function scrapeEvents({
   // query+city cache upstream means this won't re-run for cached queries.
   const enriched = await enrichFlyersWithGemini(deduped);
 
+  // V4: drop events that already happened (only show CURRENT/upcoming). Unknown
+  // or unparseable dates are kept — we never over-drop IG posts without a clear
+  // date. Applied before the location filter.
+  const fresh = filterFreshness(enriched);
+
   // V3: keep only events near the user. Graceful — with no user coords we do not
   // filter at all (preserving the global behavior). Runs per-request so the same
   // raw scrape can be reused for users near different points.
-  return filterByLocation(enriched, { city, lat, lng });
+  return filterByLocation(fresh, { city, lat, lng });
+}
+
+/** Format a Date as a date-only YYYY-MM-DD string (UTC). */
+function toDateKey(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * Keep only CURRENT events: drop a flyer when its `event_date` is a valid date
+ * strictly BEFORE today (the event already happened). Comparison is date-only
+ * (YYYY-MM-DD lexical compare, which is correct for ISO dates).
+ *
+ * Unknown or unparseable `event_date` → KEPT (we don't over-drop IG posts that
+ * lack a clear date). `now` is injectable for deterministic tests.
+ */
+export function filterFreshness(
+  flyers: ScrapedFlyer[],
+  now: Date = new Date()
+): ScrapedFlyer[] {
+  const today = toDateKey(now);
+
+  return flyers.filter((flyer) => {
+    const raw = flyer.event_date;
+    if (!raw) return true; // unknown date stays
+
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return true; // unparseable stays
+
+    // Date-only compare: drop strictly-past events, keep today and future.
+    return raw.slice(0, 10) >= today;
+  });
 }
 
 /** User context for the location filter. */
