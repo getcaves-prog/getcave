@@ -104,17 +104,6 @@ export function HomeHero() {
             <span aria-hidden>✦</span>
             Sorpréndeme
           </button>
-
-          {/* TODO: "Genera el test" — placeholder until the quiz exists. */}
-          <button
-            type="button"
-            onClick={() => {
-              /* no-op placeholder */
-            }}
-            className="text-xs text-cave-fog underline-offset-4 transition-colors hover:text-cave-light hover:underline"
-          >
-            Genera el test
-          </button>
         </div>
       </motion.div>
     </section>
