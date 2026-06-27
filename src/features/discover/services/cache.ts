@@ -1,7 +1,11 @@
 import type { ScrapedFlyer } from "@/features/discover/types/discover.types";
 
-/** Default time-to-live for a cached scrape: 6 hours. */
-const DEFAULT_TTL_MS = 6 * 60 * 60 * 1000;
+/**
+ * Default time-to-live for a cached scrape: 24 hours.
+ * Longer TTL = far fewer Apify runs (each costs money / burns the monthly
+ * quota). Events don't change often, so a stale-by-a-day list is acceptable.
+ */
+const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
 
 /** Max number of entries before we evict the oldest (LRU-ish). */
 const MAX_ENTRIES = 50;

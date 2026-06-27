@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
+  ApifyUnavailableError,
   filterFreshness,
   runApifyActor,
   scrapeEvents,
@@ -79,18 +80,22 @@ describe("runApifyActor", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("returns [] when the response is not ok", async () => {
+  it("throws ApifyUnavailableError when the response is not ok (e.g. over-quota)", async () => {
     vi.stubEnv("APIFY_TOKEN", "tok-123");
-    fetchMock.mockResolvedValue({ ok: false, json: async () => ({}) });
+    fetchMock.mockResolvedValue({ ok: false, status: 402, json: async () => ({}) });
 
-    expect(await runApifyActor("a", {})).toEqual([]);
+    await expect(runApifyActor("a", {})).rejects.toBeInstanceOf(
+      ApifyUnavailableError
+    );
   });
 
-  it("returns [] when fetch throws (network/timeout)", async () => {
+  it("throws ApifyUnavailableError when fetch throws (network/timeout)", async () => {
     vi.stubEnv("APIFY_TOKEN", "tok-123");
     fetchMock.mockRejectedValue(new Error("aborted"));
 
-    expect(await runApifyActor("a", {})).toEqual([]);
+    await expect(runApifyActor("a", {})).rejects.toBeInstanceOf(
+      ApifyUnavailableError
+    );
   });
 
   it("returns [] when the response body is not an array", async () => {
@@ -184,7 +189,8 @@ describe("scrapeEvents", () => {
       return Promise.resolve({ ok: true, json: async () => body });
     });
 
-    // "salsa" expands deterministically to [salsa, baile, bachata, clases de baile].
+    // "salsa" expands to [salsa, baile, ...] but we CAP at 2 terms to conserve
+    // the Apify quota (each extra term = extra compute per run).
     await scrapeEvents({ query: "salsa", city: "Monterrey" });
 
     const fbCalls = fetchMock.mock.calls.filter((c) =>
@@ -199,17 +205,12 @@ describe("scrapeEvents", () => {
     expect(igCalls).toHaveLength(1);
 
     expect(JSON.parse(fbCalls[0]![1].body)).toEqual({
-      searchQueries: [
-        "salsa Monterrey",
-        "baile Monterrey",
-        "bachata Monterrey",
-        "clases de baile Monterrey",
-      ],
+      searchQueries: ["salsa Monterrey", "baile Monterrey"],
       maxEvents: 30,
     });
     // IG hashtags are GENERAL (no city folded in) — city-specific tags don't exist.
     expect(JSON.parse(igCalls[0]![1].body)).toEqual({
-      hashtags: ["salsa", "baile", "bachata", "clasesdebaile"],
+      hashtags: ["salsa", "baile"],
       resultsType: "posts",
       resultsLimit: 30,
     });
@@ -225,7 +226,7 @@ describe("scrapeEvents", () => {
 
     const fbCall = fetchMock.mock.calls[0];
     expect(JSON.parse(fbCall[1].body)).toEqual({
-      searchQueries: ["salsa", "baile", "bachata", "clases de baile"],
+      searchQueries: ["salsa", "baile"],
       maxEvents: 30,
     });
   });
@@ -537,5 +538,47 @@ describe("scrapeEvents", () => {
 
     const result = await scrapeEvents({ query: "techno" });
     expect(result).toEqual([]);
+  });
+
+  it("throws ApifyUnavailableError when every actor is unavailable and nothing was scraped (don't cache the empty)", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    vi.stubEnv("APIFY_FB_ACTOR_ID", "fb~actor");
+
+    // Over-quota: actor responds non-ok → runApifyActor throws → degraded.
+    fetchMock.mockResolvedValue({ ok: false, status: 402, json: async () => ({}) });
+
+    await expect(scrapeEvents({ query: "techno" })).rejects.toBeInstanceOf(
+      ApifyUnavailableError
+    );
+  });
+
+  it("does NOT throw on a genuine empty result (successful run, zero items → cacheable)", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    vi.stubEnv("APIFY_FB_ACTOR_ID", "fb~actor");
+
+    // Successful run that simply found nothing — this is a real 'no results'.
+    fetchMock.mockResolvedValue({ ok: true, json: async () => [] });
+
+    await expect(scrapeEvents({ query: "techno" })).resolves.toEqual([]);
+  });
+
+  it("returns surviving results without throwing when one actor is down but another has data", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    vi.stubEnv("APIFY_FB_ACTOR_ID", "fb~actor");
+    vi.stubEnv("APIFY_IG_ACTOR_ID", "ig~actor");
+
+    fetchMock.mockImplementation((url: string) => {
+      if (url.includes("fb~actor")) {
+        return Promise.resolve({ ok: false, status: 402, json: async () => ({}) });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => [igItem({ url: "https://instagram.com/p/survives" })],
+      });
+    });
+
+    const result = await scrapeEvents({ query: "techno" });
+    expect(result).toHaveLength(1);
+    expect(result[0].source).toBe("instagram");
   });
 });
