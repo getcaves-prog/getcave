@@ -65,7 +65,7 @@ export function ForYouGate() {
 
   return (
     <AnimatePresence>
-      <ForYouOnboarding onComplete={() => setShow(false)} />
+      <ForYouOnboarding onComplete={() => setShow(false)} prefill={false} />
     </AnimatePresence>
   );
 }

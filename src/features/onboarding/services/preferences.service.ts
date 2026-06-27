@@ -21,6 +21,10 @@ function sanitizePreferences(prefs: UserPreferences): UserPreferences {
   const result: UserPreferences = {};
   if (prefs.looking_for !== undefined) result.looking_for = prefs.looking_for;
   if (prefs.likes !== undefined) result.likes = prefs.likes;
+  if (prefs.music_genres !== undefined) result.music_genres = prefs.music_genres;
+  if (prefs.vibes !== undefined) result.vibes = prefs.vibes;
+  if (prefs.company !== undefined) result.company = prefs.company;
+  if (prefs.timing !== undefined) result.timing = prefs.timing;
   return result;
 }
 
@@ -116,4 +120,46 @@ export async function setPreferences(prefs: UserPreferences): Promise<void> {
     .eq("id", uid);
 
   if (error) throw new Error(`Failed to set preferences: ${error.message}`);
+}
+
+// ─── getCity ─────────────────────────────────────────────────────────────────
+
+/**
+ * Reads the user's city from profiles.city. Returns null if unset or the
+ * profile row is missing. Used to pre-fill the gustos-test on re-take.
+ * If userId is omitted, resolves the current session user.
+ */
+export async function getCity(userId?: string): Promise<string | null> {
+  const supabase = createClient();
+  const uid = await resolveUserId(supabase, userId);
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("city")
+    .eq("id", uid)
+    .single();
+
+  if (error) throw new Error(`Failed to get city: ${error.message}`);
+  return data?.city ?? null;
+}
+
+// ─── setCity ─────────────────────────────────────────────────────────────────
+
+/**
+ * Updates profiles.city for the current user (gustos-test step "¿de dónde sos?").
+ * Trims whitespace; an empty/blank string clears the city (writes null).
+ * Requires an active session.
+ */
+export async function setCity(city: string): Promise<void> {
+  const supabase = createClient();
+  const uid = await resolveUserId(supabase);
+
+  const trimmed = city.trim();
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ city: trimmed.length > 0 ? trimmed : null })
+    .eq("id", uid);
+
+  if (error) throw new Error(`Failed to set city: ${error.message}`);
 }
