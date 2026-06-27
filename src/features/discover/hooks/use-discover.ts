@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { searchFlyers } from "@/features/search/services/search.service";
+import {
+  searchFlyers,
+  searchNearbyFlyers,
+} from "@/features/search/services/search.service";
 import { discoverEvents } from "../services/discover.client";
 import type { NearbyFlyer } from "@/features/canvas/types/canvas.types";
 import type { FlyerSearchResult } from "@/features/search/services/search.service";
@@ -70,6 +73,12 @@ function mergeDedup(base: NearbyFlyer[], extra: NearbyFlyer[]): NearbyFlyer[] {
   return merged;
 }
 
+/** Optional user coordinates for the location-aware DB pass. */
+export interface DiscoverLocation {
+  lat: number;
+  lng: number;
+}
+
 export interface UseDiscoverResult {
   /** Current merged flyer list (DB instant + scraped second pass). */
   results: NearbyFlyer[];
@@ -79,8 +88,16 @@ export interface UseDiscoverResult {
   scraping: boolean;
   /** True once a search has been submitted at least once. */
   searched: boolean;
-  /** Runs the two-pass search: DB instant, then merge scraped events. */
-  search: (query: string, city?: string) => Promise<void>;
+  /**
+   * Runs the two-pass search: DB instant, then merge scraped events.
+   * When `location` is provided, the DB pass is location-aware (nearby only);
+   * otherwise it falls back to a global text search.
+   */
+  search: (
+    query: string,
+    city?: string,
+    location?: DiscoverLocation
+  ) => Promise<void>;
 }
 
 /**
@@ -100,40 +117,48 @@ export function useDiscover(): UseDiscoverResult {
   // Guards against out-of-order responses when the user searches again quickly.
   const requestIdRef = useRef(0);
 
-  const search = useCallback(async (query: string, city?: string) => {
-    const clean = query.trim();
-    if (!clean) return;
+  const search = useCallback(
+    async (query: string, city?: string, location?: DiscoverLocation) => {
+      const clean = query.trim();
+      if (!clean) return;
 
-    const requestId = ++requestIdRef.current;
-    const isStale = () => requestId !== requestIdRef.current;
+      const requestId = ++requestIdRef.current;
+      const isStale = () => requestId !== requestIdRef.current;
 
-    setSearched(true);
-    setLoading(true);
-    setScraping(true);
-    setResults([]);
+      setSearched(true);
+      setLoading(true);
+      setScraping(true);
+      setResults([]);
 
-    // Pass 1 — DB results, shown immediately.
-    let dbFlyers: NearbyFlyer[] = [];
-    try {
-      const dbResults = await searchFlyers(clean);
-      dbFlyers = dbResults.map(toNearbyFlyer);
-    } catch {
-      dbFlyers = [];
-    }
+      // Pass 1 — DB results, shown immediately. Location-aware when coordinates
+      // are known (nearby only); global text search otherwise.
+      let dbFlyers: NearbyFlyer[] = [];
+      try {
+        if (location) {
+          dbFlyers = await searchNearbyFlyers(clean, location.lat, location.lng);
+        } else {
+          const dbResults = await searchFlyers(clean);
+          dbFlyers = dbResults.map(toNearbyFlyer);
+        }
+      } catch {
+        dbFlyers = [];
+      }
 
-    if (isStale()) return;
-    setResults(dbFlyers);
-    setLoading(false);
+      if (isStale()) return;
+      setResults(dbFlyers);
+      setLoading(false);
 
-    // Pass 2 — scraped events, merged in (deduped). Never blocks pass 1.
-    const scraped = await discoverEvents(clean, city);
+      // Pass 2 — scraped events, merged in (deduped). Never blocks pass 1.
+      const scraped = await discoverEvents(clean, city);
 
-    if (isStale()) return;
-    if (scraped.length > 0) {
-      setResults((prev) => mergeDedup(prev, scraped));
-    }
-    setScraping(false);
-  }, []);
+      if (isStale()) return;
+      if (scraped.length > 0) {
+        setResults((prev) => mergeDedup(prev, scraped));
+      }
+      setScraping(false);
+    },
+    []
+  );
 
   return { results, loading, scraping, searched, search };
 }

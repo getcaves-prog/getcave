@@ -73,15 +73,21 @@ function ExplorarInner() {
     }
   }, [latitude, longitude, geoLoading, geoError]);
 
-  // Run the discover flow when a `?q=` is present (or changes).
+  // Run the discover flow when a `?q=` is present (or changes). When the user's
+  // coordinates are known, the DB pass is location-aware (nearby flyers only);
+  // otherwise it falls back to a global text search inside useDiscover.
   useEffect(() => {
     if (isDiscoverMode) {
-      search(query, guessCity(locationName));
+      const location =
+        latitude !== null && longitude !== null
+          ? { lat: latitude, lng: longitude }
+          : undefined;
+      search(query, guessCity(locationName), location);
     }
     // locationName intentionally omitted: we don't want to re-run mid-typing of
     // the reverse geocode; the query param is the source of truth.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, isDiscoverMode, search]);
+  }, [query, isDiscoverMode, search, latitude, longitude]);
 
   useEffect(() => {
     // Target: center of screen → header center (24px from top)

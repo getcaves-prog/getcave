@@ -4,6 +4,8 @@ import {
   completeOnboarding,
   getPreferences,
   setPreferences,
+  setCity,
+  getCity,
 } from "./preferences.service";
 import type { UserPreferences } from "../types/preferences.types";
 
@@ -235,6 +237,111 @@ describe("setPreferences", () => {
     await setPreferences({});
 
     expect(mockUpdate).toHaveBeenCalledWith({ preferences: {} });
+  });
+
+  it("round-trips the new gustos-test fields (music/vibes/company/timing)", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    setupUpdateChain(null);
+
+    const prefs: UserPreferences = {
+      music_genres: ["techno", "house"],
+      vibes: ["under", "after"],
+      company: ["amigos"],
+      timing: ["noche", "finde"],
+      looking_for: ["discover"],
+      likes: "rooftops tranquis",
+    };
+
+    await setPreferences(prefs);
+
+    const [[saved]] = mockUpdate.mock.calls as [[{ preferences: UserPreferences }]];
+    expect(saved.preferences.music_genres).toEqual(["techno", "house"]);
+    expect(saved.preferences.vibes).toEqual(["under", "after"]);
+    expect(saved.preferences.company).toEqual(["amigos"]);
+    expect(saved.preferences.timing).toEqual(["noche", "finde"]);
+    expect(saved.preferences.looking_for).toEqual(["discover"]);
+    expect(saved.preferences.likes).toBe("rooftops tranquis");
+  });
+
+  it("keeps the new keys through the sanitizer while still stripping unknown ones", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    setupUpdateChain(null);
+
+    const dirty = {
+      music_genres: ["jazz"],
+      vibes: ["chill"],
+      company: ["solo"],
+      timing: ["dia"],
+      __admin: true,
+    } as unknown as UserPreferences;
+
+    await setPreferences(dirty);
+
+    const [[saved]] = mockUpdate.mock.calls as [[{ preferences: UserPreferences }]];
+    expect(saved.preferences).not.toHaveProperty("__admin");
+    expect(saved.preferences.music_genres).toEqual(["jazz"]);
+    expect(saved.preferences.vibes).toEqual(["chill"]);
+    expect(saved.preferences.company).toEqual(["solo"]);
+    expect(saved.preferences.timing).toEqual(["dia"]);
+  });
+});
+
+// ─── getCity ───────────────────────────────────────────────────────────────
+describe("getCity", () => {
+  it("returns the stored city", async () => {
+    setupSelectChain({ city: "Buenos Aires" });
+
+    const result = await getCity("user-1");
+
+    expect(mockSelect).toHaveBeenCalledWith("city");
+    expect(result).toBe("Buenos Aires");
+  });
+
+  it("returns null when city is null or row missing", async () => {
+    setupSelectChain({ city: null });
+    expect(await getCity("user-1")).toBeNull();
+
+    setupSelectChain(null, null);
+    expect(await getCity("user-1")).toBeNull();
+  });
+});
+
+// ─── setCity ───────────────────────────────────────────────────────────────
+describe("setCity", () => {
+  it("updates profiles.city for the current user", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    const mockUpdateEq = setupUpdateChain(null);
+
+    await setCity("Buenos Aires");
+
+    expect(mockFrom).toHaveBeenCalledWith("profiles");
+    expect(mockUpdate).toHaveBeenCalledWith({ city: "Buenos Aires" });
+    expect(mockUpdateEq).toHaveBeenCalledWith("id", "user-1");
+  });
+
+  it("trims whitespace and writes null for an empty string (clear city)", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    setupUpdateChain(null);
+
+    await setCity("   ");
+
+    expect(mockUpdate).toHaveBeenCalledWith({ city: null });
+  });
+
+  it("throws when unauthenticated", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null } });
+
+    await expect(setCity("Rosario")).rejects.toThrow("Tenés que iniciar sesión");
+    expect(mockFrom).not.toHaveBeenCalled();
+  });
+
+  it("throws on Supabase error", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    setupUpdateChain({ message: "City write failed" });
+
+    await expect(setCity("Córdoba")).rejects.toThrow(
+      "Failed to set city: City write failed"
+    );
   });
 
   it("throws when unauthenticated", async () => {

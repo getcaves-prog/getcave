@@ -3,7 +3,8 @@
 import { useState, type FormEvent } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { ForYouOnboarding } from "@/features/onboarding/components/for-you-onboarding";
 import { parseIntent } from "../services/parse-intent";
 
 /** Preset queries the "Sorpréndeme" button picks from at random. */
@@ -21,6 +22,7 @@ const SURPRISE_QUERIES = [
 export function HomeHero() {
   const router = useRouter();
   const [value, setValue] = useState("");
+  const [showTest, setShowTest] = useState(false);
 
   function goToExplore(rawText: string) {
     const { query } = parseIntent(rawText);
@@ -104,8 +106,23 @@ export function HomeHero() {
             <span aria-hidden>✦</span>
             Sorpréndeme
           </button>
+
+          <button
+            type="button"
+            onClick={() => setShowTest(true)}
+            className="font-[family-name:var(--font-space-mono)] text-xs uppercase tracking-wider text-cave-fog underline-offset-4 transition-colors hover:text-white hover:underline active:scale-95"
+          >
+            Genera el test de gustos
+          </button>
         </div>
       </motion.div>
+
+      {/* Re-takable gustos test — manual overlay (independent of ForYouGate). */}
+      <AnimatePresence>
+        {showTest && (
+          <ForYouOnboarding onComplete={() => setShowTest(false)} />
+        )}
+      </AnimatePresence>
     </section>
   );
 }

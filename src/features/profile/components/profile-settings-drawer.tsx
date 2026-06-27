@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { MyConversationsList } from "@/features/profile/components/my-conversations-list";
 import { ActivityFeed } from "@/features/profile/components/activity-feed";
 import { ForYouEditor } from "@/features/profile/components/for-you-editor";
+import { ForYouOnboarding } from "@/features/onboarding/components/for-you-onboarding";
 import { COMMUNITIES_ENABLED } from "@/shared/config/features";
 import type {
   MyConversation,
@@ -43,6 +44,8 @@ export function ProfileSettingsDrawer({
 }: ProfileSettingsDrawerProps) {
   const prefersReducedMotion = useReducedMotion();
   const [panel, setPanel] = useState<Panel>("menu");
+  // Full gustos-test overlay opened from the drawer (re-take, with prefill).
+  const [showTest, setShowTest] = useState(false);
 
   const close = () => {
     setPanel("menu");
@@ -57,6 +60,7 @@ export function ProfileSettingsDrawer({
   };
 
   return (
+    <>
     <AnimatePresence>
       {open && (
         <motion.div
@@ -132,6 +136,13 @@ export function ProfileSettingsDrawer({
                   onClick={() => setPanel("activity")}
                 />
                 <MenuButton
+                  label="Hacer el test de gustos"
+                  onClick={() => {
+                    onClose();
+                    setShowTest(true);
+                  }}
+                />
+                <MenuButton
                   label="Editar intereses (For You)"
                   onClick={() => setPanel("for-you")}
                 />
@@ -195,6 +206,14 @@ export function ProfileSettingsDrawer({
         </motion.div>
       )}
     </AnimatePresence>
+
+    {/* Full gustos-test overlay (re-take from profile, pre-filled). */}
+    <AnimatePresence>
+      {showTest && (
+        <ForYouOnboarding onComplete={() => setShowTest(false)} />
+      )}
+    </AnimatePresence>
+    </>
   );
 }
 
