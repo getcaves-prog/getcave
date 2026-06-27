@@ -15,9 +15,29 @@ const MAX_RESULTS = 40;
 const MAX_ITEMS_PER_ACTOR = 30;
 /** Cap on distinct IG hashtags sent in a single run (matches query expansion). */
 const MAX_HASHTAGS = 4;
+/**
+ * Cap on expanded search terms per run. Each extra term = extra Apify compute
+ * (more searchQueries / hashtags in the same run), so we keep this small to
+ * conserve the monthly quota. 2 = original term + one related concept.
+ */
+const MAX_TERMS = 2;
 
 /** Default attendable radius (km) for the location filter. */
 export const DEFAULT_RADIUS_KM = 80;
+
+/**
+ * Thrown when Apify itself is UNAVAILABLE — an over-quota 4xx, a network error,
+ * or a timeout — as opposed to a successful run that simply found nothing.
+ *
+ * Callers use this to AVOID caching an empty result: a transient outage should
+ * NOT poison the cache for the full TTL; the next request retries instead.
+ */
+export class ApifyUnavailableError extends Error {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "ApifyUnavailableError";
+  }
+}
 
 interface RunOpts {
   timeoutMs?: number;
@@ -30,8 +50,10 @@ interface RunOpts {
  * finishes and returns the items array directly. Uses an AbortController so a
  * hung run can't block the request forever.
  *
- * NEVER throws — on missing token, timeout, network error, non-2xx, or a
- * non-array body it returns `[]`. Discovery is best-effort.
+ * Returns `[]` when the feature is OFF (no token) or the run succeeds with a
+ * non-array body. THROWS `ApifyUnavailableError` on a hard failure (non-2xx —
+ * e.g. over-quota 402/403 — network error, or timeout) so the caller can tell
+ * "Apify is down" apart from "Apify found nothing" and skip caching the empty.
  */
 export async function runApifyActor(
   actorId: string,
@@ -57,12 +79,23 @@ export async function runApifyActor(
       signal: controller.signal,
     });
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      // Hard failure (over-quota 402/403, server error, etc.) — signal
+      // UNAVAILABLE so the result is NOT cached as an empty list.
+      throw new ApifyUnavailableError(
+        `Apify actor ${actorId} responded HTTP ${res.status}`
+      );
+    }
 
     const data = await res.json();
     return Array.isArray(data) ? data : [];
-  } catch {
-    return [];
+  } catch (err) {
+    if (err instanceof ApifyUnavailableError) throw err;
+    // Network/abort/timeout/parse error — also unavailable, not a real empty.
+    throw new ApifyUnavailableError(
+      `Apify actor ${actorId} request failed`,
+      { cause: err }
+    );
   } finally {
     clearTimeout(timer);
   }
@@ -120,8 +153,9 @@ export async function scrapeEvents({
   const jobs: Array<Promise<ScrapedFlyer[]>> = [];
 
   // Broaden coverage: expand the query into a few related terms (original first)
-  // so one run hits nearby concepts (e.g. "salsa" → also "baile", "bachata").
-  const terms = expandQuery(query);
+  // so one run hits nearby concepts (e.g. "salsa" → also "baile"). Capped at
+  // MAX_TERMS to conserve the Apify quota — each extra term costs compute.
+  const terms = expandQuery(query).slice(0, MAX_TERMS);
 
   if (fbActor) {
     // Facebook events scraper: free-text search = "<term> <city>" per term.
@@ -163,10 +197,23 @@ export async function scrapeEvents({
   const settled = await Promise.allSettled(jobs);
 
   const flyers: ScrapedFlyer[] = [];
+  let degraded = false;
   for (const outcome of settled) {
     if (outcome.status === "fulfilled") {
       flyers.push(...outcome.value);
+    } else {
+      // A rejected job means Apify was UNAVAILABLE for that actor (over-quota,
+      // network, timeout) — see ApifyUnavailableError.
+      degraded = true;
     }
+  }
+
+  // If every actor we ran was unavailable AND we scraped nothing, surface it so
+  // the route does NOT cache an empty result for the full TTL — a later request
+  // retries instead of serving blank. (Partial success, i.e. some flyers from a
+  // surviving actor, is returned normally even if another actor was down.)
+  if (flyers.length === 0 && degraded) {
+    throw new ApifyUnavailableError("All Apify actors were unavailable");
   }
 
   const deduped = dedupeById(flyers).slice(0, MAX_RESULTS);

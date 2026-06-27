@@ -32,8 +32,8 @@ describe("discover cache", () => {
     setCached("k1", stub("a"));
     expect(getCached("k1")).toEqual(stub("a"));
 
-    // Advance past the 6h default TTL.
-    vi.setSystemTime(new Date("2026-06-19T06:00:01Z"));
+    // Advance past the 24h default TTL.
+    vi.setSystemTime(new Date("2026-06-20T00:00:01Z"));
     expect(getCached("k1")).toBeUndefined();
   });
 
@@ -42,7 +42,7 @@ describe("discover cache", () => {
     vi.setSystemTime(new Date("2026-06-19T00:00:00Z"));
 
     setCached("k1", stub("a"));
-    vi.setSystemTime(new Date("2026-06-19T05:59:59Z"));
+    vi.setSystemTime(new Date("2026-06-19T23:59:59Z"));
     expect(getCached("k1")).toEqual(stub("a"));
   });
 
