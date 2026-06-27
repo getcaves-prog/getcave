@@ -116,11 +116,17 @@ export async function scrapeEvents({
   }
 
   if (igActor) {
-    // Instagram hashtag scraper: query normalized to a single hashtag token.
-    const hashtag = toHashtag(query);
-    if (hashtag) {
+    // Instagram hashtag scraper: localize by folding the city INTO the hashtag
+    // (e.g. "techno" + "monterrey" → "technomonterrey") so we get local posts
+    // instead of global #techno noise. With a city we use ONLY the local tag;
+    // without a city we fall back to the bare query tag.
+    const localHashtag = toHashtag([query, city].filter(Boolean).join(" "));
+    const hashtags = (
+      city ? [localHashtag] : [toHashtag(query)]
+    ).filter(Boolean) as string[];
+    if (hashtags.length > 0) {
       const igInput = {
-        hashtags: [hashtag],
+        hashtags,
         resultsType: "posts",
         resultsLimit: MAX_ITEMS_PER_ACTOR,
       };
