@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Space_Mono, Pinyon_Script } from "next/font/google";
 import { TermsConsentGate } from "@/features/auth/components/terms-consent-gate";
 import { ChatHeadsOverlay } from "@/features/conversations/components/chat-heads-overlay";
+import { BottomNav } from "@/features/home/components/bottom-nav";
 import "./globals.css";
 
 const inter = Inter({
@@ -108,6 +109,8 @@ export default function RootLayout({
         <TermsConsentGate />
         {/* Global chat-heads overlay — fixed, z-150, persists across navigation */}
         <ChatHeadsOverlay />
+        {/* Global bottom nav — fixed, persists across pages, hidden on auth/admin */}
+        <BottomNav />
       </body>
     </html>
   );
