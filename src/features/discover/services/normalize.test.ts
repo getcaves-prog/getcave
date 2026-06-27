@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { normalizeApifyEvent } from "./normalize";
 
 // Realistic apify/facebook-events-scraper event object.
@@ -188,6 +188,39 @@ describe("normalizeApifyEvent — instagram", () => {
     );
     expect(result).not.toBeNull();
   });
+
+  it("prefers the caption-parsed date + place over post date / locationName", () => {
+    // The normalizer calls parseCaption() without an injected `now`, so it uses
+    // the real clock. Freeze it to a date before June 11 for determinism.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-01T12:00:00.000Z"));
+
+    const caption =
+      "⚡️🔊 Monterrey, ¿listos para algo diferente?\n\n" +
+      "Este JUEVEX 11 DE JUNIO llega PHUNKADELICA a X Discoteca. 🖤🔥\n\n" +
+      "📍 Barrio Antiguo\n" +
+      "#XDiscoteca #TechnoMonterrey";
+    const result = normalizeApifyEvent(
+      igPost({
+        caption,
+        // timestamp (post date) and locationName must be overridden by the parse.
+        timestamp: "2026-05-01T18:30:00.000Z",
+        locationName: "Parque Fundidora",
+      }),
+      "instagram"
+    );
+
+    expect(result).not.toBeNull();
+    // "11 DE JUNIO" → next occurrence on/after frozen now (2026-06-01).
+    expect(result?.event_date).toBe("2026-06-11");
+    expect(result?.address).toBe("Barrio Antiguo");
+
+    vi.useRealTimers();
+  });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("normalizeApifyEvent — defensive", () => {
