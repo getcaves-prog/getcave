@@ -207,13 +207,9 @@ describe("scrapeEvents", () => {
       ],
       maxEvents: 30,
     });
+    // IG hashtags are GENERAL (no city folded in) — city-specific tags don't exist.
     expect(JSON.parse(igCalls[0]![1].body)).toEqual({
-      hashtags: [
-        "salsamonterrey",
-        "bailemonterrey",
-        "bachatamonterrey",
-        "clasesdebailemonterrey",
-      ],
+      hashtags: ["salsa", "baile", "bachata", "clasesdebaile"],
       resultsType: "posts",
       resultsLimit: 30,
     });
