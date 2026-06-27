@@ -201,4 +201,83 @@ describe("POST /api/discover-events", () => {
     expect(json.events).toEqual([]);
     expect(scrapeEventsMock).not.toHaveBeenCalled();
   });
+
+  it("localized:true with filtered events when the location filter keeps some", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    const raw = [
+      { id: "near", _lat: 7.89 },
+      { id: "far", _lat: 40.4 },
+    ];
+    scrapeEventsMock.mockResolvedValue(raw);
+
+    const res = await POST(
+      makeRequest({ query: "salsa", city: "Cúcuta", lat: 7.8939, lng: -72.5078 })
+    );
+    const json = await res.json();
+
+    expect(json.localized).toBe(true);
+    expect(json.events.map((e: { id: string }) => e.id)).toEqual(["near"]);
+  });
+
+  it("localized:false and returns RAW events when the location filter drops everything", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    // Both events are far from the user → filter drops everything, raw > 0.
+    const raw = [
+      { id: "a", _lat: 40.1 },
+      { id: "b", _lat: 41.2 },
+    ];
+    scrapeEventsMock.mockResolvedValue(raw);
+
+    const res = await POST(
+      makeRequest({ query: "reunion anime", city: "Cúcuta", lat: 7.8939, lng: -72.5078 })
+    );
+    const json = await res.json();
+
+    expect(json.localized).toBe(false);
+    expect(json.events.map((e: { id: string }) => e.id)).toEqual(["a", "b"]);
+    expect(json.source).toBe("apify");
+  });
+
+  it("localized:true and [] when there is genuinely nothing scraped", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    scrapeEventsMock.mockResolvedValue([]);
+
+    const res = await POST(
+      makeRequest({ query: "qwerty", city: "Cúcuta", lat: 7.8939, lng: -72.5078 })
+    );
+    const json = await res.json();
+
+    expect(json.localized).toBe(true);
+    expect(json.events).toEqual([]);
+  });
+
+  it("localized:false on a CACHE HIT when the filter drops everything but raw > 0", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    const cachedRaw = [
+      { id: "a", _lat: 40.1 },
+      { id: "b", _lat: 41.2 },
+    ];
+    getCachedMock.mockReturnValue(cachedRaw);
+
+    const res = await POST(
+      makeRequest({ query: "salsa", lat: 7.8939, lng: -72.5078 })
+    );
+    const json = await res.json();
+
+    expect(json.cached).toBe(true);
+    expect(json.localized).toBe(false);
+    expect(json.events.map((e: { id: string }) => e.id)).toEqual(["a", "b"]);
+  });
+
+  it("localized:true on a cache hit when no coords (no-op filter)", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    const cached = [{ id: "x" }];
+    getCachedMock.mockReturnValue(cached);
+
+    const res = await POST(makeRequest({ query: "techno" }));
+    const json = await res.json();
+
+    expect(json.localized).toBe(true);
+    expect(json.events).toEqual(cached);
+  });
 });

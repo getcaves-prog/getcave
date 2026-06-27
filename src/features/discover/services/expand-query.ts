@@ -41,6 +41,26 @@ const THEMES: Theme[] = [
     keywords: ["comedia", "standup", "stand up", "humor"],
     related: ["stand up", "comedia"],
   },
+  {
+    keywords: ["anime", "geek", "otaku", "cosplay", "manga", "comic"],
+    related: ["anime", "convención", "cosplay", "geek"],
+  },
+  {
+    keywords: ["gaming", "videojuegos", "esports"],
+    related: ["gaming", "torneo", "esports"],
+  },
+  {
+    keywords: ["cine", "pelicula", "film"],
+    related: ["cine", "película", "festival de cine"],
+  },
+  {
+    keywords: ["networking", "reunion", "meetup", "encuentro"],
+    related: ["networking", "meetup", "charla"],
+  },
+  {
+    keywords: ["deporte", "futbol", "running"],
+    related: ["deporte", "torneo", "running"],
+  },
 ];
 
 /** Lowercase + strip accents so theme matching ignores case and diacritics. */

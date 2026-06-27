@@ -67,4 +67,39 @@ describe("expandQuery", () => {
   it("trims and ignores empty/whitespace queries gracefully", () => {
     expect(expandQuery("   ")).toEqual([""]);
   });
+
+  it("expands an anime/geek query with related terms", () => {
+    const result = expandQuery("anime");
+    expect(result).toContain("anime");
+    expect(result.some((t) => /convenci[oó]n/i.test(t))).toBe(true);
+    expect(result).toContain("cosplay");
+  });
+
+  it("matches the anime theme in a multi-word query (reunion anime)", () => {
+    const result = expandQuery("reunion anime");
+    expect(result[0]).toBe("reunion anime");
+    expect(result.length).toBeGreaterThan(1);
+    expect(result).toContain("cosplay");
+  });
+
+  it("expands a gaming query (esports)", () => {
+    const result = expandQuery("esports");
+    expect(result).toContain("gaming");
+    expect(result).toContain("torneo");
+  });
+
+  it("expands a cinema query (película)", () => {
+    const result = expandQuery("película");
+    expect(result).toContain("cine");
+  });
+
+  it("expands a networking query (meetup)", () => {
+    const result = expandQuery("meetup");
+    expect(result).toContain("networking");
+  });
+
+  it("expands a sports query (running)", () => {
+    const result = expandQuery("running");
+    expect(result).toContain("deporte");
+  });
 });

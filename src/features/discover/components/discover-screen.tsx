@@ -6,6 +6,7 @@ import { InfiniteCanvas } from "@/features/canvas/components/infinite-canvas";
 import { useLocationStore } from "@/shared/stores/location.store";
 import { useDiscover } from "../hooks/use-discover";
 import { DiscoverHero } from "./discover-hero";
+import { FallbackNotice } from "./fallback-notice";
 import { ScrapingIndicator } from "./scraping-indicator";
 
 /**
@@ -21,10 +22,13 @@ export function DiscoverScreen() {
   const locationName = useLocationStore((s) => s.locationName);
   const defaultCity = useMemo(() => guessCity(locationName), [locationName]);
 
-  const { results, loading, scraping, searched, search } = useDiscover();
+  const { results, loading, scraping, searched, localized, search } =
+    useDiscover();
 
   const busy = loading || scraping;
   const hasResults = results.length > 0;
+  // Show the fallback notice only when there ARE results but they're not local.
+  const showFallbackNotice = hasResults && !localized;
 
   // Before the first search: a full-screen centered hero landing.
   if (!searched) {
@@ -61,6 +65,15 @@ export function DiscoverScreen() {
             compact
             onSearch={search}
           />
+          {/* Non-local fallback notice — only when we have related-but-not-near
+              results. Sits above the canvas, never blocks interaction. */}
+          <AnimatePresence>
+            {showFallbackNotice && (
+              <div className="mt-2">
+                <FallbackNotice city={defaultCity} />
+              </div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
