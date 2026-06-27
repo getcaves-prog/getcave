@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { scrapeEvents } from "@/features/discover/services/apify.service";
+import {
+  filterByLocation,
+  scrapeEvents,
+} from "@/features/discover/services/apify.service";
 import {
   getCached,
   setCached,
@@ -24,14 +27,24 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   let query = "";
   let city: string | undefined;
+  let lat: number | undefined;
+  let lng: number | undefined;
 
   try {
     const body = (await request.json()) as {
       query?: unknown;
       city?: unknown;
+      lat?: unknown;
+      lng?: unknown;
     };
     query = typeof body.query === "string" ? body.query.trim() : "";
     city = typeof body.city === "string" ? body.city.trim() : undefined;
+    lat = typeof body.lat === "number" && Number.isFinite(body.lat)
+      ? body.lat
+      : undefined;
+    lng = typeof body.lng === "number" && Number.isFinite(body.lng)
+      ? body.lng
+      : undefined;
   } catch {
     // Malformed JSON -> empty (off) response, never 500.
     return NextResponse.json(off);
@@ -54,21 +67,24 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const key = makeCacheKey(query, city);
 
-  // Cache hit -> avoid re-scraping (Apify costs money per run).
+  // Cache hit -> avoid re-scraping (Apify costs money per run). The cache holds
+  // the RAW (unfiltered) scrape so users near different points reuse it; the
+  // location filter runs per-request below.
   const cached = getCached(key);
   if (cached) {
     return NextResponse.json({
-      events: cached,
+      events: filterByLocation(cached, { city, lat, lng }),
       cached: true,
       source: "apify",
     } satisfies DiscoverResponse);
   }
 
   try {
-    const events = await scrapeEvents({ query, city });
-    setCached(key, events);
+    // RAW scrape (no coords) — cached as-is, then filtered per-request.
+    const raw = await scrapeEvents({ query, city });
+    setCached(key, raw);
     return NextResponse.json({
-      events,
+      events: filterByLocation(raw, { city, lat, lng }),
       cached: false,
       source: "apify",
     } satisfies DiscoverResponse);

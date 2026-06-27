@@ -16,6 +16,15 @@ export type ScrapedSource = "facebook" | "instagram";
 export interface ScrapedFlyer extends NearbyFlyer {
   source: ScrapedSource;
   external_url: string | null;
+  /**
+   * Internal-only geo signals used by the discovery location filter; never
+   * rendered. `_lat`/`_lng` come from a FB event's real coordinates; `_city`
+   * is the locality Gemini extracted from an IG caption. All optional and
+   * stripped from the public shape conceptually (the canvas ignores them).
+   */
+  _lat?: number;
+  _lng?: number;
+  _city?: string;
 }
 
 /**
@@ -42,6 +51,9 @@ export interface ScrapedFlyerInput {
   event_time?: string | null;
   address?: string | null;
   description?: string | null;
+  /** Internal geo signals (FB coords). Omitted from rendered output. */
+  _lat?: number;
+  _lng?: number;
 }
 
 /**
@@ -80,5 +92,8 @@ export function createScrapedFlyer(input: ScrapedFlyerInput): ScrapedFlyer {
     // ScrapedFlyer extras
     source: input.source,
     external_url: input.external_url ?? null,
+    // Internal geo signals — only set when present so they stay absent otherwise.
+    ...(typeof input._lat === "number" ? { _lat: input._lat } : {}),
+    ...(typeof input._lng === "number" ? { _lng: input._lng } : {}),
   };
 }
