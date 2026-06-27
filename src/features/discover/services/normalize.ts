@@ -1,3 +1,4 @@
+import { parseCaption } from "@/features/discover/services/parse-caption";
 import {
   createScrapedFlyer,
   type ScrapedFlyer,
@@ -139,8 +140,15 @@ function normalizeInstagramPost(
   const title = captionTitle(caption, ownerUsername);
 
   const externalUrl = pickString(obj, ["url"]);
-  const eventDate = toIsoDate(pickString(obj, ["timestamp"]));
-  const address = pickString(obj, ["locationName"]);
+  const locationName = pickString(obj, ["locationName"]);
+
+  // No-AI heuristic parse of the caption. Parsed results take precedence over
+  // the post-level fallbacks: a real event date beats the POST date, and a
+  // place extracted from the caption beats the (often empty) locationName.
+  const parsed = parseCaption(caption ?? "");
+  const eventDate = parsed.eventDate ?? toIsoDate(pickString(obj, ["timestamp"]));
+  const eventTime = parsed.eventTime ?? null;
+  const address = parsed.place ?? locationName ?? null;
 
   const idSeed = externalUrl ?? title;
 
@@ -151,7 +159,7 @@ function normalizeInstagramPost(
     image_url: image,
     external_url: externalUrl,
     event_date: eventDate,
-    event_time: null,
+    event_time: eventTime,
     address,
     description: caption,
   });
