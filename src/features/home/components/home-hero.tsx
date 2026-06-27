@@ -41,7 +41,7 @@ export function HomeHero() {
   }
 
   return (
-    <section className="relative flex flex-col items-center px-5 pt-12 pb-10 text-center sm:pt-20">
+    <section className="relative flex min-h-[82dvh] flex-col items-center justify-center px-5 py-16 text-center">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -62,8 +62,8 @@ export function HomeHero() {
         </h1>
 
         {/* Search */}
-        <form onSubmit={handleSubmit} className="mt-8 w-full">
-          <div className="flex items-center gap-2 rounded-2xl border border-cave-ash bg-cave-stone p-2 focus-within:border-white/60 transition-colors">
+        <form onSubmit={handleSubmit} className="mt-10 w-full">
+          <div className="flex items-center gap-2 rounded-full border border-cave-ash bg-cave-stone/70 p-2 focus-within:border-white/60 transition-colors">
             <input
               type="text"
               value={value}

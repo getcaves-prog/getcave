@@ -59,6 +59,17 @@ export function BottomNav() {
 
   const items: NavItem[] = [
     {
+      label: "Inicio",
+      href: "/",
+      match: (p) => p === "/",
+      icon: (
+        <svg {...ICON_PROPS}>
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+      ),
+    },
+    {
       label: "Explorar",
       href: "/explorar",
       match: (p) => p.startsWith("/explorar"),
@@ -110,6 +121,11 @@ export function BottomNav() {
       ),
     },
   ];
+
+  // Hidden on auth/admin full-screen flows (no app chrome there).
+  if (pathname.startsWith("/auth") || pathname.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <nav className="safe-area-bottom fixed inset-x-0 bottom-0 z-50 border-t border-cave-ash bg-cave-black/90 backdrop-blur-md">
