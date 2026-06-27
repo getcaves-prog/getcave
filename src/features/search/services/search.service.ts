@@ -1,5 +1,6 @@
 import { createClient } from "@/shared/lib/supabase/client";
 import type { Tables } from "@/shared/types/database.types";
+import type { NearbyFlyer } from "@/features/canvas/types/canvas.types";
 
 type FlyerRow = Tables<"flyers">;
 
@@ -67,4 +68,34 @@ export async function searchFlyers(
   }
 
   return (data ?? []) as FlyerSearchResult[];
+}
+
+const DEFAULT_RADIUS_KM = 25;
+
+/**
+ * Location-aware text search via the `search_nearby_flyers` RPC. Returns approved,
+ * non-expired flyers within `radiusKm` whose title/description match `query`,
+ * ordered by distance. Use this when the user's coordinates are known; fall back
+ * to {@link searchFlyers} (global, no location) when they are not.
+ */
+export async function searchNearbyFlyers(
+  query: string,
+  lat: number,
+  lng: number,
+  radiusKm: number = DEFAULT_RADIUS_KM
+): Promise<NearbyFlyer[]> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("search_nearby_flyers", {
+    p_query: query.trim(),
+    p_lat: lat,
+    p_lng: lng,
+    p_radius_km: radiusKm,
+  });
+
+  if (error) {
+    throw new Error(`Failed to search nearby flyers: ${error.message}`);
+  }
+
+  return (data ?? []) as NearbyFlyer[];
 }
