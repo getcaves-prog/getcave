@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { runApifyActor, scrapeEvents, toHashtag } from "./apify.service";
+import {
+  filterFreshness,
+  runApifyActor,
+  scrapeEvents,
+  toHashtag,
+} from "./apify.service";
+import { createScrapedFlyer } from "@/features/discover/types/discover.types";
 
 // Realistic facebook-events-scraper item.
 function fbItem(overrides: Record<string, unknown> = {}) {
@@ -22,7 +28,8 @@ function igItem(overrides: Record<string, unknown> = {}) {
     caption: "IG Post line one\nmore text",
     displayUrl: "https://cdninstagram.com/b.jpg",
     url: "https://instagram.com/p/2",
-    timestamp: "2026-06-01T10:00:00.000Z",
+    // Far-future post date so the freshness filter (real clock) keeps it.
+    timestamp: "2099-06-01T10:00:00.000Z",
     locationName: "Parque Fundidora",
     ownerUsername: "promoter",
     type: "Image",
@@ -108,6 +115,58 @@ describe("toHashtag", () => {
   });
 });
 
+describe("filterFreshness", () => {
+  const NOW = new Date("2026-06-27T12:00:00.000Z");
+
+  function flyerWithDate(eventDate: string | null) {
+    return createScrapedFlyer({
+      id: `scraped:facebook:${eventDate ?? "null"}`,
+      source: "facebook",
+      title: "X",
+      image_url: "https://x/i.jpg",
+      event_date: eventDate,
+    });
+  }
+
+  it("drops events whose date is strictly before today", () => {
+    const past = flyerWithDate("2026-06-26");
+    expect(filterFreshness([past], NOW)).toEqual([]);
+  });
+
+  it("keeps events happening today", () => {
+    const today = flyerWithDate("2026-06-27");
+    expect(filterFreshness([today], NOW)).toHaveLength(1);
+  });
+
+  it("keeps future events", () => {
+    const future = flyerWithDate("2026-12-31");
+    expect(filterFreshness([future], NOW)).toHaveLength(1);
+  });
+
+  it("keeps flyers with a null event_date (unknown date stays)", () => {
+    const unknown = flyerWithDate(null);
+    expect(filterFreshness([unknown], NOW)).toHaveLength(1);
+  });
+
+  it("keeps flyers with an unparseable event_date", () => {
+    const bad = flyerWithDate("not-a-date");
+    expect(filterFreshness([bad], NOW)).toHaveLength(1);
+  });
+
+  it("compares date-only, ignoring the time of day", () => {
+    // Event earlier today (by time) is still TODAY → kept.
+    const today = flyerWithDate("2026-06-27");
+    const lateNow = new Date("2026-06-27T23:59:59.000Z");
+    expect(filterFreshness([today], lateNow)).toHaveLength(1);
+  });
+
+  it("defaults now to the current date when omitted", () => {
+    // A far-past date is always dropped regardless of the real clock.
+    const past = flyerWithDate("2000-01-01");
+    expect(filterFreshness([past])).toEqual([]);
+  });
+});
+
 describe("scrapeEvents", () => {
   it("returns [] when APIFY_TOKEN is missing (feature off)", async () => {
     const result = await scrapeEvents({ query: "techno" });
@@ -115,7 +174,7 @@ describe("scrapeEvents", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("sends FB searchQueries and IG hashtags with the right shapes", async () => {
+  it("sends EXPANDED FB searchQueries and IG hashtags (one run each)", async () => {
     vi.stubEnv("APIFY_TOKEN", "tok-123");
     vi.stubEnv("APIFY_FB_ACTOR_ID", "fb~actor");
     vi.stubEnv("APIFY_IG_ACTOR_ID", "ig~actor");
@@ -125,37 +184,67 @@ describe("scrapeEvents", () => {
       return Promise.resolve({ ok: true, json: async () => body });
     });
 
-    await scrapeEvents({ query: "techno", city: "Monterrey" });
+    // "salsa" expands deterministically to [salsa, baile, bachata, clases de baile].
+    await scrapeEvents({ query: "salsa", city: "Monterrey" });
 
-    const fbCall = fetchMock.mock.calls.find((c) =>
+    const fbCalls = fetchMock.mock.calls.filter((c) =>
       (c[0] as string).includes("fb~actor")
     );
-    const igCall = fetchMock.mock.calls.find((c) =>
+    const igCalls = fetchMock.mock.calls.filter((c) =>
       (c[0] as string).includes("ig~actor")
     );
 
-    expect(JSON.parse(fbCall![1].body)).toEqual({
-      searchQueries: ["techno Monterrey"],
+    // ONE run per actor — broader coverage via array inputs, not extra runs.
+    expect(fbCalls).toHaveLength(1);
+    expect(igCalls).toHaveLength(1);
+
+    expect(JSON.parse(fbCalls[0]![1].body)).toEqual({
+      searchQueries: [
+        "salsa Monterrey",
+        "baile Monterrey",
+        "bachata Monterrey",
+        "clases de baile Monterrey",
+      ],
       maxEvents: 30,
     });
-    expect(JSON.parse(igCall![1].body)).toEqual({
-      hashtags: ["technomonterrey"],
+    expect(JSON.parse(igCalls[0]![1].body)).toEqual({
+      hashtags: [
+        "salsamonterrey",
+        "bailemonterrey",
+        "bachatamonterrey",
+        "clasesdebailemonterrey",
+      ],
       resultsType: "posts",
       resultsLimit: 30,
     });
   });
 
-  it("omits city from the FB search text when not provided", async () => {
+  it("omits city from each expanded FB search term when not provided", async () => {
     vi.stubEnv("APIFY_TOKEN", "tok-123");
     vi.stubEnv("APIFY_FB_ACTOR_ID", "fb~actor");
 
     fetchMock.mockResolvedValue({ ok: true, json: async () => [fbItem()] });
 
-    await scrapeEvents({ query: "techno" });
+    await scrapeEvents({ query: "salsa" });
 
     const fbCall = fetchMock.mock.calls[0];
     expect(JSON.parse(fbCall[1].body)).toEqual({
-      searchQueries: ["techno"],
+      searchQueries: ["salsa", "baile", "bachata", "clases de baile"],
+      maxEvents: 30,
+    });
+  });
+
+  it("uses a single FB searchQuery when the query has no related theme", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    vi.stubEnv("APIFY_FB_ACTOR_ID", "fb~actor");
+
+    fetchMock.mockResolvedValue({ ok: true, json: async () => [fbItem()] });
+
+    await scrapeEvents({ query: "qwerty", city: "Monterrey" });
+
+    const fbCall = fetchMock.mock.calls[0];
+    expect(JSON.parse(fbCall[1].body)).toEqual({
+      searchQueries: ["qwerty Monterrey"],
       maxEvents: 30,
     });
   });
@@ -415,6 +504,27 @@ describe("scrapeEvents", () => {
       lng: -100.3161,
     });
     expect(result).toHaveLength(1);
+  });
+
+  it("drops past FB events but keeps today/future ones (freshness)", async () => {
+    vi.stubEnv("APIFY_TOKEN", "tok-123");
+    vi.stubEnv("APIFY_FB_ACTOR_ID", "fb~actor");
+
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => [
+        fbItem({
+          name: "Future Event",
+          url: "https://facebook.com/events/future",
+          // Far future relative to the real clock.
+          utcStartDate: "2099-07-01T22:00:00.000Z",
+        }),
+      ],
+    });
+
+    const result = await scrapeEvents({ query: "salsa" });
+    expect(result).toHaveLength(1);
+    expect(result[0].title).toBe("Future Event");
   });
 
   it("drops un-normalizable items (canceled FB event)", async () => {
