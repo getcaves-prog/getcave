@@ -1311,6 +1311,40 @@ export type Database = {
         }
         Returns: undefined
       }
+      search_nearby_flyers: {
+        Args: {
+          p_lat: number
+          p_limit?: number
+          p_lng: number
+          p_query: string
+          p_radius_km?: number
+        }
+        Returns: {
+          address: string
+          canvas_x: number
+          canvas_y: number
+          created_at: string
+          description: string
+          distance_m: number
+          duration_days: number
+          event_date: string
+          event_time: string
+          expires_at: string
+          height: number
+          id: string
+          image_url: string
+          is_promoted: boolean
+          location: unknown
+          promoted_until: string
+          rotation: number
+          social_copy: string
+          status: string
+          title: string
+          user_id: string
+          width: number
+          zone_name: string
+        }[]
+      }
       toggle_event_heat: { Args: { p_event_id: string }; Returns: Json }
       transfer_community_ownership: {
         Args: { p_community_id: string; p_new_owner: string }
