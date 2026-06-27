@@ -1,5 +1,6 @@
 // Server-only: reads APIFY_* secrets from process.env (never NEXT_PUBLIC_*).
 // Must only be imported from server code (the discover-events route handler).
+import { enrichFlyersWithGemini } from "@/features/discover/services/gemini.service";
 import { normalizeApifyEvent } from "@/features/discover/services/normalize";
 import type {
   ScrapedFlyer,
@@ -143,7 +144,12 @@ export async function scrapeEvents({
     }
   }
 
-  return dedupeById(flyers).slice(0, MAX_RESULTS);
+  const deduped = dedupeById(flyers).slice(0, MAX_RESULTS);
+
+  // V2: structure noisy captions (esp. Instagram) via Gemini. One batch call per
+  // search; graceful — on missing key/error it returns `deduped` unchanged. The
+  // query+city cache upstream means this won't re-run for cached queries.
+  return enrichFlyersWithGemini(deduped);
 }
 
 async function runAndNormalize(
