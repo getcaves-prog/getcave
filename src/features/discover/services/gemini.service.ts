@@ -22,6 +22,8 @@ interface GeminiEvent {
   event_time?: string | null;
   place?: string | null;
   category?: string | null;
+  /** The event's city/locality, or null when not stated. Drives the geo filter. */
+  city?: string | null;
 }
 
 /**
@@ -40,6 +42,7 @@ const RESPONSE_SCHEMA = {
       event_time: { type: "STRING", nullable: true },
       place: { type: "STRING", nullable: true },
       category: { type: "STRING", nullable: true },
+      city: { type: "STRING", nullable: true },
     },
     required: ["index"],
   },
@@ -117,7 +120,8 @@ function buildPrompt(texts: string[]): string {
     "  - event_time: the start time (e.g. 22:00), or null",
     "  - place: the venue/place name, or null",
     "  - category: a one-word category (music, party, art, food...), or null",
-    "Use null for anything not clearly present. Do NOT invent dates.",
+    "  - city: the city/locality where the event happens, or null if not stated",
+    "Use null for anything not clearly present. Do NOT invent dates or cities.",
     "",
     "Posts:",
     numbered,
@@ -204,12 +208,16 @@ function mergeEvents(
     if (flyerIndex === undefined) continue;
 
     const current = result[flyerIndex];
+    const city = clean(event.city);
     result[flyerIndex] = {
       ...current,
       title: clean(event.title) ?? current.title,
       event_date: clean(event.event_date) ?? current.event_date,
       event_time: clean(event.event_time) ?? current.event_time,
       address: clean(event.place) ?? current.address,
+      // Only attach when Gemini actually returned a city; uncertain stays unset
+      // so the location filter does NOT over-filter it.
+      ...(city ? { _city: city } : {}),
     };
   }
 

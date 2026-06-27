@@ -148,8 +148,9 @@ export function useDiscover(): UseDiscoverResult {
       setResults(dbFlyers);
       setLoading(false);
 
-      // Pass 2 — scraped events, merged in (deduped). Never blocks pass 1.
-      const scraped = await discoverEvents(clean, city);
+      // Pass 2 — scraped events, merged in (deduped). Never blocks pass 1. The
+      // user coords flow through so the server drops non-local scraped events.
+      const scraped = await discoverEvents(clean, city, location);
 
       if (isStale()) return;
       if (scraped.length > 0) {
