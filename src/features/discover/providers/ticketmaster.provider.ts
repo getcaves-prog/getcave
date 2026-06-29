@@ -13,6 +13,87 @@ import {
 } from "@/features/discover/types/discover.types";
 
 const TM_ENDPOINT = "https://app.ticketmaster.com/discovery/v2/events.json";
+
+/**
+ * Map a free-text query to a Ticketmaster classification (genre/segment) name.
+ *
+ * Ticketmaster's catalog is English + genre-based, so the free `keyword` param
+ * misses Spanish/scene terms ("salsa"→0, "techno"→0). Matching by
+ * `classificationName` instead unlocks the events that ARE there:
+ * "salsa"→Latin (31), "techno"→Dance/Electronic (5), "comedia"→Comedy (5).
+ * First match wins; accent/case-insensitive substring match.
+ */
+const TM_CLASSIFICATIONS: ReadonlyArray<{
+  classification: string;
+  match: readonly string[];
+}> = [
+  {
+    classification: "Dance/Electronic",
+    match: [
+      "techno",
+      "electro",
+      "electronica",
+      "electronico",
+      "rave",
+      "house",
+      "edm",
+      "trance",
+      "dance",
+    ],
+  },
+  {
+    classification: "Latin",
+    match: [
+      "salsa",
+      "bachata",
+      "cumbia",
+      "merengue",
+      "reggaeton",
+      "reggeton",
+      "regueton",
+      "latin",
+      "latino",
+      "banda",
+      "corrido",
+      "regional",
+      "mariachi",
+      "norteno",
+    ],
+  },
+  {
+    classification: "Comedy",
+    match: ["comedia", "stand up", "standup", "stand-up", "humor", "comedy"],
+  },
+  {
+    classification: "Rock",
+    match: ["rock", "metal", "punk", "hardcore", "ska"],
+  },
+  {
+    classification: "Hip-Hop/Rap",
+    match: ["rap", "hip hop", "hiphop", "hip-hop", "trap"],
+  },
+  { classification: "Pop", match: ["pop"] },
+  { classification: "Jazz", match: ["jazz"] },
+  { classification: "Reggae", match: ["reggae"] },
+  {
+    classification: "Theatre",
+    match: ["teatro", "obra", "theatre", "theater", "musical"],
+  },
+];
+
+/** Resolve a query to a TM classificationName, or null when none matches. */
+export function ticketmasterClassification(query: string): string | null {
+  const normalized = query
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+  for (const entry of TM_CLASSIFICATIONS) {
+    if (entry.match.some((keyword) => normalized.includes(keyword))) {
+      return entry.classification;
+    }
+  }
+  return null;
+}
 /** Ticketmaster covers Mexico; override per-deployment via env if needed. */
 const DEFAULT_COUNTRY_CODE = "MX";
 const MAX_EVENTS = 30;
@@ -162,11 +243,18 @@ export async function fetchTicketmasterEvents({
 
   const params = new URLSearchParams({
     apikey,
-    keyword: query,
     countryCode,
     sort: "date,asc",
     size: String(MAX_EVENTS),
   });
+  // Prefer a genre/segment classification (much better recall on TM's English
+  // catalog); fall back to a free keyword (artist/name) when nothing maps.
+  const classification = ticketmasterClassification(query);
+  if (classification) {
+    params.set("classificationName", classification);
+  } else {
+    params.set("keyword", query);
+  }
   if (city) params.set("city", city);
 
   const controller = new AbortController();
