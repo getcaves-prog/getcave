@@ -111,8 +111,15 @@ export function normalizeTicketmasterEvent(raw: unknown): ScrapedFlyer | null {
   const cityRec = venue ? asRecord(venue.city) : null;
   const cityName = cityRec ? str(cityRec.name) : null;
   const location = venue ? asRecord(venue.location) : null;
-  const lat = location ? num(location.latitude) : null;
-  const lng = location ? num(location.longitude) : null;
+  const rawLat = location ? num(location.latitude) : null;
+  const rawLng = location ? num(location.longitude) : null;
+  // Ticketmaster returns (0,0) as a "no geo" sentinel. Treat it as absent so the
+  // location filter falls back to the city instead of placing the event at Null
+  // Island and dropping a real (e.g. Monterrey) event as ~12000 km away.
+  const hasRealCoords =
+    rawLat !== null && rawLng !== null && !(rawLat === 0 && rawLng === 0);
+  const lat = hasRealCoords ? rawLat : null;
+  const lng = hasRealCoords ? rawLng : null;
   const address = [venueName, cityName].filter(Boolean).join(", ") || null;
 
   const idSeed = str(event.id) ?? externalUrl ?? title;
