@@ -9,6 +9,9 @@ export const ALLOWED_IMAGE_HOST_SUFFIXES = [
   "instagram.com",
   "fbsbx.com",
   "licdn.com",
+  // Ticketmaster Discovery API event images.
+  "ticketm.net",
+  "ticketmaster.com",
 ] as const;
 
 /**

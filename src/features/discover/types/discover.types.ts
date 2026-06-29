@@ -1,7 +1,7 @@
 import type { NearbyFlyer } from "@/features/canvas/types/canvas.types";
 
-/** Source platform a scraped event came from. */
-export type ScrapedSource = "facebook" | "instagram";
+/** Source platform a scraped/fetched external event came from. */
+export type ScrapedSource = "facebook" | "instagram" | "ticketmaster";
 
 /**
  * A scraped external event normalized to the canvas `NearbyFlyer` shape so the
@@ -36,7 +36,9 @@ export function isScrapedFlyer(
 ): flyer is ScrapedFlyer {
   return (
     flyer.status === "external" &&
-    (flyer.source === "facebook" || flyer.source === "instagram")
+    (flyer.source === "facebook" ||
+      flyer.source === "instagram" ||
+      flyer.source === "ticketmaster")
   );
 }
 
@@ -51,9 +53,11 @@ export interface ScrapedFlyerInput {
   event_time?: string | null;
   address?: string | null;
   description?: string | null;
-  /** Internal geo signals (FB coords). Omitted from rendered output. */
+  /** Internal geo signals. Omitted from rendered output. */
   _lat?: number;
   _lng?: number;
+  /** Internal city signal (e.g. a venue's city) for the location fallback. */
+  _city?: string;
 }
 
 /**
@@ -95,5 +99,8 @@ export function createScrapedFlyer(input: ScrapedFlyerInput): ScrapedFlyer {
     // Internal geo signals — only set when present so they stay absent otherwise.
     ...(typeof input._lat === "number" ? { _lat: input._lat } : {}),
     ...(typeof input._lng === "number" ? { _lng: input._lng } : {}),
+    ...(typeof input._city === "string" && input._city.length > 0
+      ? { _city: input._city }
+      : {}),
   };
 }

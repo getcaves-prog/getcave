@@ -1,13 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { scrapeEventsMock, getCachedMock, setCachedMock } = vi.hoisted(() => ({
-  scrapeEventsMock: vi.fn(),
+const { aggregateEventsMock, getCachedMock, setCachedMock } = vi.hoisted(() => ({
+  aggregateEventsMock: vi.fn(),
   getCachedMock: vi.fn(),
   setCachedMock: vi.fn(),
 }));
 
 vi.mock("@/features/discover/services/apify.service", () => ({
-  scrapeEvents: scrapeEventsMock,
   // Real-ish filter: drop FB events outside the radius; keep everything else.
   // Mirrors the production contract closely enough for route assertions.
   filterByLocation: (
@@ -21,7 +20,19 @@ vi.mock("@/features/discover/services/apify.service", () => ({
       return true;
     });
   },
+  filterFreshness: (flyers: unknown[]) => flyers,
+  scrapeEvents: vi.fn(),
 }));
+
+// Mock only aggregateEvents; keep the REAL hasEnabledProvider so route gating is
+// still driven by env vars (APIFY_TOKEN / TICKETMASTER_API_KEY) as the tests set.
+vi.mock("@/features/discover/services/aggregate.service", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@/features/discover/services/aggregate.service")
+    >();
+  return { ...actual, aggregateEvents: aggregateEventsMock };
+});
 
 vi.mock("@/features/discover/services/cache", () => ({
   getCached: getCachedMock,
@@ -48,7 +59,7 @@ beforeEach(() => {
 
 describe("POST /api/discover-events", () => {
   it("returns events:[] with source 'off' when no APIFY_TOKEN", async () => {
-    scrapeEventsMock.mockResolvedValue([]);
+    aggregateEventsMock.mockResolvedValue([]);
 
     const res = await POST(makeRequest({ query: "techno" }));
     const json = await res.json();
@@ -64,7 +75,7 @@ describe("POST /api/discover-events", () => {
 
     expect(res.status).toBe(200);
     expect(json.events).toEqual([]);
-    expect(scrapeEventsMock).not.toHaveBeenCalled();
+    expect(aggregateEventsMock).not.toHaveBeenCalled();
   });
 
   it("returns events:[] for a missing query", async () => {
@@ -73,13 +84,13 @@ describe("POST /api/discover-events", () => {
 
     expect(res.status).toBe(200);
     expect(json.events).toEqual([]);
-    expect(scrapeEventsMock).not.toHaveBeenCalled();
+    expect(aggregateEventsMock).not.toHaveBeenCalled();
   });
 
   it("scrapes, caches, and returns events when token is set", async () => {
     vi.stubEnv("APIFY_TOKEN", "tok-123");
     const flyers = [{ id: "scraped:facebook:abc", source: "facebook" }];
-    scrapeEventsMock.mockResolvedValue(flyers);
+    aggregateEventsMock.mockResolvedValue(flyers);
 
     const res = await POST(
       makeRequest({ query: "Techno", city: "Monterrey" })
@@ -89,9 +100,9 @@ describe("POST /api/discover-events", () => {
     expect(res.status).toBe(200);
     expect(json.events).toEqual(flyers);
     expect(json.cached).toBe(false);
-    expect(json.source).toBe("apify");
+    expect(json.source).toBe("providers");
     // RAW scrape (no coords) so the cache is shared across nearby users.
-    expect(scrapeEventsMock).toHaveBeenCalledWith({
+    expect(aggregateEventsMock).toHaveBeenCalledWith({
       query: "Techno",
       city: "Monterrey",
     });
@@ -106,7 +117,7 @@ describe("POST /api/discover-events", () => {
       { id: "near", _lat: 7.89 },
       { id: "far", _lat: 40.4 },
     ];
-    scrapeEventsMock.mockResolvedValue(raw);
+    aggregateEventsMock.mockResolvedValue(raw);
 
     const res = await POST(
       makeRequest({ query: "salsa", city: "Cúcuta", lat: 7.8939, lng: -72.5078 })
@@ -131,7 +142,7 @@ describe("POST /api/discover-events", () => {
     );
     const json = await res.json();
 
-    expect(scrapeEventsMock).not.toHaveBeenCalled();
+    expect(aggregateEventsMock).not.toHaveBeenCalled();
     expect(json.cached).toBe(true);
     expect(json.events.map((e: { id: string }) => e.id)).toEqual(["near"]);
   });
@@ -142,7 +153,7 @@ describe("POST /api/discover-events", () => {
       { id: "near", _lat: 7.89 },
       { id: "far", _lat: 40.4 },
     ];
-    scrapeEventsMock.mockResolvedValue(raw);
+    aggregateEventsMock.mockResolvedValue(raw);
 
     const res = await POST(makeRequest({ query: "salsa", lat: "x", lng: null }));
     const json = await res.json();
@@ -164,13 +175,13 @@ describe("POST /api/discover-events", () => {
 
     expect(json.events).toEqual(cached);
     expect(json.cached).toBe(true);
-    expect(json.source).toBe("apify");
-    expect(scrapeEventsMock).not.toHaveBeenCalled();
+    expect(json.source).toBe("providers");
+    expect(aggregateEventsMock).not.toHaveBeenCalled();
   });
 
   it("never 500s — returns events:[] when scrapeEvents throws", async () => {
     vi.stubEnv("APIFY_TOKEN", "tok-123");
-    scrapeEventsMock.mockRejectedValue(new Error("boom"));
+    aggregateEventsMock.mockRejectedValue(new Error("boom"));
 
     const res = await POST(makeRequest({ query: "techno" }));
     const json = await res.json();
@@ -199,7 +210,7 @@ describe("POST /api/discover-events", () => {
     const json = await res.json();
 
     expect(json.events).toEqual([]);
-    expect(scrapeEventsMock).not.toHaveBeenCalled();
+    expect(aggregateEventsMock).not.toHaveBeenCalled();
   });
 
   it("localized:true with filtered events when the location filter keeps some", async () => {
@@ -208,7 +219,7 @@ describe("POST /api/discover-events", () => {
       { id: "near", _lat: 7.89 },
       { id: "far", _lat: 40.4 },
     ];
-    scrapeEventsMock.mockResolvedValue(raw);
+    aggregateEventsMock.mockResolvedValue(raw);
 
     const res = await POST(
       makeRequest({ query: "salsa", city: "Cúcuta", lat: 7.8939, lng: -72.5078 })
@@ -226,7 +237,7 @@ describe("POST /api/discover-events", () => {
       { id: "a", _lat: 40.1 },
       { id: "b", _lat: 41.2 },
     ];
-    scrapeEventsMock.mockResolvedValue(raw);
+    aggregateEventsMock.mockResolvedValue(raw);
 
     const res = await POST(
       makeRequest({ query: "reunion anime", city: "Cúcuta", lat: 7.8939, lng: -72.5078 })
@@ -235,12 +246,12 @@ describe("POST /api/discover-events", () => {
 
     expect(json.localized).toBe(false);
     expect(json.events.map((e: { id: string }) => e.id)).toEqual(["a", "b"]);
-    expect(json.source).toBe("apify");
+    expect(json.source).toBe("providers");
   });
 
   it("localized:true and [] when there is genuinely nothing scraped", async () => {
     vi.stubEnv("APIFY_TOKEN", "tok-123");
-    scrapeEventsMock.mockResolvedValue([]);
+    aggregateEventsMock.mockResolvedValue([]);
 
     const res = await POST(
       makeRequest({ query: "qwerty", city: "Cúcuta", lat: 7.8939, lng: -72.5078 })

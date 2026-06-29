@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { filterByLocation } from "@/features/discover/services/apify.service";
 import {
-  filterByLocation,
-  scrapeEvents,
-} from "@/features/discover/services/apify.service";
+  aggregateEvents,
+  hasEnabledProvider,
+} from "@/features/discover/services/aggregate.service";
 import {
   getCached,
   setCached,
@@ -10,7 +11,8 @@ import {
 } from "@/features/discover/services/cache";
 import type { ScrapedFlyer } from "@/features/discover/types/discover.types";
 
-// Apify run-sync calls can take tens of seconds — must run on Node, not edge.
+// Provider calls (Apify run-sync, Ticketmaster) can take tens of seconds — must
+// run on Node, not edge.
 export const runtime = "nodejs";
 
 const MAX_QUERY_LEN = 200;
@@ -18,7 +20,7 @@ const MAX_QUERY_LEN = 200;
 interface DiscoverResponse {
   events: ScrapedFlyer[];
   cached: boolean;
-  source: "apify" | "off";
+  source: "providers" | "off";
   /**
    * Whether the returned events are filtered to the user's location.
    * `false` signals a fallback: nothing matched the location filter, so we
@@ -78,53 +80,52 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   // Validate the query: non-empty after trim, within max length.
   if (!query || query.length > MAX_QUERY_LEN) {
-    const tokenPresent = Boolean(process.env.APIFY_TOKEN);
     return NextResponse.json({
       events: [],
       cached: false,
-      source: tokenPresent ? "apify" : "off",
+      source: hasEnabledProvider() ? "providers" : "off",
       localized: true,
     } satisfies DiscoverResponse);
   }
 
-  // Feature off when no token configured.
-  if (!process.env.APIFY_TOKEN) {
+  // Feature off when no provider is configured (no Apify token, no TM key, …).
+  if (!hasEnabledProvider()) {
     return NextResponse.json(off);
   }
 
   const key = makeCacheKey(query, city);
 
-  // Cache hit -> avoid re-scraping (Apify costs money per run). The cache holds
-  // the RAW (unfiltered) scrape so users near different points reuse it; the
-  // location filter runs per-request below.
+  // Cache hit -> avoid re-fetching (provider runs cost money / burn quota). The
+  // cache holds the RAW (unfiltered) set so users near different points reuse it;
+  // the location filter runs per-request below.
   const cached = getCached(key);
   if (cached) {
     const { events, localized } = localizeOrFallback(cached, { city, lat, lng });
     return NextResponse.json({
       events,
       cached: true,
-      source: "apify",
+      source: "providers",
       localized,
     } satisfies DiscoverResponse);
   }
 
   try {
-    // RAW scrape (no coords) — cached as-is, then filtered per-request.
-    const raw = await scrapeEvents({ query, city });
+    // RAW fetch from all providers (no coords) — cached, then filtered per-request.
+    const raw = await aggregateEvents({ query, city });
     setCached(key, raw);
     const { events, localized } = localizeOrFallback(raw, { city, lat, lng });
     return NextResponse.json({
       events,
       cached: false,
-      source: "apify",
+      source: "providers",
       localized,
     } satisfies DiscoverResponse);
   } catch {
-    // Scrape failure -> still 200 with empty events.
+    // Provider outage -> still 200 with empty events, NOT cached (retry later).
     return NextResponse.json({
       events: [],
       cached: false,
-      source: "apify",
+      source: "providers",
       localized: true,
     } satisfies DiscoverResponse);
   }
