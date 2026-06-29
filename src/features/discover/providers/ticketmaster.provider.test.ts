@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   fetchTicketmasterEvents,
   normalizeTicketmasterEvent,
+  ticketmasterClassification,
 } from "./ticketmaster.provider";
 import { ProvidersUnavailableError } from "./provider.types";
 
@@ -125,6 +126,25 @@ describe("normalizeTicketmasterEvent", () => {
   });
 });
 
+describe("ticketmasterClassification", () => {
+  it("maps Spanish/scene keywords to TM classification names", () => {
+    expect(ticketmasterClassification("salsa")).toBe("Latin");
+    expect(ticketmasterClassification("quiero bailar bachata")).toBe("Latin");
+    expect(ticketmasterClassification("techno")).toBe("Dance/Electronic");
+    expect(ticketmasterClassification("comedia")).toBe("Comedy");
+    expect(ticketmasterClassification("rock")).toBe("Rock");
+  });
+
+  it("is accent- and case-insensitive", () => {
+    expect(ticketmasterClassification("ELECTRÓNICA")).toBe("Dance/Electronic");
+  });
+
+  it("returns null when nothing maps (artist/name search)", () => {
+    expect(ticketmasterClassification("Bad Bunny")).toBeNull();
+    expect(ticketmasterClassification("xyzzy")).toBeNull();
+  });
+});
+
 describe("fetchTicketmasterEvents", () => {
   it("returns [] and does not fetch when the API key is missing", async () => {
     const result = await fetchTicketmasterEvents({ query: "techno" });
@@ -150,6 +170,20 @@ describe("fetchTicketmasterEvents", () => {
     expect(url.searchParams.get("countryCode")).toBe("MX");
     expect(url.searchParams.get("city")).toBe("Monterrey");
     expect(url.searchParams.get("size")).toBe("30");
+  });
+
+  it("uses classificationName (not keyword) for a mapped query", async () => {
+    vi.stubEnv("TICKETMASTER_API_KEY", "tm-key");
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ _embedded: { events: [] } }),
+    });
+
+    await fetchTicketmasterEvents({ query: "salsa", city: "Monterrey" });
+
+    const url = new URL(fetchMock.mock.calls[0][0] as string);
+    expect(url.searchParams.get("classificationName")).toBe("Latin");
+    expect(url.searchParams.get("keyword")).toBeNull();
   });
 
   it("honors TICKETMASTER_COUNTRY_CODE override", async () => {
