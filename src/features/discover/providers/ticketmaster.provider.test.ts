@@ -73,6 +73,27 @@ describe("normalizeTicketmasterEvent", () => {
     expect(flyer!._city).toBe("Monterrey");
   });
 
+  it("treats (0,0) coordinates as absent (TM's no-geo sentinel) and keeps the city", () => {
+    const flyer = normalizeTicketmasterEvent(
+      tmEvent({
+        _embedded: {
+          venues: [
+            {
+              name: "Arena Monterrey",
+              city: { name: "Monterrey" },
+              location: { latitude: "0", longitude: "0" },
+            },
+          ],
+        },
+      })
+    );
+    // No coords → the location filter must fall back to the city, not place the
+    // event at Null Island and drop a real Monterrey event as "12000 km away".
+    expect(flyer!._lat).toBeUndefined();
+    expect(flyer!._lng).toBeUndefined();
+    expect(flyer!._city).toBe("Monterrey");
+  });
+
   it("falls back to the first image when no wide 16:9 exists", () => {
     const flyer = normalizeTicketmasterEvent(
       tmEvent({
