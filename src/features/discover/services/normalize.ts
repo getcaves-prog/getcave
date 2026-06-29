@@ -34,7 +34,7 @@ function pickNumber(
 }
 
 /** Converts a raw date-ish string into an ISO date (YYYY-MM-DD), or null. */
-function toIsoDate(raw: string | null): string | null {
+export function toIsoDate(raw: string | null): string | null {
   if (!raw) return null;
   const parsed = new Date(raw);
   if (Number.isNaN(parsed.getTime())) return null;
@@ -43,9 +43,10 @@ function toIsoDate(raw: string | null): string | null {
 
 /**
  * Tiny deterministic string hash (djb2). Not cryptographic — only used to make
- * a stable synthetic id per event so dedupe works across runs.
+ * a stable synthetic id per event so dedupe works across runs. Exported so
+ * other providers (e.g. Ticketmaster) build synthetic ids the same way.
  */
-function hash(input: string): string {
+export function hash(input: string): string {
   let h = 5381;
   for (let i = 0; i < input.length; i++) {
     h = (h * 33) ^ input.charCodeAt(i);

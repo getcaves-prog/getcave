@@ -16,12 +16,14 @@ describe("proxiedImageUrl", () => {
 });
 
 describe("isAllowedImageHost", () => {
-  it("allows fbcdn, cdninstagram, instagram, fbsbx, licdn hosts", () => {
+  it("allows fbcdn, cdninstagram, instagram, fbsbx, licdn, ticketmaster hosts", () => {
     expect(isAllowedImageHost("https://scontent.fbcdn.net/a.jpg")).toBe(true);
     expect(isAllowedImageHost("https://x.cdninstagram.com/a.jpg")).toBe(true);
     expect(isAllowedImageHost("https://www.instagram.com/a.jpg")).toBe(true);
     expect(isAllowedImageHost("https://y.fbsbx.com/a.jpg")).toBe(true);
     expect(isAllowedImageHost("https://media.licdn.com/a.jpg")).toBe(true);
+    expect(isAllowedImageHost("https://s1.ticketm.net/dam/a.jpg")).toBe(true);
+    expect(isAllowedImageHost("https://www.ticketmaster.com/a.jpg")).toBe(true);
   });
 
   it("rejects non-allowlisted hosts", () => {
